@@ -1,0 +1,19 @@
+name: Build and Checks
+
+on:
+  push:
+    branches: '*'
+  pull_request:
+    branches: '*'
+    
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    - name: make format-check
+      run: make format-check
+    - name: make
+      run: make

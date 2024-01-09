@@ -5,3 +5,4 @@ set(FETCHCONTENT_QUIET OFF)
 
 include(spdlog.cmake)
 include(rapidcsv.cmake)
+include(argparse.cmake)

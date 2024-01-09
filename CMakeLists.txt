@@ -34,4 +34,5 @@ if(CMAKE_EXPORT_COMPILE_COMMANDS)
 endif()
 
 add_subdirectory(modules)
+add_subdirectory(common)
 add_subdirectory(pkg)

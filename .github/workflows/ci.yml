@@ -23,3 +23,12 @@ jobs:
       run: make tidy
     - name: make
       run: make
+
+  editor-config:
+    runs-on: ubuntu-latest
+    container: mstruebing/editorconfig-checker
+    steps:
+    - name: Check out repository code
+      uses: actions/checkout@v2
+    - name: Check editorconfig
+      run: ec --exclude .git

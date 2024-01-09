@@ -13,9 +13,7 @@
 #include <regex>
 #include <stdexcept>
 
-namespace whitelist {
-
-static std::string concatenateVectorOfStrings(
+std::string concatenateVectorOfStrings(
 	const std::vector<std::string>& vectorToConcatenate,
 	const std::string& delimiter = ",")
 {
@@ -31,6 +29,8 @@ static std::string concatenateVectorOfStrings(
 
 	return concatenatedString;
 }
+
+namespace whitelist {
 
 void ConfigParser::setUnirecTemplate(const std::vector<UnirecTypeName>& unirecTemplateDescription)
 {

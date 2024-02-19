@@ -14,8 +14,8 @@ jobs:
           echo "${{ github.event_name }}"
           echo "${{ github.event.action }}"
           echo "${{ github.event.pull_request.merger }}"
-          echo "${{ github.event.pull_request.base.ref }}"
-          echo "${{ github.event.pull_request.head.ref }}"
+          echo "${{ github.base.ref }}"
+          echo "${{ github.head.ref }}"
   build-os-matrix:
     needs: check
     runs-on: ubuntu-latest

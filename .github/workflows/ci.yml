@@ -6,7 +6,6 @@ jobs:
   check:
     uses: ./.github/workflows/check.yml
   rpm:
-    needs: check
     runs-on: ubuntu-latest
     steps:
       - name: vars
@@ -16,6 +15,9 @@ jobs:
           echo "${{ github.event.pull_request.merger }}"
           echo "${{ github.base.ref }}"
           echo "${{ github.head.ref }}"
+          echo "${{ github.event.head_commit.message }}"
+          echo "${{ github.event.workflow_run.head_commit.message }}"
+
   build-os-matrix:
     needs: check
     runs-on: ubuntu-latest

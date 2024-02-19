@@ -49,12 +49,3 @@ jobs:
     uses: ./.github/workflows/test.yml
     with:
       os: ${{ matrix.os }}
-  upload:
-    if: |
-      github.event_name == 'pull_request' &&
-      github.event.action == 'closed' &&
-      github.event.pull_request.merged == true &&
-      github.event.pull_request.base.ref == 'main' &&
-      github.event.pull_request.head.ref == 'new_version'
-    needs: [test]
-    uses: ./.github/workflows/upload.yml

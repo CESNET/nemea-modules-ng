@@ -1,7 +1,9 @@
 name: upload
 
 on:
-  workflow_call:
+  push:
+    branches:
+      - main
 
 jobs:
   run-command:
@@ -12,4 +14,6 @@ jobs:
 
     - name: Run your command
       run: |
+        echo "${{ github.event.head_commit.message }}"
+        echo "${{ github.event.workflow_run.head_commit.message }}"      
         echo "Run your command here"

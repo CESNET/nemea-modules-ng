@@ -1,0 +1,15 @@
+name: upload
+
+on:
+  workflow_call:
+
+jobs:
+  run-command:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Run your command
+      run: |
+        echo "Run your command here"

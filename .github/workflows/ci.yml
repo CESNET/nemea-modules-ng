@@ -8,7 +8,7 @@ jobs:
   build-os-matrix:
     needs: check
     runs-on: ubuntu-latest
-    outputs: 
+    outputs:
       os: ${{ steps.os.outputs.os }}
     steps:
       - name: Build OS Array
@@ -37,4 +37,13 @@ jobs:
         os: ${{ fromJSON(needs.build-os-matrix.outputs.os) }}
     uses: ./.github/workflows/test.yml
     with:
-      os: ${{ matrix.os }}  
+      os: ${{ matrix.os }}
+  upload:
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'new_version'
+    needs: [test]
+    uses: ./.github/workflows/upload.yml

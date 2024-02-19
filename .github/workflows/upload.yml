@@ -7,16 +7,14 @@ jobs:
   run-command:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - uses: actions/checkout@v2
     
-    - name: Validate version change regex
-      uses: actions-ecosystem/action-regex-match@v2
-      id: regex-match
-      with:
-        text: ${{ github.event.head_commit.message }}
-        regex: '^Merge pull request #\d+ from .*/new_version$'i
-    - name: Upload SRPM to copr
-      if: ${{ steps.regex-match.outputs.match != '' }}
-      run: |
-        echo "Regex match'
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: regex-match
+        with:
+          text: ${{ github.event.head_commit.message }}
+          regex: '^Merge pull request #\d+ from .*/new_version$'i
+      - name: Upload SRPM to copr
+        if: ${{ steps.regex-match.outputs.match != '' }}
+        run: |
+          echo "Regex match'

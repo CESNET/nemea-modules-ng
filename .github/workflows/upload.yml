@@ -2,8 +2,6 @@ name: upload
 
 on:
   push:
-    branches:
-      - main
 
 jobs:
   run-command:
@@ -11,9 +9,14 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-
-    - name: Run your command
+    
+    - name: Validate version change regex
+      uses: actions-ecosystem/action-regex-match@v2
+        id: regex-match
+        with:
+          text: ${{ github.event.head_commit.message }}
+          regex: '^Merge pull request #\d+ from .*/new_version$'i
+    - name: Upload SRPM to copr
+      if: ${{ steps.regex-match.outputs.match != '' }}
       run: |
-        echo "${{ github.event.head_commit.message }}"
-        echo "${{ github.event.workflow_run.head_commit.message }}"      
-        echo "Run your command here"
+        echo "Regex match'

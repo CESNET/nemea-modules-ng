@@ -1,4 +1,4 @@
-name: Add Label with Comment
+name: upload SRPM to copr
 
 on: push
 
@@ -11,11 +11,9 @@ jobs:
       - uses: actions-ecosystem/action-regex-match@v2
         id: regex-match
         with:
-          text: ${{ github.event.comment.body }}
-          regex: '^/label\s*(.*?)\s*$'
-
-      - uses: actions-ecosystem/action-add-labels@v1
-        if: ${{ steps.regex-match.outputs.match != '' }}
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          labels: ${{ steps.regex-match.outputs.group1 }}
+          text: ${{ github.event.head_commit.message }}
+          regex: '^Merge pull request #\d+ from .*/new_version$'
+      - name: Upload SRPM to copr	
+        if: ${{ steps.regex-match.outputs.match != '' }}	
+        run: |	
+          echo "regex matched" 

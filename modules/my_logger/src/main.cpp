@@ -7,6 +7,11 @@
 
 using namespace Nemea;
 
+void handleFormatChange(UnirecInputInterface& inputInterface)
+{
+	inputInterface.changeTemplate();
+}
+
 void processNextRecord(
 	UnirecInputInterface& inputInterface)
 {
@@ -16,10 +21,8 @@ void processNextRecord(
 	}
 
 	urcsv_t* temp = urcsv_init(inputInterface.getTemplate(), ',');
-	std::cout << urcsv_record(temp, unirecRecord->data());
+	std::cout << urcsv_record(temp, unirecRecord->data()) << "\n";
 	urcsv_free(&temp);
-
-	std::cout << "\n";
 
 	// int recordNum = unirecRecord->getSequenceNumber();
 	// assert(recordNum < 0);
@@ -31,8 +34,8 @@ void processUnirecRecords(
 	while (true) {
 		try {
 			processNextRecord(inputInterface);
-		// } catch (FormatChangeException& ex) {
-		// 	handleFormatChange(biInterface);
+		} catch (FormatChangeException& ex) {
+			handleFormatChange(inputInterface);
 		} catch (EoFException& ex) {
 			break;
 		} catch (std::exception& ex) {
@@ -58,7 +61,7 @@ int main(int argc, char** argv) {
 	try {
     	UnirecInputInterface interface = unirec.buildInputInterface();
 
-		interface.setRequieredFormat("ipaddr DST_IP,ipaddr SRC_IP,uint64 BYTES,uint64 BYTES_REV,uint64 L4_TCP_OPTIONS,uint64 L4_TCP_OPTIONS_REV,uint64 LINK_BIT_FIELD,time TIME_FIRST,time TIME_LAST,uint32 L4_TCP_MSS,uint32 L4_TCP_MSS_REV,uint32 PACKETS,uint32 PACKETS_REV,uint16 DST_PORT,uint16 L4_TCP_SYN_SIZE,uint16 L4_TCP_WIN,uint16 L4_TCP_WIN_REV,uint16 SRC_PORT,uint8 DIR_BIT_FIELD,uint8 FLOW_END_REASON,uint8 L3_FLAGS,uint8 L3_FLAGS_REV,uint8 PROTOCOL,uint8 TCP_FLAGS,uint8 TOS,uint8 TTL,uint8 TTL_REV");
+		interface.setRequieredFormat("");
 
 		processUnirecRecords(interface);
 
@@ -66,5 +69,4 @@ int main(int argc, char** argv) {
 		logger->error(ex.what());
 		return EXIT_FAILURE;
 	}
-
 }

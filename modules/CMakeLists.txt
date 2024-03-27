@@ -1,2 +1,2 @@
 add_subdirectory(whitelist)
-add_subdirectory(my_logger)
+add_subdirectory(telemetry)

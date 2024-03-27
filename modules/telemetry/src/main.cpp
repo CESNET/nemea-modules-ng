@@ -1,39 +1,17 @@
 
 #include "logger.hpp"
+#include "timer.hpp"
+
 #include <argparse/argparse.hpp>
+#include <atomic>
 #include <iostream>
 #include <stdexcept>
 #include <telemetry/directory.hpp>
+#include <thread>
 #include <unirec++/unirec.hpp>
-#include <unirec++/urTime.hpp>
 #include <unirec/unirec2csv.h>
 
 using namespace Nemea;
-
-class Timer {
-public:
-	Timer() { m_lastTime = Nemea::UrTime::now().time; }
-
-	bool isIntervalElapsed()
-	{
-		uint64_t const curTime = Nemea::UrTime::now().time;
-
-#define SECOND_IN_MS 1000
-
-		if (ur_timediff(curTime, m_lastTime) > (uint64_t) m_interval * SECOND_IN_MS) {
-			m_lastTime = curTime;
-			return true;
-		}
-
-		return false;
-	}
-
-	void setInterval(uint32_t interval) { m_interval = interval; }
-
-private:
-	uint64_t m_lastTime;
-	uint32_t m_interval = 1;
-};
 
 nm::telemetry::Content getBiInterfaceTelemetry(UnirecBidirectionalInterface& biInterface)
 {
@@ -64,22 +42,38 @@ void processNextRecord(UnirecBidirectionalInterface& biInterface)
 	biInterface.send(*unirecRecord);
 }
 
+void telemetry(
+	std::atomic<bool>& flag,
+	const std::shared_ptr<nm::telemetry::File>& file,
+	Timer& timer)
+{
+	while (true) {
+		if (flag) {
+			break;
+		}
+
+		if (timer.isIntervalElapsed()) {
+			std::cout << nm::telemetry::contentToString(file->read()) << "\n";
+		}
+	}
+}
+
 void processUnirecRecords(
-	Timer timer,
+	Timer& timer,
 	UnirecBidirectionalInterface& biInterface,
 	const std::shared_ptr<nm::telemetry::File>& file)
 {
+	std::atomic<bool> flagStop(false);
+	std::thread telemetryThread(telemetry, std::ref(flagStop), std::ref(file), std::ref(timer));
+
 	while (true) {
 		try {
 			processNextRecord(biInterface);
-
-			if (timer.isIntervalElapsed()) {
-				std::cout << nm::telemetry::contentToString(file->read()) << "\n";
-			}
-
 		} catch (FormatChangeException& ex) {
 			handleFormatChange(biInterface);
 		} catch (EoFException& ex) {
+			flagStop.store(true);
+			telemetryThread.join();
 			break;
 		} catch (std::exception& ex) {
 			throw;
@@ -89,7 +83,7 @@ void processUnirecRecords(
 
 int main(int argc, char** argv)
 {
-	argparse::ArgumentParser program("my_logger");
+	argparse::ArgumentParser program("telemetry");
 
 	program.add_argument("-il", "--interval")
 		.required()
@@ -98,7 +92,7 @@ int main(int argc, char** argv)
 		.scan<'d', uint32_t>()
 		.default_value((uint32_t) 1);
 
-	Unirec unirec({1, 1, "my_logger", "logger test module"});
+	Unirec unirec({1, 1, "telemetry", "Unirec telemetry module"});
 
 	nm::loggerInit();
 	auto logger = nm::loggerGet("main");

@@ -19,10 +19,11 @@ bool Timer::isIntervalElapsed()
 {
 	auto curTime = std::chrono::steady_clock::now();
 
-	const int64_t secondInMs = 1000;
+	using namespace std::chrono_literals;
+	const int64_t millisecondsInSecond = std::chrono::milliseconds(1s).count();
 
 	if (std::chrono::duration_cast<std::chrono::milliseconds>(curTime - m_lastTime).count()
-		> m_interval * secondInMs) {
+		> m_interval * millisecondsInSecond) {
 		m_lastTime = curTime;
 		return true;
 	}

@@ -48,7 +48,8 @@ nm::telemetry::Content getBiInterfaceTelemetry(UnirecBidirectionalInterface& biI
 	dict["receivedRecords"] = stats.receivedRecords;
 	dict["missedRecords"] = stats.missedRecords;
 	dict["missed"] = nm::telemetry::ScalarWithUnit(
-		(static_cast<double>(stats.missedRecords) / stats.receivedRecords) * fractionToPercentage,
+		(static_cast<double>(stats.missedRecords) / static_cast<double>(stats.receivedRecords))
+			* fractionToPercentage,
 		"%");
 
 	return dict;

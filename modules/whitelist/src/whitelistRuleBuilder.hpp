@@ -12,10 +12,8 @@
 #include "logger.hpp"
 #include "whitelistRule.hpp"
 
-#include <memory>
 #include <string>
 #include <unirec/unirec.h>
-#include <vector>
 
 namespace Whitelist {
 

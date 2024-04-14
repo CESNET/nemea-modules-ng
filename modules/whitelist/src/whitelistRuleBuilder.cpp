@@ -10,10 +10,8 @@
 
 #include <charconv>
 #include <optional>
-#include <regex>
+#include <sstream>
 #include <stdexcept>
-
-#include <iostream>
 
 namespace {
 
@@ -104,11 +102,15 @@ void WhitelistRuleBuilder::validateUnirecFieldId(const std::string& fieldName, i
 WhitelistRule
 WhitelistRuleBuilder::build(const ConfigParser::WhitelistRuleDescription& whitelistRuleDescription)
 {
-	WhitelistRule whitelistRule = {};
+	std::vector<RuleField> ruleFields;
+
 	for (const auto& fieldValue : whitelistRuleDescription) {
-		auto ruleField = createRuleField(fieldValue, m_unirecFieldsId.at(whitelistRule.size()));
-		whitelistRule.emplace_back(ruleField);
+		auto ruleField = createRuleField(fieldValue, m_unirecFieldsId.at(ruleFields.size()));
+		ruleFields.emplace_back(ruleField);
 	}
+
+	WhitelistRule whitelistRule(ruleFields);
+
 	return whitelistRule;
 }
 

@@ -2,7 +2,7 @@
 
 ## Description
 The module passes Unirec records through a bidirectional interface and logs telemetry
-data to stdout.
+data to stdout and to FUSE.
 
 ## Interfaces
 - Input: 1
@@ -17,26 +17,33 @@ data to stdout.
 - `-vvv`             Be even more verbose.
 
 ### Module specific parameters
-- `-il --interval <seconds>`  Interval in seconds at which stats are recorded (default = 1)
+- `-il --interval <seconds>`  Interval in seconds at which stats are printed to stdout (default = 1)
+- `-fp --fusePath <path>` Path to a dir to which FUSE links and stores telemetry. 
+  - The directory has to exist before it is linked. 
+  - If it is not used it means telemetry is not collected to FUSE, only printed to stdout.
 
 ## Telemetry data format
+```
+└─ stats 
+```
+
+```
 missed:          (double) (%)
 missedRecords:   (uint64_t)
 receivedBytes:   (uint64_t)
 receivedRecords: (uint64_t)
+```
 
-The data is gathered continuously and only logged at intervals. This means that each log
-reflects the cumulative statistics for the entire duration of the module's operation, not
-just for the specific interval at which it's logged.
+- The data is gathered continuously and when you try to read the file it is collected. This means 
+that the data is up to date every time you read it. 
+- It reflects the cumulative statistics for the entire duration of the module's operation, not
+just for the specific interval at which it's collected.
 
 ## Usage Examples
 ```
 # Data from the input unix socket interface "trap_in" is forwarded directly to output interface
-"trap_out", and telemetry data is printed out to stdout.
+"trap_out", and telemetry data is printed out to stdout every 10s. In the stats directory 
+the data you read is always up to date, it is collected when you read it.
 
-$ telemetry -i u:trap_in,u:trap_out -il 10
+$ telemetry -i u:trap_in,u:trap_out -il 10 -fp stats
 ```
-
-## Notes
-Change usage example and Description when the module is updated to log telemetry to file.
-Also remove this section.

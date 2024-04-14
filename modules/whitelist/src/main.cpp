@@ -1,6 +1,7 @@
 /**
  * @file
  * @author Pavel Siska <siska@cesnet.cz>
+ * @author Daniel Pelanek <xpeland00@vutbr.cz>
  * @brief Whitelist Module: Process and filter Unirec records based on whitelist rules.
  *
  * This file contains the main function and supporting functions for the Unirec Whitelist Module.
@@ -16,12 +17,39 @@
 #include "logger.hpp"
 #include "whitelist.hpp"
 
+#include <appFs.hpp>
 #include <argparse/argparse.hpp>
-#include <iostream>
 #include <stdexcept>
+#include <telemetry.hpp>
 #include <unirec++/unirec.hpp>
 
 using namespace Nemea;
+
+/**
+ * @brief function for telemetry FileOps with Bidirectional Interface
+ *
+ * @param biInterface
+ * @return telemetry::Content
+ */
+telemetry::Content getBiInterfaceTelemetry(UnirecBidirectionalInterface& biInterface)
+{
+	telemetry::Dict dict;
+
+	const InputInteraceStats stats = biInterface.getInputInterfaceStats();
+
+	const int fractionToPercentage = 100;
+
+	dict["receivedBytes"] = stats.receivedBytes;
+	dict["receivedRecords"] = stats.receivedRecords;
+	dict["missedRecords"] = stats.missedRecords;
+	dict["missed"] = telemetry::ScalarWithUnit(
+		(static_cast<double>(stats.missedRecords)
+		 / (static_cast<double>(stats.receivedRecords) + static_cast<double>(stats.missedRecords)))
+			* fractionToPercentage,
+		"%");
+
+	return dict;
+}
 
 /**
  * @brief Handle a format change exception by adjusting the template.
@@ -45,9 +73,7 @@ void handleFormatChange(UnirecBidirectionalInterface& biInterface)
  * @param biInterface Bidirectional interface for Unirec communication.
  * @param whitelist Whitelist instance for checking Unirec records.
  */
-void processNextRecord(
-	UnirecBidirectionalInterface& biInterface,
-	const Whitelist::Whitelist& whitelist)
+void processNextRecord(UnirecBidirectionalInterface& biInterface, Whitelist::Whitelist& whitelist)
 {
 	std::optional<UnirecRecordView> unirecRecord = biInterface.receive();
 	if (!unirecRecord) {
@@ -73,7 +99,7 @@ void processNextRecord(
  */
 void processUnirecRecords(
 	UnirecBidirectionalInterface& biInterface,
-	const Whitelist::Whitelist& whitelist)
+	Whitelist::Whitelist& whitelist)
 {
 	while (true) {
 		try {
@@ -96,6 +122,12 @@ int main(int argc, char** argv)
 		.required()
 		.help("specify the whitelist file.")
 		.metavar("csv_file");
+
+	program.add_argument("-fp", "--fusePath")
+		.required()
+		.help(
+			"path to where fuse dir will mount, empty means output will only be printed to stdout")
+		.default_value(std::string(""));
 
 	Unirec unirec({1, 1, "Whitelist", "Unirec whitelist module"});
 
@@ -120,6 +152,21 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
+	std::shared_ptr<telemetry::Directory> telemetryRootNode;
+	telemetryRootNode = telemetry::Directory::create();
+
+	std::string fusePath = program.get<std::string>("--fusePath");
+
+	std::unique_ptr<telemetry::appFs::AppFsFuse> fuse;
+	if (fusePath != "") {
+		fuse = std::make_unique<telemetry::appFs::AppFsFuse>(telemetryRootNode, fusePath);
+		fuse->start();
+	}
+
+	std::shared_ptr<telemetry::Directory> telemetryInputDir = telemetryRootNode->addDir("input");
+	std::shared_ptr<telemetry::Directory> telemetryWhitelistDir
+		= telemetryRootNode->addDir("whitelist");
+
 	try {
 		std::unique_ptr<Whitelist::ConfigParser> whitelistConfigParser
 			= std::make_unique<Whitelist::CsvConfigParser>(program.get<std::string>("--whitelist"));
@@ -129,7 +176,14 @@ int main(int argc, char** argv)
 		UnirecBidirectionalInterface biInterface = unirec.buildBidirectionalInterface();
 		biInterface.setRequieredFormat(requiredUnirecTemplate);
 
-		const Whitelist::Whitelist whitelist(whitelistConfigParser.get());
+		telemetry::FileOps const inputFileOps
+			= {[&biInterface]() { return getBiInterfaceTelemetry(biInterface); }, nullptr};
+		std::shared_ptr<telemetry::File> const inputFile
+			= telemetryInputDir->addFile("stats", inputFileOps);
+
+		Whitelist::Whitelist whitelist(whitelistConfigParser.get());
+
+		whitelist.configTelemetry(telemetryWhitelistDir);
 
 		processUnirecRecords(biInterface, whitelist);
 

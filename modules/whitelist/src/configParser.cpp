@@ -12,6 +12,8 @@
 #include <numeric>
 #include <regex>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace {
 

@@ -8,7 +8,8 @@
 
 #include "timer.hpp"
 
-#include <cstddef>
+#include <chrono>
+#include <cstdint>
 
 Timer::Timer()
 {

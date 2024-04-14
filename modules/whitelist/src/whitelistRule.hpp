@@ -1,6 +1,7 @@
 /**
  * @file
  * @author Pavel Siska <siska@cesnet.cz>
+ * @author Daniel Pelanek <xpeland00@vutbr.cz>
  * @brief Defines data structures for a whitelist rule.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -12,12 +13,18 @@
 
 #include <optional>
 #include <regex>
+#include <telemetry.hpp>
+#include <unirec++/unirec.hpp>
 #include <unirec/unirec.h>
 #include <utility>
 #include <variant>
 #include <vector>
 
 namespace Whitelist {
+
+struct RuleStats {
+	uint64_t matchedCount;
+};
 
 /**
  * @brief Represents possible values for a rule field in the whitelist.
@@ -40,11 +47,17 @@ using RuleFieldValue = std::variant<
  */
 using RuleField = std::pair<ur_field_id_t, std::optional<RuleFieldValue>>;
 
-/**
- * @brief Represents a whitelist rule.
- *
- * A vector of RuleField objects, defining the conditions for whitelisting.
- */
-using WhitelistRule = std::vector<RuleField>;
+class WhitelistRule {
+public:
+	WhitelistRule(const std::vector<RuleField>& ruleFields);
+
+	bool isMatched(const Nemea::UnirecRecordView& unirecRecordView);
+
+	const RuleStats& getStats() const noexcept;
+
+private:
+	std::vector<RuleField> m_ruleFields;
+	RuleStats m_stats;
+};
 
 } // namespace Whitelist

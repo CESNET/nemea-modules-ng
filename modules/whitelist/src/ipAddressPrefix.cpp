@@ -9,9 +9,13 @@
 #include "ipAddressPrefix.hpp"
 
 #include <climits>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <unirec++/ipAddress.hpp>
+#include <unirec/ipaddr.h>
 
 namespace {
 

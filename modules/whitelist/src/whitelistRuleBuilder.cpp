@@ -7,13 +7,24 @@
  */
 
 #include "whitelistRuleBuilder.hpp"
+#include "/home/current/xpeland00/shared_home/NEMEA/nemea-modules-ng/modules/whitelist/src/configParser.hpp"
+#include "/home/current/xpeland00/shared_home/NEMEA/nemea-modules-ng/modules/whitelist/src/ipAddressPrefix.hpp"
+#include "/home/current/xpeland00/shared_home/NEMEA/nemea-modules-ng/modules/whitelist/src/whitelistRule.hpp"
 
 #include <charconv>
+#include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <regex>
+#include <sstream>
 #include <stdexcept>
 
-#include <iostream>
+#include <string>
+#include <system_error>
+#include <unirec++/ipAddress.hpp>
+#include <unirec/unirec.h>
+#include <utility>
+#include <vector>
 
 namespace {
 
@@ -104,11 +115,15 @@ void WhitelistRuleBuilder::validateUnirecFieldId(const std::string& fieldName, i
 WhitelistRule
 WhitelistRuleBuilder::build(const ConfigParser::WhitelistRuleDescription& whitelistRuleDescription)
 {
-	WhitelistRule whitelistRule = {};
+	std::vector<RuleField> ruleFields;
+
 	for (const auto& fieldValue : whitelistRuleDescription) {
-		auto ruleField = createRuleField(fieldValue, m_unirecFieldsId.at(whitelistRule.size()));
-		whitelistRule.emplace_back(ruleField);
+		auto ruleField = createRuleField(fieldValue, m_unirecFieldsId.at(ruleFields.size()));
+		ruleFields.emplace_back(ruleField);
 	}
+
+	WhitelistRule whitelistRule(ruleFields);
+
 	return whitelistRule;
 }
 

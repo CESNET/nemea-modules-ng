@@ -1,0 +1,21 @@
+add_executable(deduplicator
+	main.cpp
+	hashtable.cpp
+	tablerecord.cpp
+	deduplicator.cpp
+	spinlock.cpp
+)
+
+target_link_libraries(deduplicator PRIVATE
+	telemetry::telemetry
+	telemetry::appFs
+	common
+	rapidcsv
+	unirec::unirec++
+	unirec::unirec
+	trap::trap
+	argparse
+	xxhash
+)
+
+install(TARGETS deduplicator DESTINATION ${INSTALL_DIR_BIN})

@@ -16,6 +16,7 @@ target_link_libraries(common PUBLIC
 	unirec::unirec++
 )
 
+
 target_include_directories(common PUBLIC
 	include
 	spdlog::spdlog

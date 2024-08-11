@@ -36,7 +36,6 @@ that make up the main components of the test environment.
 
 %files
 %license LICENSE
-%{_bindir}/nemea/whitelist
 %{_bindir}/nemea/sampler
 %{_bindir}/nemea/telemetry_stats
 

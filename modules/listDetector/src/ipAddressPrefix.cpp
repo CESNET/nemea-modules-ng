@@ -40,8 +40,12 @@ IpAddressPrefix::IpAddressPrefix(Nemea::IpAddress ipAddress, size_t prefix)
 			m_mask.ip.bytes[bytesIndex] = UINT8_MAX;
 		}
 
-		if (prefixBits != 0U) {
-			m_mask.ip.bytes[prefixBytes] = UINT8_MAX << (CHAR_BIT - prefixBits);
+		if (prefixBytes != 16) {
+			m_mask.ip.bytes[prefixBytes] = (uint16_t) UINT8_MAX << (CHAR_BIT - prefixBits);
+		}
+
+		for (size_t bytesIndex = prefixBytes + 1; bytesIndex < 16; bytesIndex++) {
+			m_mask.ip.bytes[bytesIndex] = 0;
 		}
 	}
 

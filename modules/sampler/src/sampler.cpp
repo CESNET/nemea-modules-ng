@@ -11,7 +11,7 @@
 namespace Sampler {
 
 Sampler::Sampler(std::size_t samplingRate)
-	: m_samplingRate(samplingRate)
+	: M_SAMPLING_RATE(samplingRate)
 {
 }
 
@@ -19,7 +19,7 @@ bool Sampler::shouldBeSampled() noexcept
 {
 	m_totalRecords++;
 
-	if ((m_totalRecords % m_samplingRate) == 0) {
+	if ((m_totalRecords % M_SAMPLING_RATE) == 0) {
 		m_sampledRecords++;
 		return true;
 	}

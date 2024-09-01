@@ -82,7 +82,9 @@ void NcursesOutputPlugin::printFile(const std::shared_ptr<telemetry::File>& file
 	m_ncurses.print(fileContextAsString);
 }
 
-void NcursesOutputPlugin::loopThread(float interval, const std::shared_ptr<telemetry::File>& statsFile)
+void NcursesOutputPlugin::loopThread(
+	float interval,
+	const std::shared_ptr<telemetry::File>& statsFile)
 {
 	while (true) {
 		printFile(statsFile);
@@ -131,6 +133,6 @@ static Nm::
 	PluginFactoryRegistrator<OutputPlugin, NcursesOutputPlugin, OutputPluginGenerator<OutputPlugin>>
 		g_NcursesPluginRegistration(
 			g_ncursesManifest,
-			OutputPluginLambda<OutputPlugin, NcursesOutputPlugin>);
+			g_OutputPluginLambda<OutputPlugin, NcursesOutputPlugin>);
 
 } // namespace TelemetryStats

@@ -30,7 +30,7 @@ using OutputPluginGenerator = std::function<
  * @brief A lambda function template for creating OutputPlugin instances.
  */
 template <typename Base, typename Derived>
-OutputPluginGenerator<Base> OutputPluginLambda
+OutputPluginGenerator<Base> g_OutputPluginLambda
 	= [](const std::string& params,
 		 const std::shared_ptr<telemetry::Directory>& directory) -> std::unique_ptr<Base> {
 	return std::make_unique<Derived>(params, directory);

@@ -39,7 +39,7 @@ using DefaultPluginGenerator = std::function<std::unique_ptr<Base>(const std::st
  * @tparam Derived Type of the plugin to generate.
  */
 template <typename Base, typename Derived>
-DefaultPluginGenerator<Base> lambdaPluginGenerator
+DefaultPluginGenerator<Base> g_lambdaPluginGenerator
 	= [](const std::string& params) -> std::unique_ptr<Base> {
 	return std::make_unique<Derived>(params);
 };
@@ -99,6 +99,8 @@ public:
 	std::vector<PluginManifest> getRegisteredPlugins()
 	{
 		std::vector<PluginManifest> registeredPlugins;
+		registeredPlugins.reserve(m_registeredPlugins.size());
+
 		for (const auto& [pluginManifest, _] : m_registeredPlugins) {
 			registeredPlugins.push_back(pluginManifest);
 		}

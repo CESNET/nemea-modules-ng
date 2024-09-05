@@ -57,5 +57,7 @@ CheckOptions:
     value: '^.*_type$|^.*_category$|^.*reference$|^.*iterator$|^.*pointer$'
   - key:   readability-magic-numbers.IgnorePowersOf2IntegerValues
     value: True
+  - key:   misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+    value: True
 ...
 

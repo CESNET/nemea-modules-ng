@@ -49,7 +49,7 @@ public:
 	SamplerStats getStats() const noexcept;
 
 private:
-	const std::size_t m_samplingRate;
+	const std::size_t M_SAMPLING_RATE;
 	uint64_t m_totalRecords = 0;
 	uint64_t m_sampledRecords = 0;
 };

@@ -40,7 +40,7 @@ struct PluginFactoryRegistrator {
 	 */
 	explicit PluginFactoryRegistrator(
 		const PluginManifest& manifest,
-		Generator generator = lambdaPluginGenerator<Base, Derived>)
+		Generator generator = g_lambdaPluginGenerator<Base, Derived>)
 	{
 		static_assert(
 			std::is_base_of<Base, Derived>::value,

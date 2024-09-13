@@ -74,6 +74,6 @@ static Nm::
 	PluginFactoryRegistrator<OutputPlugin, AppFsOutputPlugin, OutputPluginGenerator<OutputPlugin>>
 		g_appFsPluginRegistration(
 			g_appFsManifest,
-			OutputPluginLambda<OutputPlugin, AppFsOutputPlugin>);
+			g_OutputPluginLambda<OutputPlugin, AppFsOutputPlugin>);
 
 } // namespace TelemetryStats

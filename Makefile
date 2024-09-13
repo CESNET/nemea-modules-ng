@@ -14,7 +14,8 @@ ifeq ($(RUN_CLANG_TIDY),)
 RUN_CLANG_TIDY := run-clang-tidy
 endif
 
-SOURCE_DIR = modules/ common/
+SOURCE_DIR = $(shell pwd)/modules/ $(shell pwd)/common/
+HEADER_FILTER = $(shell echo $(SOURCE_DIR) | sed 's/ /|/g')
 SOURCE_REGEX = '.*\.\(cpp\|hpp\|c\|h\)'
 
 .PHONY: all
@@ -40,9 +41,9 @@ format-fix:
 
 .PHONY: tidy
 tidy: all
-	$(RUN_CLANG_TIDY) -p build -quiet -j $(shell nproc) $(SOURCE_DIR)
+	$(RUN_CLANG_TIDY) -p build -quiet -j $(shell nproc) -header-filter="$(HEADER_FILTER)" $(SOURCE_DIR)
 
 .PHONY: tidy-fix
 tidy-fix: all
-	$(RUN_CLANG_TIDY) -p build -quiet -fix -j $(shell nproc) $(SOURCE_DIR)
+	$(RUN_CLANG_TIDY) -p build -quiet -fix -j $(shell nproc) -header-filter="$(HEADER_FILTER)" $(SOURCE_DIR)
 

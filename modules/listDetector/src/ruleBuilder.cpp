@@ -17,7 +17,7 @@
 namespace ListDetector {
 
 template <typename T>
-std::optional<T> convertStringToType(const std::string& str)
+static std::optional<T> convertStringToType(const std::string& str)
 {
 	if (str.empty()) {
 		return std::nullopt;
@@ -31,7 +31,7 @@ std::optional<T> convertStringToType(const std::string& str)
 	throw std::runtime_error("convertStringToType() has failed");
 }
 
-std::optional<IpAddressPrefix> convertStringToIpAddressPrefix(const std::string& ipStr)
+static std::optional<IpAddressPrefix> convertStringToIpAddressPrefix(const std::string& ipStr)
 {
 	if (ipStr.empty()) {
 		return std::nullopt;
@@ -69,8 +69,8 @@ std::optional<IpAddressPrefix> convertStringToIpAddressPrefix(const std::string&
 RuleBuilder::RuleBuilder(const std::string& unirecTemplateDescription)
 {
 	extractUnirecFieldsId(unirecTemplateDescription);
-	m_ipAddressMatchers = std::make_shared<std::unordered_map<ur_field_id_t, IpAddressMatcher>>();
-	m_staticFieldsHasher = std::make_shared<StaticFieldsHasher>(m_unirecFieldsId);
+	m_ipAddressFieldMatchers
+		= std::make_shared<std::unordered_map<ur_field_id_t, IpAddressFieldMatcher>>();
 }
 
 void RuleBuilder::extractUnirecFieldsId(const std::string& unirecTemplateDescription)
@@ -107,8 +107,6 @@ Rule RuleBuilder::build(const ConfigParser::RuleDescription& ruleDescription)
 		ruleFields.emplace_back(ruleField);
 	}
 
-	m_staticFieldsHasher->addRule(ruleFields);
-
 	return Rule {ruleFields};
 }
 
@@ -118,8 +116,17 @@ RuleField RuleBuilder::createRuleField(const std::string& fieldValue, ur_field_i
 	validateUnirecFieldType(fieldValue, unirecFieldType);
 
 	switch (unirecFieldType) {
-	case UR_TYPE_STRING:
-		return std::make_pair(fieldId, std::regex(fieldValue, std::regex::egrep));
+	case UR_TYPE_STRING: {
+		auto fieldLength = fieldValue.length();
+		constexpr const std::string_view regexStringPattern = "R\"()\"";
+		if (fieldLength >= regexStringPattern.length() && fieldValue[0] == 'R'
+			&& fieldValue[1] == '\"' && fieldValue[2] == '(' && fieldValue[fieldLength - 2] == ')'
+			&& fieldValue[fieldLength - 1] == '\"') {
+			auto stringValue = fieldValue.substr(3, fieldLength - regexStringPattern.length());
+			return std::make_pair(fieldId, std::regex(stringValue, std::regex::egrep));
+		}
+		return std::make_pair(fieldId, fieldValue);
+	}
 	case UR_TYPE_CHAR:
 		return std::make_pair(fieldId, convertStringToType<char>(fieldValue));
 	case UR_TYPE_UINT8:
@@ -141,7 +148,7 @@ RuleField RuleBuilder::createRuleField(const std::string& fieldValue, ur_field_i
 	case UR_TYPE_IP: {
 		auto ruleField = std::make_pair(fieldId, convertStringToIpAddressPrefix(fieldValue));
 		if (ruleField.second.has_value()) {
-			(*m_ipAddressMatchers)[fieldId].addPrefix(ruleField.second.value());
+			(*m_ipAddressFieldMatchers)[fieldId].addPrefix(ruleField.second.value());
 		}
 		return ruleField;
 	}
@@ -161,15 +168,10 @@ void RuleBuilder::validateUnirecFieldType(const std::string& fieldTypeString, in
 	}
 }
 
-std::shared_ptr<std::unordered_map<ur_field_id_t, IpAddressMatcher>>
-RuleBuilder::getIpAddressMatchers() const noexcept
+std::shared_ptr<std::unordered_map<ur_field_id_t, IpAddressFieldMatcher>>
+RuleBuilder::getIpAddressFieldMatchers() const noexcept
 {
-	return m_ipAddressMatchers;
-}
-
-std::shared_ptr<StaticFieldsHasher> RuleBuilder::getStaticFieldsHasher() const noexcept
-{
-	return m_staticFieldsHasher;
+	return m_ipAddressFieldMatchers;
 }
 
 } // namespace ListDetector

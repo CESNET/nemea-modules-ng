@@ -1,6 +1,7 @@
 /**
  * @file
  * @author Pavel Siska <siska@cesnet.cz>
+ * @author Damir Zainullin <zaidamilda@gmail.com>
  * @brief Declares the RuleBuilder class for constructing rules.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -11,7 +12,6 @@
 #include "configParser.hpp"
 #include "logger/logger.hpp"
 #include "rule.hpp"
-#include "staticFieldsHasher.hpp"
 
 #include <memory>
 #include <string>
@@ -39,18 +39,12 @@ public:
 	Rule build(const ConfigParser::RuleDescription& ruleDescription);
 
 	/**
-	 * @brief Getter for IP address matchers.
-	 * @return Shared pointer to unordered map of IP address matcher, where id of Unirec field is
-	 * key.
+	 * @brief Getter for IP address field matchers.
+	 * @return Shared pointer to unordered map of IP address field matcher, where id of Unirec field
+	 * is a key.
 	 */
-	std::shared_ptr<std::unordered_map<ur_field_id_t, IpAddressMatcher>>
-	getIpAddressMatchers() const noexcept;
-
-	/**
-	 * @brief Getter for static fields hasher.
-	 * @return Shared ptr to .
-	 */
-	std::shared_ptr<StaticFieldsHasher> getStaticFieldsHasher() const noexcept;
+	std::shared_ptr<std::unordered_map<ur_field_id_t, IpAddressFieldMatcher>>
+	getIpAddressFieldMatchers() const noexcept;
 
 private:
 	void extractUnirecFieldsId(const std::string& unirecTemplateDescription);
@@ -62,9 +56,8 @@ private:
 
 	std::shared_ptr<spdlog::logger> m_logger = Nm::loggerGet("RuleBuilder");
 
-	std::shared_ptr<std::unordered_map<ur_field_id_t, IpAddressMatcher>> m_ipAddressMatchers;
-
-	std::shared_ptr<StaticFieldsHasher> m_staticFieldsHasher;
+	std::shared_ptr<std::unordered_map<ur_field_id_t, IpAddressFieldMatcher>>
+		m_ipAddressFieldMatchers;
 };
 
 } // namespace ListDetector

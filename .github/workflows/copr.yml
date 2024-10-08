@@ -25,5 +25,5 @@ jobs:
     - name: Upload SRPM to copr
       run: |
         copr build @CESNET/NEMEA build/pkg/rpm/rpmbuild/SRPMS/*
-        copr build @CESNET/NEMEA-stable build/pkg/rpm/rpmbuild/SRPMS/*
+        copr build @CESNET/NEMEA-testing build/pkg/rpm/rpmbuild/SRPMS/*
 

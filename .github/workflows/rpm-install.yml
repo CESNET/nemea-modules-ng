@@ -1,4 +1,4 @@
-name: test
+name: rpm-install
 
 on:
   workflow_call:
@@ -8,7 +8,7 @@ on:
         type: string
 
 jobs:
-  test:
+  rpm-install:
     runs-on: ubuntu-latest
     container: ${{ inputs.os }}
     steps:

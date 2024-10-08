@@ -12,14 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     container: ${{ inputs.os }}
     steps:
-    - name: Install dependencies
-      run: |
-        dnf install -y dnf-plugins-core
-        dnf -y copr enable @CESNET/NEMEA
-        dnf install -y make gcc-c++ cmake3 git rpm-build
-        dnf install -y libtrap-devel unirec fuse3-devel ncurses-devel
+    - name: Install git
+      run: dnf install -y git
     - name: Check out repository code
       uses: actions/checkout@v4
+    - name: Install dependencies
+      uses: ./.github/actions/install-dependencies
     - name: Mark github workspace as safe
       run: git config --system --add safe.directory $PWD
     - name: make

@@ -8,14 +8,10 @@ on:
 jobs:
   upload-srpm-to-copr:
     runs-on: ubuntu-latest
-    container: oraclelinux:8
+    container: oraclelinux:9
     steps:
     - name: Install dependencies
-      run: |
-        dnf install -y dnf-plugins-core epel-release
-        dnf -y copr enable @CESNET/NEMEA
-        dnf install -y make gcc-c++ cmake3 git rpm-build copr-cli
-        dnf install -y libtrap-devel unirec fuse3-devel ncurses-devel
+      uses: ./.github/actions/install-dependencies
     - name: Check out repository code
       uses: actions/checkout@v4
     - name: Mark github workspace as safe

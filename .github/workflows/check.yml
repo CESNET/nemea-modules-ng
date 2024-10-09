@@ -39,3 +39,24 @@ jobs:
 
   cppcheck:
     uses: ./.github/workflows/cppcheck.yml
+
+  doxygen:
+    runs-on: ubuntu-latest
+    container: oraclelinux:9
+    steps:
+    - name: Check out repository code
+      uses: actions/checkout@v4
+    - name: Install dependencies
+      uses: ./.github/actions/install-dependencies
+    - name: Install doxygen
+      run: |
+        dnf config-manager --set-enabled ol9_codeready_builder
+        dnf install -y doxygen
+    - name: make doxygen
+      run: make doxygen CMAKE_ARGS="-DDOXYGEN_WARN_AS_ERROR=YES"
+    - name: upload Doxygen artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: doxygen
+        path: ./build/doc/doxygen/html
+        retention-days: 7

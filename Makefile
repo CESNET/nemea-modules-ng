@@ -47,3 +47,7 @@ tidy: all
 tidy-fix: all
 	$(RUN_CLANG_TIDY) -p build -quiet -fix -j $(shell nproc) -header-filter="$(HEADER_FILTER)" $(SOURCE_DIR)
 
+.PHONY: doxygen
+doxygen: build
+	@cd build && $(CMAKE) $(CMAKE_ARGS) -DNM_NG_ENABLE_DOC_DOXYGEN=ON ..
+	@$(MAKE) --no-print-directory -C build $@

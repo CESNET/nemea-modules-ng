@@ -17,6 +17,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+option(NM_NG_ENABLE_DOC_DOXYGEN "Enable build of code documentation" OFF)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -Wextra -Wunused -Wconversion -Wsign-conversion")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -Werror")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -ggdb3")
@@ -26,3 +28,4 @@ include(cmake/dependencies.cmake)
 add_subdirectory(modules)
 add_subdirectory(common)
 add_subdirectory(pkg)
+add_subdirectory(doc)

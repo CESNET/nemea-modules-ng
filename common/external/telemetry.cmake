@@ -14,7 +14,7 @@ set(GIT_REPO https://github.com/CESNET/telemetry.git)
 FetchContent_Declare(
 	telemetry
 	GIT_REPOSITORY ${GIT_REPO}
-	GIT_TAG v0.2.2
+	GIT_TAG v1.0.0
 )
 
 # Make sure that subproject accepts predefined build options without warnings.

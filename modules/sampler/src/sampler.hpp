@@ -16,8 +16,8 @@ namespace Sampler {
  * @brief Structure to hold sampling statistics.
  */
 struct SamplerStats {
-	uint64_t sampledRecords = 0;
-	uint64_t totalRecords = 0;
+	uint64_t sampledRecords = 0; ///< Number of sampled records.
+	uint64_t totalRecords = 0;  ///< Total number of records.
 };
 
 /**
@@ -45,6 +45,7 @@ public:
 
 	/**
 	 * @brief Returns the current sampling statistics.
+	 * @return The current sampling statistics.
 	 */
 	SamplerStats getStats() const noexcept;
 

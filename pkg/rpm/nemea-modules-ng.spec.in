@@ -38,5 +38,6 @@ that make up the main components of the test environment.
 %license LICENSE
 %{_bindir}/nemea/sampler
 %{_bindir}/nemea/telemetry_stats
+%{_bindir}/nemea/deduplicator
 
 %changelog

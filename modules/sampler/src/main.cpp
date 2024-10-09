@@ -177,7 +177,7 @@ int main(int argc, char** argv)
 			return EXIT_FAILURE;
 		}
 
-		Sampler::Sampler sampler(samplingRate);
+		Sampler::Sampler sampler(static_cast<std::size_t>(samplingRate));
 
 		UnirecBidirectionalInterface biInterface = unirec.buildBidirectionalInterface();
 

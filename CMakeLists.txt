@@ -18,10 +18,22 @@ set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(NM_NG_ENABLE_DOC_DOXYGEN "Enable build of code documentation" OFF)
+option(NM_NG_BUILD_WITH_ASAN    "Build with Address Sanitizer (only for CMAKE_BUILD_TYPE=Debug)" OFF)
+option(NM_NG_BUILD_WITH_UBSAN   "Build with Undefined Behavior Sanitizer (only for CMAKE_BUILD_TYPE=Debug)" OFF)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -Wextra -Wunused -Wconversion -Wsign-conversion")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -Werror")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -ggdb3")
+
+if (NM_NG_BUILD_WITH_ASAN)
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address -fsanitize-recover=address")
+	set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address -fsanitize-recover=address")
+endif()
+
+if (NM_NG_BUILD_WITH_UBSAN)
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=undefined")
+	set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=undefined")
+endif()
 
 include(cmake/dependencies.cmake)
 

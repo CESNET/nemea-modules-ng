@@ -1,4 +1,4 @@
-name: test
+name: rpm-install
 
 on:
   workflow_call:
@@ -8,14 +8,20 @@ on:
         type: string
 
 jobs:
-  test:
+  rpm-install:
     runs-on: ubuntu-latest
     container: ${{ inputs.os }}
     steps:
+    - name: Check out repository code
+      uses: actions/checkout@v4
     - name: Install dependencies
-      run: |
-        dnf install -y dnf-plugins-core
-        dnf -y copr enable @CESNET/NEMEA
+      uses: ./.github/actions/install-dependencies
+      with:
+        build-deps: false
+    - name: Install dependencies
+      uses: ./.github/actions/install-dependencies
+      with:
+        clang-tools: true
     - name: extract artifact name
       run: |
         OS=${{ inputs.os }}

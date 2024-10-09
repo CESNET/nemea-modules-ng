@@ -32,11 +32,11 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       os: ${{ matrix.os }}
-  test:
+  rpm-install:
     needs: [build-os-matrix, build]
     strategy:
       matrix:
         os: ${{ fromJSON(needs.build-os-matrix.outputs.os) }}
-    uses: ./.github/workflows/test.yml
+    uses: ./.github/workflows/rpm-install.yml
     with:
       os: ${{ matrix.os }}

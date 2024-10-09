@@ -1,0 +1,32 @@
+name: 'Install Dependencies'
+description: 'Install required dependencies in container'
+
+inputs:
+  clang-tools:
+    description: 'Install clang & clang-tools-extra'
+    required: false
+    default: false
+  build-deps:
+    description: 'Install build dependencies'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Enable NEMEA COPR repository
+      shell: bash
+      run: |
+        dnf install -y dnf-plugins-core
+        dnf -y copr enable @CESNET/NEMEA
+    - name: Install build dependencies
+      if: ${{ inputs.build-deps == 'true' }}
+      shell: bash
+      run: |
+        dnf install -y make gcc-c++ cmake3 git rpm-build
+        dnf install -y libtrap-devel unirec fuse3-devel ncurses-devel
+    - name: Install clang tools
+      if: ${{ inputs.clang-tools == 'true' }}
+      shell: bash
+      run: |
+        dnf install -y clang clang-tools-extra

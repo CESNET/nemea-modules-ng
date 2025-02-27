@@ -96,7 +96,7 @@ public:
 	 * Defines the possible outcomes of an `insert` operation, indicating whether a key was newly
 	 * inserted, was already present and valid, or was replaced due to bucket overflow.
 	 */
-	enum class InsertResult {
+	enum class InsertResult : uint8_t {
 		INSERTED, ///< A new key was successfully inserted into the bucket.
 		ALREADY_PRESENT, ///< The key was found in the bucket and is still valid (not timed out).
 		REPLACED, ///< The bucket was full; an existing key was replaced to make room for the new

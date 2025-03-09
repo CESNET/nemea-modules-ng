@@ -1,0 +1,37 @@
+name: tests
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    container: ${{ inputs.os }}
+    steps:
+    - name: Install git
+      run: dnf install -y git
+    - name: Check out repository code
+      uses: actions/checkout@v4
+    - name: Install dependencies
+      uses: ./.github/actions/install-dependencies
+    - name: Install nemea
+      run: |
+          dnf copr enable @CESNET/NEMEA-testing
+          dnf copr enable @CESNET/NEMEA
+          dnf install -y epel-release
+          dnf install -y nemea-framework-devel
+          dnf install -y nemea
+          dnf install -y procps-ng autoconf
+          echo PATH=/usr/bin/nemea:$PATH >> $GITHUB_ENV
+    - name: Compile modules
+      run: |
+        cmake -S . -B build -DNM_NG_ENABLE_TESTS=On
+        make -C build install
+    - name: Run tests
+      run: |
+        echo "Path=$PATH"
+        make -C build tests

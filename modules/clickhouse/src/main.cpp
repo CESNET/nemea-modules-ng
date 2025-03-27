@@ -15,6 +15,7 @@
 #include "logger.hpp"
 #include "unirec/unirec-telemetry.hpp"
 #include "config.hpp"
+#include "manager.hpp"
 
 // #include <appFs.hpp>
 #include <argparse/argparse.hpp>
@@ -39,15 +40,16 @@ void signalHandler(int signum)
     g_stopFlag.store(true);
 }
 
-void handleFormatChange(UnirecInputInterface& interface)
+void handleFormatChange(UnirecInputInterface& interface, Config& config)
 {
-    // throw std::runtime_error("Unable to handle change to template. Clickhouse schema has to be set manually.");
     interface.changeTemplate();
 
     ur_template_t* x = interface.getTemplate();
     char* res = ur_template_string_delimiter(x, ',');
 
-    printf("%s", res);
+    if(config.template_column_csv != res) {
+        throw std::runtime_error("Template in input doesn't match template in configuration.");
+    }
 
     free(res);
 }
@@ -60,13 +62,13 @@ void processNextRecord(UnirecInputInterface& interface)
     }
 }
 
-void processUnirecRecords(UnirecInputInterface& interface)
+void processUnirecRecords(UnirecInputInterface& interface, Config& config)
 {
     while (!g_stopFlag.load()) {
         try {
             processNextRecord(interface);
         } catch (FormatChangeException& ex) {
-            handleFormatChange(interface);
+            handleFormatChange(interface, config);
         } catch (EoFException& ex) {
             break;
         } catch (std::exception& ex) {
@@ -85,20 +87,6 @@ int main(int argc, char** argv)
 
     signal(SIGINT, signalHandler);
 
-    std::ifstream file("test.xml", std::ios::ate);
-    if (!file) {
-        std::cerr << "Error opening file!" << std::endl;
-        return 1;
-    }
-    std::streamsize size = file.tellg();
-    file.seekg(0, std::ios::beg);
-
-    char buffer[100000];
-    file.read(buffer, size);
-    buffer[size] = '\0';
-
-    parse_config(buffer);
-
     try {
         unirec.init(argc, argv);
     } catch (HelpException& ex) {
@@ -116,10 +104,31 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
+    std::ifstream file("test.xml", std::ios::ate);
+    if (!file) {
+        std::cerr << "Error opening file!" << std::endl;
+        return 1;
+    }
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    char buffer[100000];
+    file.read(buffer, size);
+    buffer[size] = '\0';
+
+    Config config;
+    try {
+        config = parse_config(buffer);
+    
+    } catch (const std::exception& ex){
+        logger.error(ex.what());
+        return EXIT_FAILURE;
+    }
+
     try {
         UnirecInputInterface interface = unirec.buildInputInterface();
 
-        processUnirecRecords(interface);
+        processUnirecRecords(interface, config);
 
     } catch (std::exception& ex) {
         logger.error(ex.what());

@@ -1,32 +1,43 @@
+#pragma once
+
 #include <cstdint>
 #include <string>
 #include <variant>
 #include <vector>
 
-// enum class SpecialField {
-//     NONE = 0,
-//     ODID,
-// };
-
 enum ColumnType {
     Int8,
+    Int8Arr,
     Int16,
+    Int16Arr,
     Int32,
+    Int32Arr,
     Int64,
+    Int64Arr,
 
     UInt8,
+    UInt8Arr,
     UInt16,
+    UInt16Arr,
     UInt32,
+    UInt32Arr,
     UInt64,
+    UInt64Arr,
 
     Char,
+    CharArr,
     Float,
+    FloatArr,
     Double,
+    DoubleArr,
 
     Ipaddr,
-    macaddr,
+    IpaddrArr,
+    Macaddr,
+    MacaddrArr,
 
     Time,
+    TimeArr,
 
     String,
     Bytes,
@@ -34,14 +45,12 @@ enum ColumnType {
 
 /**
  * @class Config
- * @brief A struct containing all the configurable plugin parameters
+ * @brief A struct containing all the configurable parameters
  */
 struct Config {
     struct Column {
         std::string name;
-        bool nullable = false;
         ColumnType type;
-        // std::variant<const fds_iemgr_elem *, const fds_iemgr_alias *, SpecialField> source;
     };
 
     struct Endpoint {
@@ -59,6 +68,7 @@ struct Config {
 
     Connection connection;
     std::vector<Config::Column> columns;
+    std::string template_column_csv;
     uint64_t inserter_threads = 32;
     uint64_t blocks = 256;
     uint64_t block_insert_threshold = 100000;
@@ -71,7 +81,6 @@ struct Config {
  * @brief Parse a XML config into a structured form
  *
  * @param xml The config as a XML string
- * @param iemgr The iemgr instance
  * @return The parsed config
  */
 Config parse_config(char *xml);

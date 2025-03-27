@@ -1,3 +1,5 @@
+#pragma once
+
 #include <clickhouse/client.h>
 #include <thread>
 

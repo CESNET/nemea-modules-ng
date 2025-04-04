@@ -40,35 +40,37 @@ void signalHandler(int signum)
     g_stopFlag.store(true);
 }
 
-void handleFormatChange(UnirecInputInterface& interface, Config& config)
+void handleFormatChange(UnirecInputInterface& interface, Manager& manager)
 {
     interface.changeTemplate();
 
     ur_template_t* x = interface.getTemplate();
     char* res = ur_template_string_delimiter(x, ',');
 
-    if(config.template_column_csv != res) {
+    if(manager.m_config.template_column_csv != res) {
         throw std::runtime_error("Template in input doesn't match template in configuration.");
     }
 
     free(res);
 }
 
-void processNextRecord(UnirecInputInterface& interface)
+void processNextRecord(UnirecInputInterface& interface, Manager& manager)
 {
     std::optional<UnirecRecordView> unirecRecord = interface.receive();
     if (!unirecRecord) {
         return;
     }
+
+    manager.process_record(*unirecRecord);
 }
 
-void processUnirecRecords(UnirecInputInterface& interface, Config& config)
+void processUnirecRecords(UnirecInputInterface& interface, Manager& manager)
 {
     while (!g_stopFlag.load()) {
         try {
-            processNextRecord(interface);
+            processNextRecord(interface, manager);
         } catch (FormatChangeException& ex) {
-            handleFormatChange(interface, config);
+            handleFormatChange(interface, manager);
         } catch (EoFException& ex) {
             break;
         } catch (std::exception& ex) {
@@ -125,10 +127,19 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
+    std::unique_ptr<Manager> manager;
+    try {
+        manager = std::make_unique<Manager>(config);
+    } catch (const std::exception& ex) {
+        logger.error(ex.what());
+        return EXIT_FAILURE;
+    }
+
+
     try {
         UnirecInputInterface interface = unirec.buildInputInterface();
 
-        processUnirecRecords(interface, config);
+        processUnirecRecords(interface, *manager);
 
     } catch (std::exception& ex) {
         logger.error(ex.what());
@@ -137,3 +148,5 @@ int main(int argc, char** argv)
 
     return EXIT_SUCCESS;
 }
+
+// TODO(Sigull): check how datetime works clickhouse

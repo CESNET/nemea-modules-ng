@@ -4,43 +4,47 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <unirec/unirec.h>
 
 enum ColumnType {
-    Int8,
     Int8Arr,
-    Int16,
     Int16Arr,
-    Int32,
     Int32Arr,
-    Int64,
     Int64Arr,
 
-    UInt8,
     UInt8Arr,
-    UInt16,
     UInt16Arr,
-    UInt32,
     UInt32Arr,
-    UInt64,
     UInt64Arr,
 
-    Char,
     CharArr,
-    Float,
     FloatArr,
-    Double,
     DoubleArr,
+    IpaddrArr,
+    MacaddrArr,
+    TimeArr,
+    Bytes,
+
+    Int8 = 100,
+    Int16,
+    Int32,
+    Int64,
+
+    UInt8,
+    UInt16,
+    UInt32,
+    UInt64,
+
+    Char,
+    Float,
+    Double,
 
     Ipaddr,
-    IpaddrArr,
     Macaddr,
-    MacaddrArr,
 
     Time,
-    TimeArr,
-
+    
     String,
-    Bytes,
 };
 
 /**
@@ -51,6 +55,7 @@ struct Config {
     struct Column {
         std::string name;
         ColumnType type;
+        ur_field_id_t fieldID;
     };
 
     struct Endpoint {

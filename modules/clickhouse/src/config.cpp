@@ -92,7 +92,7 @@ static const std::map<std::string, ColumnType> string_to_columntype =
      {"float", ColumnType::Float },     {"float*", ColumnType::FloatArr },
      {"double", ColumnType::Double },   {"double*", ColumnType::DoubleArr },
      {"ipaddr", ColumnType::Ipaddr },   {"ipaddr*", ColumnType::IpaddrArr },
-     {"macaddr", ColumnType::macaddr }, {"macaddr*", ColumnType::macaddrArr },
+     {"macaddr", ColumnType::Macaddr }, {"macaddr*", ColumnType::MacaddrArr },
      {"time", ColumnType::Time },       {"time*", ColumnType::TimeArr },
      {"string", ColumnType::String },
      {"bytes", ColumnType::Bytes }};
@@ -123,6 +123,8 @@ static void parse_columns(rapidxml::xml_node<>* columns_node, Config& config) {
         
         trim_left(name);
         column.name = name;
+
+        column.fieldID = ur_get_id_by_name(column.name.c_str());
 
         config.columns.push_back(column);
 

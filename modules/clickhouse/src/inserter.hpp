@@ -2,22 +2,49 @@
 
 #include <clickhouse/client.h>
 #include <thread>
+#include <variant>
+#include <unirec++/unirec.hpp>
 
 #include "syncqueue.hpp"
 #include "syncstack.hpp"
 #include "logger.hpp"
+#include "config.hpp"
+
+using ValueVariant = std::variant<
+    uint8_t, Nemea::UnirecArray<uint8_t>,
+    uint16_t, Nemea::UnirecArray<uint16_t>,
+    uint32_t, Nemea::UnirecArray<uint32_t>,
+    uint64_t, Nemea::UnirecArray<uint64_t>,
+    int8_t, Nemea::UnirecArray<int8_t>,
+    int16_t, Nemea::UnirecArray<int16_t>,
+    int32_t, Nemea::UnirecArray<int32_t>,
+    int64_t, Nemea::UnirecArray<int64_t>,
+    float, Nemea::UnirecArray<float>,
+    double, Nemea::UnirecArray<double>,
+    Nemea::IpAddress, Nemea::UnirecArray<Nemea::IpAddress>,
+    Nemea::MacAddress, Nemea::UnirecArray<Nemea::MacAddress>,
+    Nemea::UrTime, Nemea::UnirecArray<Nemea::UrTime>,
+    std::string
+>;
+
+using GetterFn = std::function<void (Nemea::UnirecRecordView& record, ur_field_id_t fieldID, ValueVariant &value)>;
+using IsZeroFn = std::function<bool (ValueVariant &value)>;
+using ColumnWriterFn = std::function<void (ValueVariant *value, clickhouse::Column &column)>;
+// using ExtractorFn = std::function<std::optional<fds_drec_field> (fds_drec &drec, uint16_t iter_flags)>;
+using ColumnFactoryFn = std::function<std::shared_ptr<clickhouse::Column>()>;
 
 struct ColumnCtx {
     std::string name;
-    std::string type;
+    ColumnType type;
+    ur_field_id_t fieldID;
 
-    // ColumnFactoryFn column_factory = nullptr;
+    ColumnFactoryFn column_factory = nullptr;
     // ExtractorFn extractor = nullptr;
-    // GetterFn getter = nullptr;
-    // ColumnWriterFn column_writer = nullptr;
+    GetterFn getter = nullptr;
+    ColumnWriterFn column_writer = nullptr;
 
     bool has_value = false;
-    // ValueVariant value_buffer;
+    ValueVariant value_buffer;
 };
 
 struct BlockCtx {

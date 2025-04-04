@@ -77,3 +77,20 @@ void Inserter::run() {
         m_empty_blocks.put(block);
     }
 }
+
+void Inserter::stop()
+{
+    m_stop_signal = true;
+}
+
+void Inserter::join()
+{
+    m_thread.join();
+}
+
+void Inserter::check_error()
+{
+    if (m_errored) {
+        std::rethrow_exception(m_exception);
+    }
+}

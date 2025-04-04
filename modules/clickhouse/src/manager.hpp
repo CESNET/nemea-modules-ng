@@ -10,16 +10,19 @@ class Manager : Nonmoveable, Noncopyable {
          *
          * @param config parsed in main
          */
-        Manager(Logger& logger);
+        Manager(Config config);
     
         /**
          * @brief Stop the plugin and wait till it is stopped (blocking)
          */
         void stop();
     
+        const Config m_config;
+
+        bool process_record(Nemea::UnirecRecordView& record);
+
     private:
         Logger& m_logger;
-        Config m_config;
         std::vector<ColumnCtx> m_columns;
     
         BlockCtx *m_current_block = nullptr;
@@ -34,7 +37,5 @@ class Manager : Nonmoveable, Noncopyable {
         std::time_t m_start_time = 0;
         std::time_t m_last_stats_print_time = 0;
         std::time_t m_last_insert_time = 0;
-
-        bool process_record();
 };
     

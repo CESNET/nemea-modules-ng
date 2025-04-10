@@ -47,53 +47,53 @@ static std::vector<in6_addr> get_ip_arr(Nemea::UnirecRecordView& record, ur_fiel
     return result;
 }
 
-// static std::vector<uint8_t> get_mac(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
-// {
-//     Nemea::MacAddress mac = record.getFieldAsType<Nemea::MacAddress>(fieldID);
-//     std::vector<uint8_t> result;
-//     result.reserve(6);
-//     for (int i=0; i < 6; i++) {
-//         result.push_back(mac.mac.bytes[i]);
-//     }
-//     return result;
-// }
+static std::vector<uint8_t> get_mac(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
+{
+    Nemea::MacAddress mac = record.getFieldAsType<Nemea::MacAddress>(fieldID);
+    std::vector<uint8_t> result;
+    result.reserve(6);
+    for (int i=0; i < 6; i++) {
+        result.push_back(mac.mac.bytes[i]);
+    }
+    return result;
+}
 
-// static std::vector<std::vector<uint8_t>> get_mac_arr(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
-// {
-//     Nemea::UnirecArray<Nemea::MacAddress> mac_arr = record.getFieldAsUnirecArray<Nemea::MacAddress>(fieldID);
-//     std::vector<std::vector<uint8_t>> result;
-//     result.reserve(mac_arr.size());
-//     for (const auto& value : mac_arr) {
-//         result.push_back(std::vector<uint8_t>());
-//         for (int i=0; i < 6; i++) {
-//             result.back().push_back(value.mac.bytes[i]);
-//         }
-//     }
-//     return result;
-// }
+static std::vector<std::vector<uint8_t>> get_mac_arr(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
+{
+    Nemea::UnirecArray<Nemea::MacAddress> mac_arr = record.getFieldAsUnirecArray<Nemea::MacAddress>(fieldID);
+    std::vector<std::vector<uint8_t>> result;
+    result.reserve(mac_arr.size());
+    for (const auto& value : mac_arr) {
+        result.push_back(std::vector<uint8_t>());
+        for (int i=0; i < 6; i++) {
+            result.back().push_back(value.mac.bytes[i]);
+        }
+    }
+    return result;
+}
 
-// static uint64_t get_time(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
-// {
-//     Nemea::UrTime time = record.getFieldAsType<Nemea::UrTime>(fieldID);
-//     return static_cast<uint64_t>(time.time);
-// }
+static uint64_t get_time(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
+{
+    Nemea::UrTime time = record.getFieldAsType<Nemea::UrTime>(fieldID);
+    return static_cast<uint64_t>(time.time);
+}
 
-// static std::vector<uint64_t> get_time_arr(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
-// {
-//     Nemea::UnirecArray<Nemea::UrTime> time_arr = record.getFieldAsUnirecArray<Nemea::UrTime>(fieldID);
-//     std::vector<uint64_t> result;
-//     result.reserve(time_arr.size());
-//     for (const auto& value : time_arr) {
-//         result.push_back(value.time);
-//     }
-//     return result;
-// }
+static std::vector<uint64_t> get_time_arr(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
+{
+    Nemea::UnirecArray<Nemea::UrTime> time_arr = record.getFieldAsUnirecArray<Nemea::UrTime>(fieldID);
+    std::vector<uint64_t> result;
+    result.reserve(time_arr.size());
+    for (const auto& value : time_arr) {
+        result.push_back(value.time);
+    }
+    return result;
+}
 
-// static std::string get_string(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
-// {
-//     std::string str = record.getFieldAsType<std::string>(fieldID);
-//     return str;
-// }
+static std::string get_string(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
+{
+    std::string str = record.getFieldAsType<std::string>(fieldID);
+    return str;
+}
 }
 
 template<ColumnType> struct DataTypeTraits {};
@@ -242,41 +242,41 @@ template<> struct DataTypeTraits<ColumnType::IpaddrArr> {
     static constexpr auto Getter = &getters::get_ip_arr;
 };
 
-// template<> struct DataTypeTraits<ColumnType::Macaddr> {
-//     using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>;
-//     static constexpr std::string_view ClickhouseTypeName = "Array(UInt8)";
-//     static constexpr auto Getter = &getters::get_mac;
-// };
+template<> struct DataTypeTraits<ColumnType::Macaddr> {
+    using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>;
+    static constexpr std::string_view ClickhouseTypeName = "Array(UInt8)";
+    static constexpr auto Getter = &getters::get_mac;
+};
 
-// template<> struct DataTypeTraits<ColumnType::MacaddrArr> {
-//     using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>>;
-//     static constexpr std::string_view ClickhouseTypeName = "Array(Array(UInt8))";
-//     static constexpr auto Getter = &getters::get_mac_arr;
-// };
+template<> struct DataTypeTraits<ColumnType::MacaddrArr> {
+    using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>>;
+    static constexpr std::string_view ClickhouseTypeName = "Array(Array(UInt8))";
+    static constexpr auto Getter = &getters::get_mac_arr;
+};
 
-// template<> struct DataTypeTraits<ColumnType::Time> {
-//     using ColumnType = ColumnDateTime64<9>;
-//     static constexpr std::string_view ClickhouseTypeName = "DateTime64(9)";
-//     static constexpr auto Getter = &getters::get_time;
-// };
+template<> struct DataTypeTraits<ColumnType::Time> {
+    using ColumnType = ColumnDateTime64<9>;
+    static constexpr std::string_view ClickhouseTypeName = "DateTime64(9)";
+    static constexpr auto Getter = &getters::get_time;
+};
 
-// template<> struct DataTypeTraits<ColumnType::TimeArr> {
-//     using ColumnType = clickhouse::ColumnArrayT<ColumnDateTime64<9>>;
-//     static constexpr std::string_view ClickhouseTypeName = "Array(DateTime64(9))";
-//     static constexpr auto Getter = &getters::get_time_arr;
-// };
+template<> struct DataTypeTraits<ColumnType::TimeArr> {
+    using ColumnType = clickhouse::ColumnArrayT<ColumnDateTime64<9>>;
+    static constexpr std::string_view ClickhouseTypeName = "Array(DateTime64(9))";
+    static constexpr auto Getter = &getters::get_time_arr;
+};
 
-// template<> struct DataTypeTraits<ColumnType::String> {
-//     using ColumnType = clickhouse::ColumnString;
-//     static constexpr std::string_view ClickhouseTypeName = "String";
-//     static constexpr auto Getter = &getters::get_string;
-// };
+template<> struct DataTypeTraits<ColumnType::String> {
+    using ColumnType = clickhouse::ColumnString;
+    static constexpr std::string_view ClickhouseTypeName = "String";
+    static constexpr auto Getter = &getters::get_string;
+};
 
-// template<> struct DataTypeTraits<ColumnType::Bytes> {
-//     using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>;
-//     static constexpr std::string_view ClickhouseTypeName = "Array(UInt8)";
-//     static constexpr auto Getter = &getters::get_value_arr<uint8_t>;
-// };
+template<> struct DataTypeTraits<ColumnType::Bytes> {
+    using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>;
+    static constexpr std::string_view ClickhouseTypeName = "Array(UInt8)";
+    static constexpr auto Getter = &getters::get_value_arr<uint8_t>;
+};
 
 
 template <typename Func>
@@ -295,8 +295,8 @@ static void visit(ColumnType type, Func func)
         case ColumnType::Float:             func(DataTypeTraits<ColumnType::Float>{});            break;
         case ColumnType::Double:            func(DataTypeTraits<ColumnType::Double>{});            break;
         case ColumnType::Ipaddr:            func(DataTypeTraits<ColumnType::Ipaddr>{});              break;
-        // case ColumnType::Time:              func(DataTypeTraits<ColumnType::Time>{});                break;
-        // case ColumnType::String:            func(DataTypeTraits<ColumnType::String>{});            break;
+        case ColumnType::Time:              func(DataTypeTraits<ColumnType::Time>{});                break;
+        case ColumnType::String:            func(DataTypeTraits<ColumnType::String>{});            break;
         case ColumnType::Int8Arr:           func(DataTypeTraits<ColumnType::Int8Arr>{});              break;
         case ColumnType::Int16Arr:          func(DataTypeTraits<ColumnType::Int16Arr>{});             break;
         case ColumnType::Int32Arr:          func(DataTypeTraits<ColumnType::Int32Arr>{});             break;
@@ -309,10 +309,10 @@ static void visit(ColumnType type, Func func)
         case ColumnType::FloatArr:          func(DataTypeTraits<ColumnType::FloatArr>{});            break;
         case ColumnType::DoubleArr:         func(DataTypeTraits<ColumnType::DoubleArr>{});            break;
         case ColumnType::IpaddrArr:         func(DataTypeTraits<ColumnType::IpaddrArr>{});              break;
-        // case ColumnType::Macaddr:           func(DataTypeTraits<ColumnType::Macaddr>{});              break;
-        // case ColumnType::MacaddrArr:        func(DataTypeTraits<ColumnType::MacaddrArr>{});              break;
-        // case ColumnType::TimeArr:           func(DataTypeTraits<ColumnType::TimeArr>{});                break;
-        // case ColumnType::Bytes:             func(DataTypeTraits<ColumnType::Bytes>{});            break;
+        case ColumnType::Macaddr:           func(DataTypeTraits<ColumnType::Macaddr>{});              break;
+        case ColumnType::MacaddrArr:        func(DataTypeTraits<ColumnType::MacaddrArr>{});              break;
+        case ColumnType::TimeArr:           func(DataTypeTraits<ColumnType::TimeArr>{});                break;
+        case ColumnType::Bytes:             func(DataTypeTraits<ColumnType::Bytes>{});            break;
         default:                            throw std::runtime_error("invalid data type");
     }
 }
@@ -333,8 +333,8 @@ static void visit_non_arr(ColumnType type, Func func)
         case ColumnType::Float:             func(DataTypeTraits<ColumnType::Float>{});            break;
         case ColumnType::Double:            func(DataTypeTraits<ColumnType::Double>{});            break;
         case ColumnType::Ipaddr:            func(DataTypeTraits<ColumnType::Ipaddr>{});              break;
-        // case ColumnType::Time:              func(DataTypeTraits<ColumnType::Time>{});                break;
-        // case ColumnType::String:            func(DataTypeTraits<ColumnType::String>{});            break;
+        case ColumnType::Time:              func(DataTypeTraits<ColumnType::Time>{});                break;
+        case ColumnType::String:            func(DataTypeTraits<ColumnType::String>{});            break;
         default:                            throw std::runtime_error("invalid data type");
     }
 }
@@ -355,10 +355,10 @@ static void visit_arr(ColumnType type, Func func)
         case ColumnType::FloatArr:          func(DataTypeTraits<ColumnType::FloatArr>{});            break;
         case ColumnType::DoubleArr:         func(DataTypeTraits<ColumnType::DoubleArr>{});            break;
         case ColumnType::IpaddrArr:         func(DataTypeTraits<ColumnType::IpaddrArr>{});              break;
-        // case ColumnType::Macaddr:           func(DataTypeTraits<ColumnType::Macaddr>{});              break;
-        // case ColumnType::MacaddrArr:        func(DataTypeTraits<ColumnType::MacaddrArr>{});              break;
-        // case ColumnType::TimeArr:           func(DataTypeTraits<ColumnType::TimeArr>{});                break;
-        // case ColumnType::Bytes:             func(DataTypeTraits<ColumnType::Bytes>{});            break;
+        case ColumnType::Macaddr:           func(DataTypeTraits<ColumnType::Macaddr>{});              break;
+        case ColumnType::MacaddrArr:        func(DataTypeTraits<ColumnType::MacaddrArr>{});              break;
+        case ColumnType::TimeArr:           func(DataTypeTraits<ColumnType::TimeArr>{});                break;
+        case ColumnType::Bytes:             func(DataTypeTraits<ColumnType::Bytes>{});            break;
         default:                            throw std::runtime_error("invalid data type");
     }
 }

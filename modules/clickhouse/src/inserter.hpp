@@ -11,18 +11,18 @@
 #include "config.hpp"
 
 using ValueVariant = std::variant<
-    uint8_t, Nemea::UnirecArray<uint8_t>,
-    uint16_t, Nemea::UnirecArray<uint16_t>,
-    uint32_t, Nemea::UnirecArray<uint32_t>,
-    uint64_t, Nemea::UnirecArray<uint64_t>,
-    int8_t, Nemea::UnirecArray<int8_t>,
-    int16_t, Nemea::UnirecArray<int16_t>,
-    int32_t, Nemea::UnirecArray<int32_t>,
-    int64_t, Nemea::UnirecArray<int64_t>,
-    float, Nemea::UnirecArray<float>,
-    double, Nemea::UnirecArray<double>,
-    Nemea::IpAddress, Nemea::UnirecArray<Nemea::IpAddress>,
-    Nemea::MacAddress, Nemea::UnirecArray<Nemea::MacAddress>,
+    uint8_t, 
+    uint16_t,
+    uint32_t,
+    uint64_t,
+    int8_t,  
+    int16_t, 
+    int32_t, 
+    int64_t, 
+    float,   
+    double,   
+    std::shared_ptr<clickhouse::ColumnArray>,
+    in6_addr,
     Nemea::UrTime, Nemea::UnirecArray<Nemea::UrTime>,
     std::string
 >;

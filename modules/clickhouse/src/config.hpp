@@ -25,6 +25,8 @@ enum ColumnType {
     TimeArr,
     Bytes,
 
+    Macaddr,
+
     Int8 = 100,
     Int16,
     Int32,
@@ -40,10 +42,7 @@ enum ColumnType {
     Double,
 
     Ipaddr,
-    Macaddr,
-
     Time,
-    
     String,
 };
 

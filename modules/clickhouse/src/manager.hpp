@@ -21,6 +21,8 @@ class Manager : Nonmoveable, Noncopyable {
 
         bool process_record(Nemea::UnirecRecordView& record);
 
+        void update_fieldIDs();
+
     private:
         Logger& m_logger;
         std::vector<ColumnCtx> m_columns;

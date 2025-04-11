@@ -30,6 +30,16 @@ static std::vector<Value> get_value_arr(Nemea::UnirecRecordView& record, ur_fiel
     return result;
 }
 
+static std::vector<uint8_t> get_bytes(Nemea::UnirecRecordView& record, ur_field_id_t fieldID) {
+    Nemea::UnirecArray<std::byte> arr = record.getFieldAsUnirecArray<std::byte>(fieldID);
+    std::vector<uint8_t> result;
+    result.reserve(arr.size());
+    for (const auto& value : arr) {
+        result.push_back((char)value);
+    }
+    return result;
+}
+
 static in6_addr get_ip(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
 {
     Nemea::IpAddress addr = record.getFieldAsType<Nemea::IpAddress>(fieldID);
@@ -275,7 +285,7 @@ template<> struct DataTypeTraits<ColumnType::String> {
 template<> struct DataTypeTraits<ColumnType::Bytes> {
     using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>;
     static constexpr std::string_view ClickhouseTypeName = "Array(UInt8)";
-    static constexpr auto Getter = &getters::get_value_arr<uint8_t>;
+    static constexpr auto Getter = &getters::get_bytes;
 };
 
 
@@ -459,7 +469,7 @@ Manager::Manager(Config config)
     }
 
     // Prepare blocks
-    m_logger.info("Preparing %d blocks", m_config.blocks);
+    m_logger.info("Preparing {} blocks", m_config.blocks);
     for (unsigned int i = 0; i < m_config.blocks; i++) {
         m_blocks.emplace_back(std::make_unique<BlockCtx>());
         BlockCtx &block = *m_blocks.back().get();
@@ -471,7 +481,7 @@ Manager::Manager(Config config)
     }
 
     // Prepare inserters
-    m_logger.info("Preparing %d inserter threads", m_config.inserter_threads);
+    m_logger.info("Preparing {} inserter threads", m_config.inserter_threads);
     for (unsigned int i = 0; i < m_config.inserter_threads; i++) {
         auto client_opts = clickhouse::ClientOptions()
             .SetEndpoints(endpoints)
@@ -498,6 +508,7 @@ bool Manager::process_record(Nemea::UnirecRecordView& record) {
         m_current_block = m_empty_blocks.get();
     }
 
+    
     for (ColumnCtx &ctx : m_columns) {
         ctx.getter(record, ctx.fieldID, ctx.value_buffer);
         ctx.has_value = true;
@@ -532,6 +543,24 @@ bool Manager::process_record(Nemea::UnirecRecordView& record) {
     }
 
     return true;
+}
+
+void Manager::update_fieldIDs() {
+    // Export what's left in the last block
+    if (m_current_block && m_current_block->rows > 0) {
+        m_filled_blocks.put(m_current_block);
+        m_current_block = nullptr;
+    }
+    
+    for(auto& column : m_columns) {
+        column.fieldID = ur_get_id_by_name(column.name.c_str());
+        
+        if (column.fieldID == UR_E_INVALID_NAME) {
+            printf("Invalid field name: %s\n", column.name.c_str());
+        }
+    }
+
+    m_logger.info("Updated field ids");
 }
 
 void Manager::stop() {

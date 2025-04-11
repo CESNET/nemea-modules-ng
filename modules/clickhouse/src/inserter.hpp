@@ -11,18 +11,19 @@
 #include "config.hpp"
 
 using ValueVariant = std::variant<
-    uint8_t, std::vector<uint8_t>,
-    uint16_t, std::vector<uint16_t>,
-    uint32_t, std::vector<uint32_t>,
-    uint64_t, std::vector<uint64_t>,
-    int8_t, std::vector<uint8_t>,
-    int16_t, std::vector<uint16_t>,
-    int32_t, std::vector<uint32_t>,
-    int64_t, std::vector<uint64_t>,
-    float, std::vector<float>, 
-    double, std::vector<double>,
-    in6_addr, std::vector<in6_addr>,
+    int8_t,  std::vector<int8_t>,
+    int16_t,  std::vector<int16_t>,
+    int32_t,  std::vector<int32_t>,
+    int64_t,  std::vector<int64_t>,
+    uint8_t,  std::vector<uint8_t>,
+    uint16_t,  std::vector<uint16_t>,
+    uint32_t,  std::vector<uint32_t>,
+    uint64_t,  std::vector<uint64_t>,
+    float,  std::vector<float>,
+    double,  std::vector<double>,
+    std::vector<char>,
     std::vector<std::vector<uint8_t>>,
+    in6_addr, std::vector<in6_addr>,
     std::string
 >;
 

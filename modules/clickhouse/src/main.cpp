@@ -51,6 +51,8 @@ void handleFormatChange(UnirecInputInterface& interface, Manager& manager)
         throw std::runtime_error("Template in input doesn't match template in configuration.");
     }
 
+    manager.update_fieldIDs();
+
     free(res);
 }
 
@@ -127,6 +129,8 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
+    print_config(config);
+
     std::unique_ptr<Manager> manager;
     try {
         manager = std::make_unique<Manager>(config);
@@ -134,7 +138,6 @@ int main(int argc, char** argv)
         logger.error(ex.what());
         return EXIT_FAILURE;
     }
-
 
     try {
         UnirecInputInterface interface = unirec.buildInputInterface();

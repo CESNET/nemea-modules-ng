@@ -88,3 +88,5 @@ struct Config {
  * @return The parsed config
  */
 Config parse_config(char *xml);
+
+void print_config(Config config);

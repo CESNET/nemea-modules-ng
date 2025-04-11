@@ -124,7 +124,7 @@ static void parse_columns(rapidxml::xml_node<>* columns_node, Config& config) {
         trim_left(name);
         column.name = name;
 
-        column.fieldID = ur_get_id_by_name(column.name.c_str());
+        column.fieldID = 0;
 
         config.columns.push_back(column);
 
@@ -220,4 +220,17 @@ Config parse_config(char *xml_string) {
     parse_root(doc.first_node(), config);
 
     return config;
+}
+
+void print_config(Config config) {
+    for(auto endpoint : config.connection.endpoints) {
+        std::cout << "endpoint -> " << endpoint.host << ":" << endpoint.port << "\n"; 
+    }
+
+    std::cout << config.connection.user << " ";
+    std::cout << config.connection.password << " ";
+    std::cout << config.connection.database << " ";
+    std::cout << config.connection.table << " ";
+
+    std::cout << "\n";
 }

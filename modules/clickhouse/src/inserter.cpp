@@ -37,7 +37,7 @@ void Inserter::insert(clickhouse::Block &block) {
             if (needs_reconnect) {
                 m_client->ResetConnectionEndpoint();
                 // ensure_schema(*m_client.get(), m_table, m_columns);
-                m_logger.warn("[Worker %d] Connected to %s:%d due to error with previous endpoint", m_id,
+                m_logger.warn("[Worker {}}] Connected to {}:{} due to error with previous endpoint", m_id,
                               m_client->GetCurrentEndpoint()->host.c_str(), m_client->GetCurrentEndpoint()->port);
             }
 
@@ -45,7 +45,7 @@ void Inserter::insert(clickhouse::Block &block) {
             break;
 
         } catch (const std::exception &ex) {
-            m_logger.error("[Worker %d] Insert failed: %s - retrying in 1 second", m_id, ex.what());
+            m_logger.error("[Worker {}] Insert failed: {} - retrying in 1 second", m_id, ex.what());
             needs_reconnect = true;
         }
 
@@ -56,7 +56,7 @@ void Inserter::insert(clickhouse::Block &block) {
 void Inserter::run() {
     m_client = std::make_unique<clickhouse::Client>(m_client_opts);
     // ensure_schema(*m_client.get(), m_table, m_columns);
-    m_logger.info("[Worker %d] Connected to %s:%d", m_id,
+    m_logger.info("[Worker {}] Connected to {}:{}", m_id,
                   m_client->GetCurrentEndpoint()->host.c_str(), m_client->GetCurrentEndpoint()->port);
 
     while (!m_stop_signal) {

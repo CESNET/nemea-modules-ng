@@ -30,7 +30,6 @@ using ValueVariant = std::variant<
 using GetterFn = std::function<void (Nemea::UnirecRecordView& record, ur_field_id_t fieldID, ValueVariant &value)>;
 using IsZeroFn = std::function<bool (ValueVariant &value)>;
 using ColumnWriterFn = std::function<void (ValueVariant *value, clickhouse::Column &column)>;
-// using ExtractorFn = std::function<std::optional<fds_drec_field> (fds_drec &drec, uint16_t iter_flags)>;
 using ColumnFactoryFn = std::function<std::shared_ptr<clickhouse::Column>()>;
 
 struct ColumnCtx {
@@ -39,7 +38,6 @@ struct ColumnCtx {
     ur_field_id_t fieldID;
 
     ColumnFactoryFn column_factory = nullptr;
-    // ExtractorFn extractor = nullptr;
     GetterFn getter = nullptr;
     ColumnWriterFn column_writer = nullptr;
 
@@ -53,20 +51,10 @@ struct BlockCtx {
     unsigned int rows;
 };
 
-class Noncopyable {
-    public:
-        Noncopyable() = default; // Default constructor is fine
-        Noncopyable(const Noncopyable&) = delete; // Delete copy constructor
-        Noncopyable& operator=(const Noncopyable&) = delete; // Delete copy assignment operator
-};
-
-class Nonmoveable {
-    public:
-        Nonmoveable() = default; // Default constructor is fine
-        Nonmoveable(Nonmoveable&&) = delete; // Delete move constructor
-        Nonmoveable& operator=(Nonmoveable&&) = delete; // Delete move assignment operator
-};
-
+/**
+ * @brief A worker class responsible for inserting data into a ClickHouse table.
+ * 
+ */
 class Inserter : Nonmoveable, Noncopyable {
     public:
         /**
@@ -116,7 +104,7 @@ class Inserter : Nonmoveable, Noncopyable {
         std::exception_ptr m_exception = nullptr;
     
         clickhouse::ClientOptions m_client_opts;
-        const std::vector<ColumnCtx>& m_columns;
+        const std::vector<ColumnCtx>& m_columns; // defines clickhouse table schema
         const std::string& m_table;
         SyncQueue<BlockCtx *>& m_filled_blocks;
         SyncStack<BlockCtx *>& m_empty_blocks;

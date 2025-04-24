@@ -5,7 +5,21 @@
 #include <memory>
 #include <string>
 
-class Logger {
+class Noncopyable {
+    public:
+        Noncopyable() = default; // Default constructor is fine
+        Noncopyable(const Noncopyable&) = delete; // Delete copy constructor
+        Noncopyable& operator=(const Noncopyable&) = delete; // Delete copy assignment operator
+};
+
+class Nonmoveable {
+    public:
+        Nonmoveable() = default; // Default constructor is fine
+        Nonmoveable(Nonmoveable&&) = delete; // Delete move constructor
+        Nonmoveable& operator=(Nonmoveable&&) = delete; // Delete move assignment operator
+};
+
+class Logger : Nonmoveable, Noncopyable {
 public:
     static Logger& getInstance() {
         static Logger instance;
@@ -31,9 +45,6 @@ public:
     void error(const std::string& msg, const Args&... args) {
         logger_->error(msg, args...);
     }
-
-    Logger(const Logger&) = delete;
-    Logger& operator=(const Logger&) = delete;
 
 private:
     Logger() {

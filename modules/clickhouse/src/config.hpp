@@ -87,6 +87,6 @@ struct Config {
  * @param xml The config as a XML string
  * @return The parsed config
  */
-Config parse_config(char *xml);
+Config parse_config(std::string filename);
 
 void print_config(Config config);

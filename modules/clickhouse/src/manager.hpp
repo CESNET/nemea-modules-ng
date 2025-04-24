@@ -3,25 +3,50 @@
 #include "config.hpp"
 #include "inserter.hpp"
 
+/**
+ * @brief Converts Unirec records to clickhouse format, buffers them and
+ *        sends them through inserters.
+ *
+ * This class should be instantiated only once. It owns blocks of columns and
+ * and inserters. It also owns synced data structures which keep track of currently
+ * filled blocks. It fills the blocks inside process_record and inserters take fully
+ * filled blocks through sync queue by themselves to send.
+ *
+ */
 class Manager : Nonmoveable, Noncopyable {
     public:
         /**
          * @brief Instantiate the manager instance
          *
-         * @param config parsed in main
+         * @param config Config instance parsed in main.
          */
         Manager(Config config);
     
         /**
-         * @brief Stop the plugin and wait till it is stopped (blocking)
+         * @brief Stop the plugin and wait till it is stopped (blocking).
          */
         void stop();
-    
-        const Config m_config;
-
-        bool process_record(Nemea::UnirecRecordView& record);
-
+        
+        /**
+         * @brief Takes unirec record, converts it to clickhouse format and stores it. 
+         *        Adds to filled blocks if a block was sufficiently filled or none were sent
+         *        in a specified time frame (m_config.block_insert_max_delay_secs). 
+         * 
+         * @param record Unirec record view to parse
+         */
+        void process_record(Nemea::UnirecRecordView& record);
+        
+        /**
+        * @brief changes unirec ids of fields after getting template in main.
+        * 
+        */
         void update_fieldIDs();
+
+        /**
+         * @brief Stores config specified by argument.
+         * 
+         */
+        const Config m_config;
 
     private:
         Logger& m_logger;

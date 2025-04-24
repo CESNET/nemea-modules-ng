@@ -1,13 +1,14 @@
 /**
  * @file
- * @author Karel Hynek <hynekkar@cesnet.cz>
- * @author Pavel Siska <siska@cesnet.cz>
- * @brief Sampling Module: Sample flowdata
+ * @author Daniel Pelanek <xpeland>
+ * @brief Clickhouse Module: resend flowdata to clickhouse
  *
- * This file contains the main function and supporting functions for the Unirec Sampling Module.
- * This module process Unirec records thourgh a bidirectional interface and samples them accoring
- * to user specified sampling rate. It utilizes the Unirec++ library for
- * record handling, argparse for command-line argument parsing.
+ * This file contains the main function and supporting functions for the Unirec Clickhouse Module.
+ * This module takes Unirec records from a unidirectional interface, converts them to 
+ * Clickhouse format buffers them and then sends them to the specified Clickhouse server in config. 
+ * It utilizes the Unirec++ library for record handling, argparse for command-line argument parsing,
+ * rapidxml for config parsing and clickhouse cpp library.
+ * Ported from ipfixcol2 clickhouse plugin.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -17,7 +18,6 @@
 #include "config.hpp"
 #include "manager.hpp"
 
-// #include <appFs.hpp>
 #include <argparse/argparse.hpp>
 #include <atomic>
 #include <csignal>
@@ -40,6 +40,18 @@ void signalHandler(int signum)
     g_stopFlag.store(true);
 }
 
+/**
+ * @brief Handle format change exception by adjusting the template and check template
+ *        against the one defined in config.
+ *
+ * This function is called when a `FormatChangeException` is caught in the main loop.
+ * It adjusts the template in the input interface to handle the format change but in this
+ * case the program only continues if the template is the same as defined in config. Meaning
+ * it only continues if the template changes to the same one.
+ *
+ * @param interface input interface for Unirec communication.
+ * @param manager Manager instance which buffers and sends data to clickhouse.
+ */
 void handleFormatChange(UnirecInputInterface& interface, Manager& manager)
 {
     interface.changeTemplate();
@@ -48,7 +60,7 @@ void handleFormatChange(UnirecInputInterface& interface, Manager& manager)
     char* res = ur_template_string_delimiter(x, ',');
 
     if(manager.m_config.template_column_csv != res) {
-        throw std::runtime_error("Template in input doesn't match template in configuration.");
+        throw std::runtime_error("Template in input interface doesn't match template in configuration.");
     }
 
     manager.update_fieldIDs();
@@ -56,6 +68,12 @@ void handleFormatChange(UnirecInputInterface& interface, Manager& manager)
     free(res);
 }
 
+/**
+ * @brief Process unirec record in manager and forward to 
+ *
+ * @param interface input interface for Unirec communication.
+ * @param manager Manager instance which buffers and sends data to clickhouse.
+ */
 void processNextRecord(UnirecInputInterface& interface, Manager& manager)
 {
     std::optional<UnirecRecordView> unirecRecord = interface.receive();
@@ -66,6 +84,16 @@ void processNextRecord(UnirecInputInterface& interface, Manager& manager)
     manager.process_record(*unirecRecord);
 }
 
+/**
+ * @brief Process Unirec records.
+ *
+ * The `processUnirecRecords` function continuously receives Unirec records through the provided
+ * input interface (`interface`). Each received record is processed, buffered and
+ * then sent to a clickhouse database.
+ *
+ * @param interface input interface for Unirec communication.
+ * @param manager Manager instance which buffers and sends data to clickhouse.
+ */
 void processUnirecRecords(UnirecInputInterface& interface, Manager& manager)
 {
     while (!g_stopFlag.load()) {
@@ -85,7 +113,12 @@ int main(int argc, char** argv)
 {
     argparse::ArgumentParser program("Unirec Clickhouse");
 
-    Unirec unirec({1, 0, "clickhouse", "Unirec loader module"});
+    program.add_argument("-c", "--config")
+		.required()
+		.help("specify the xml config file. Format is in readme.")
+		.metavar("xml_file");
+
+    Unirec unirec({1, 0, "clickhouse", "Unirec clickhouse module"});
 
     auto& logger = Logger::getInstance();
 
@@ -108,21 +141,9 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    std::ifstream file("test.xml", std::ios::ate);
-    if (!file) {
-        std::cerr << "Error opening file!" << std::endl;
-        return 1;
-    }
-    std::streamsize size = file.tellg();
-    file.seekg(0, std::ios::beg);
-
-    char buffer[100000];
-    file.read(buffer, size);
-    buffer[size] = '\0';
-
     Config config;
     try {
-        config = parse_config(buffer);
+        config = parse_config(program.get<std::string>("--config"));
     
     } catch (const std::exception& ex){
         logger.error(ex.what());
@@ -144,6 +165,10 @@ int main(int argc, char** argv)
 
         processUnirecRecords(interface, *manager);
 
+        logger.info("here");
+
+        manager->stop();
+
     } catch (std::exception& ex) {
         logger.error(ex.what());
         return EXIT_FAILURE;
@@ -151,5 +176,3 @@ int main(int argc, char** argv)
 
     return EXIT_SUCCESS;
 }
-
-// TODO(Sigull): check how datetime works clickhouse

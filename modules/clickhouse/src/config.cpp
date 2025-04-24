@@ -10,7 +10,8 @@
 #include <string.h>
 #include <sstream>
 #include <map>
-#include <algorithm> 
+#include <algorithm>
+#include <fstream>
 
 static inline void trim_left(std::string &s) {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
@@ -208,14 +209,28 @@ static void parse_root(rapidxml::xml_node<>* root_node, Config& config) {
     }
 }
 
-Config parse_config(char *xml_string) {
+std::string load_file(std::string filename) {
+    std::ifstream file(filename);
+
+    if (!file) {
+        std::stringstream ss;
+        ss << "Could not open config file: " << filename;
+        throw std::runtime_error(ss.str());
+    }
+
+    std::ostringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+}
+
+Config parse_config(std::string filename) {
+    std::string xml_string = load_file(filename);
+
     Config config{};
 
     rapidxml::xml_document<> doc;
 
-    doc.parse<0>(xml_string);
-
-    // rapidxml::print(std::cout, doc, 0);
+    doc.parse<0>(xml_string.data());
 
     parse_root(doc.first_node(), config);
 

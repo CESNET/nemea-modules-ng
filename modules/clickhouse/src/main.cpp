@@ -1,6 +1,6 @@
 /**
- * @file
- * @author Daniel Pelanek <xpeland>
+ * @file main.cpp
+ * @author Daniel Pelanek <xpeland00@vutbr.cz>
  * @brief Clickhouse Module: resend flowdata to clickhouse
  *
  * This file contains the main function and supporting functions for the Unirec Clickhouse Module.
@@ -149,8 +149,6 @@ int main(int argc, char** argv)
         logger.error(ex.what());
         return EXIT_FAILURE;
     }
-
-    print_config(config);
 
     std::unique_ptr<Manager> manager;
     try {

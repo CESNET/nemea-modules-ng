@@ -1,3 +1,13 @@
+/**
+ * @file inserter.cpp
+ * @author Daniel Pelanek <xpeland00@vutbr.cz>
+ * @brief Defines functions for creating column lambdas for creating, writing
+ *        and parsing unirec data into them.
+ *
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #include "datatype.hpp"
 
 #include <iostream>

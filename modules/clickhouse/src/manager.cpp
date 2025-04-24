@@ -1,3 +1,12 @@
+/**
+ * @file manager.cpp
+ * @author Daniel Pelanek <xpeland00@vutbr.cz>
+ * @brief Defines manager methods and helper function.
+ *
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #include "manager.hpp"
 #include "datatype.hpp"
 

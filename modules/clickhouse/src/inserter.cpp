@@ -1,3 +1,12 @@
+/**
+ * @file inserter.cpp
+ * @author Daniel Pelanek <xpeland00@vutbr.cz>
+ * @brief Defines inserter methods and helper functions.
+ *
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #include "inserter.hpp"
 #include "datatype.hpp"
 
@@ -5,6 +14,13 @@
 
 static constexpr int ERR_TABLE_NOT_FOUND = 60;
 
+/**
+ * @brief Describes table predefined in clickhouse database.
+ * 
+ * @param client 
+ * @param table name from config
+ * @return std::vector<std::pair<std::string, std::string>> 
+ */
 static std::vector<std::pair<std::string, std::string>> describe_table(clickhouse::Client &client, const std::string &table)
 {
     std::vector<std::pair<std::string, std::string>> name_and_type;
@@ -31,6 +47,13 @@ static std::vector<std::pair<std::string, std::string>> describe_table(clickhous
     return name_and_type;
 }
 
+/**
+ * @brief Compares clickhouse schema to the one defined in config.
+ * 
+ * @param client 
+ * @param table name from config
+ * @param columns initialized based on config 
+ */
 static void ensure_schema(clickhouse::Client &client, const std::string &table, const std::vector<ColumnCtx> &columns)
 {
     // Check that the database has the necessary columns

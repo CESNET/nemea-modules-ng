@@ -1,3 +1,12 @@
+/**
+ * @file datatype.hpp
+ * @author Daniel Pelanek <xpeland00@vutbr.cz>
+ * @brief Functions specific to column data
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+
 #pragma once
 
 #include "config.hpp"

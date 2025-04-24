@@ -1,3 +1,12 @@
+/**
+ * @file logger.hpp
+ * @author Daniel Pelanek <xpeland00@vutbr.cz>
+ * @brief Implements spdlog logger class, 
+ *        Defines Noncopyable and Nonmoveable classes
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #pragma once
 
 #include <spdlog/spdlog.h>

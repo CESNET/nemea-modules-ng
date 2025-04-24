@@ -1,3 +1,13 @@
+/**
+ * @file inserter.hpp
+ * @author Daniel Pelanek <xpeland00@vutbr.cz>
+ * @brief Declares Inserter class for clickhouse module,
+ *        blocks and colums and helper structures for them.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+
 #pragma once
 
 #include <clickhouse/client.h>
@@ -10,6 +20,10 @@
 #include "logger.hpp"
 #include "config.hpp"
 
+/**
+ * @brief All possible types of parsed values sent into clickhouse.
+ * 
+ */
 using ValueVariant = std::variant<
     int8_t,  std::vector<int8_t>,
     int16_t,  std::vector<int16_t>,
@@ -32,6 +46,15 @@ using IsZeroFn = std::function<bool (ValueVariant &value)>;
 using ColumnWriterFn = std::function<void (ValueVariant *value, clickhouse::Column &column)>;
 using ColumnFactoryFn = std::function<std::shared_ptr<clickhouse::Column>()>;
 
+/**
+ * @brief Column specification.
+ * 
+ * Contains:
+ *   type, name, unirec field id.
+ *   Helper lambdas for creating, loading data, writing to clickhouse
+ *   value when loaded.
+ * 
+ */
 struct ColumnCtx {
     std::string name;
     ColumnType type;
@@ -45,6 +68,10 @@ struct ColumnCtx {
     ValueVariant value_buffer;
 };
 
+/**
+ * @brief Sent block through inserter;
+ * 
+ */
 struct BlockCtx {
     std::vector<std::shared_ptr<clickhouse::Column>> columns;
     clickhouse::Block block;

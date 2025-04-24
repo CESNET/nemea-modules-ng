@@ -1,3 +1,12 @@
+/**
+ * @file config.cpp
+ * @author Daniel Pelanek <xpeland00@vutbr.cz>
+ * @brief Parses config xml into config structure. Uses rapidxml.
+ *
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #include "config.hpp"
 #include "rapidxml.hpp"
 #include "rapidxml_print.hpp"
@@ -13,12 +22,22 @@
 #include <algorithm>
 #include <fstream>
 
+/**
+ * @brief Remove leading spaces from string.
+ * 
+ * @param s 
+ */
 static inline void trim_left(std::string &s) {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
         return !std::isspace(ch);
     }));
 }
 
+/**
+ * @brief Remove spaces from string on both sides.
+ * 
+ * @param s 
+ */
 static inline void trim(std::string &s) {
     s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
         return !std::isspace(ch);
@@ -80,6 +99,10 @@ static void parse_endpoints(rapidxml::xml_node<>* endpoints_node, Config& config
     }
 }
 
+/**
+ * @brief type from unirec template into local enum.
+ * 
+ */
 static const std::map<std::string, ColumnType> string_to_columntype = 
     {{"int8", ColumnType::Int8 },       {"int8*", ColumnType::Int8Arr },
      {"int16", ColumnType::Int16 },     {"int16*", ColumnType::Int16Arr },
@@ -235,17 +258,4 @@ Config parse_config(std::string filename) {
     parse_root(doc.first_node(), config);
 
     return config;
-}
-
-void print_config(Config config) {
-    for(auto endpoint : config.connection.endpoints) {
-        std::cout << "endpoint -> " << endpoint.host << ":" << endpoint.port << "\n"; 
-    }
-
-    std::cout << config.connection.user << " ";
-    std::cout << config.connection.password << " ";
-    std::cout << config.connection.database << " ";
-    std::cout << config.connection.table << " ";
-
-    std::cout << "\n";
 }

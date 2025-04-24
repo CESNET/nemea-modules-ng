@@ -1,3 +1,13 @@
+/**
+ * @file manager.hpp
+ * @author Daniel Pelanek <xpeland00@vutbr.cz>
+ * @brief Declares Config struct and function for parsing it.
+ *        Also declares possible types of column.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+
 #pragma once
 
 #include <cstdint>
@@ -6,6 +16,10 @@
 #include <vector>
 #include <unirec/unirec.h>
 
+/**
+ * @brief Possible unirec column type.
+ * 
+ */
 enum ColumnType {
     Int8Arr,
     Int16Arr,
@@ -88,5 +102,3 @@ struct Config {
  * @return The parsed config
  */
 Config parse_config(std::string filename);
-
-void print_config(Config config);

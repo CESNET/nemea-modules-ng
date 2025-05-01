@@ -6,14 +6,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-
 #pragma once
 
 #include "config.hpp"
 #include "inserter.hpp"
 
-#include <memory>
 #include <clickhouse/client.h>
+#include <memory>
 
 std::shared_ptr<clickhouse::Column> make_column(ColumnType type);
 

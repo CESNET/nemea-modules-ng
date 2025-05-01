@@ -21,56 +21,57 @@
  * filled blocks through sync queue by themselves to send.
  *
  */
-class Manager : Nonmoveable, Noncopyable {
-    public:
-        /**
-         * @brief Instantiate the manager instance
-         *
-         * @param config Config instance parsed in main.
-         */
-        Manager(Config config);
-    
-        /**
-         * @brief Stop the plugin and wait till it is stopped (blocking).
-         */
-        void stop();
-        
-        /**
-         * @brief Takes unirec record, converts it to clickhouse format and stores it. 
-         *        Adds to filled blocks if a block was sufficiently filled or none were sent
-         *        in a specified time frame (m_config.block_insert_max_delay_secs). 
-         * 
-         * @param record Unirec record view to parse
-         */
-        void process_record(Nemea::UnirecRecordView& record);
-        
-        /**
-        * @brief changes unirec ids of fields after getting template in main.
-        * 
-        */
-        void update_fieldIDs();
+class Manager
+	: Nonmoveable
+	, Noncopyable {
+public:
+	/**
+	 * @brief Instantiate the manager instance
+	 *
+	 * @param config Config instance parsed in main.
+	 */
+	Manager(Config config);
 
-        /**
-         * @brief Stores config specified by argument.
-         * 
-         */
-        const Config m_config;
+	/**
+	 * @brief Stop the plugin and wait till it is stopped (blocking).
+	 */
+	void stop();
 
-    private:
-        Logger& m_logger;
-        std::vector<ColumnCtx> m_columns;
-    
-        BlockCtx *m_current_block = nullptr;
-        std::vector<std::unique_ptr<Inserter>> m_inserters;
-        std::vector<std::unique_ptr<BlockCtx>> m_blocks;
-        SyncStack<BlockCtx *> m_empty_blocks;
-        SyncQueue<BlockCtx *> m_filled_blocks;
-    
-        uint64_t m_rows_written_total = 0;
-        uint64_t m_recs_processed_total = 0;
-        uint64_t m_recs_processed_since_last = 0;
-        std::time_t m_start_time = 0;
-        std::time_t m_last_stats_print_time = 0;
-        std::time_t m_last_insert_time = 0;
+	/**
+	 * @brief Takes unirec record, converts it to clickhouse format and stores it.
+	 *        Adds to filled blocks if a block was sufficiently filled or none were sent
+	 *        in a specified time frame (m_config.block_insert_max_delay_secs).
+	 *
+	 * @param record Unirec record view to parse
+	 */
+	void process_record(Nemea::UnirecRecordView& record);
+
+	/**
+	 * @brief changes unirec ids of fields after getting template in main.
+	 *
+	 */
+	void update_fieldIDs();
+
+	/**
+	 * @brief Stores config specified by argument.
+	 *
+	 */
+	const Config m_config;
+
+private:
+	Logger& m_logger;
+	std::vector<ColumnCtx> m_columns;
+
+	BlockCtx* m_current_block = nullptr;
+	std::vector<std::unique_ptr<Inserter>> m_inserters;
+	std::vector<std::unique_ptr<BlockCtx>> m_blocks;
+	SyncStack<BlockCtx*> m_empty_blocks;
+	SyncQueue<BlockCtx*> m_filled_blocks;
+
+	uint64_t m_rows_written_total = 0;
+	uint64_t m_recs_processed_total = 0;
+	uint64_t m_recs_processed_since_last = 0;
+	std::time_t m_start_time = 0;
+	std::time_t m_last_stats_print_time = 0;
+	std::time_t m_last_insert_time = 0;
 };
-    

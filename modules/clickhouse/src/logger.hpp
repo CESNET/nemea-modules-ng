@@ -28,6 +28,10 @@ public:
 	Nonmoveable& operator=(Nonmoveable&&) = delete; // Delete move assignment operator
 };
 
+/**
+ * @brief Spdlog logger class.
+ *
+ */
 class Logger
 	: Nonmoveable
 	, Noncopyable {

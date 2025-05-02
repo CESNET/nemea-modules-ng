@@ -22,7 +22,6 @@
  */
 std::shared_ptr<clickhouse::Column> make_column(ColumnType type);
 
-
 /**
  * @brief Makes a function (lambda) which converts unirec column data into clickhouse column
  *

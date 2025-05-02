@@ -50,10 +50,23 @@ using ValueVariant = std::variant<
 	std::vector<in6_addr>,
 	std::string>;
 
+/**
+ * @brief Lambda for converting unirec column data to clickhouse column.
+ *
+ */
 using GetterFn = std::function<
 	void(Nemea::UnirecRecordView& record, ur_field_id_t fieldID, ValueVariant& value)>;
-using IsZeroFn = std::function<bool(ValueVariant& value)>;
+	
+/**
+ * @brief Lambda for writing value into clickhouse column.
+ *
+ */
 using ColumnWriterFn = std::function<void(ValueVariant* value, clickhouse::Column& column)>;
+
+/**
+ * @brief Lambda for creating clickhouse columns.
+ *
+ */
 using ColumnFactoryFn = std::function<std::shared_ptr<clickhouse::Column>()>;
 
 /**

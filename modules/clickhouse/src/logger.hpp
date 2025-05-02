@@ -14,6 +14,10 @@
 #include <spdlog/spdlog.h>
 #include <string>
 
+/**
+ * @brief Noncopyable for inheritance.
+ *
+ */
 class Noncopyable {
 public:
 	Noncopyable() = default; // Default constructor is fine
@@ -21,6 +25,10 @@ public:
 	Noncopyable& operator=(const Noncopyable&) = delete; // Delete copy assignment operator
 };
 
+/**
+ * @brief Nonmoveable for inheritance.
+ *
+ */
 class Nonmoveable {
 public:
 	Nonmoveable() = default; // Default constructor is fine

@@ -9,15 +9,15 @@
 
 #pragma once
 
-#include <clickhouse/client.h>
-#include <thread>
-#include <unirec++/unirec.hpp>
-#include <variant>
-
 #include "config.hpp"
 #include "logger.hpp"
 #include "syncqueue.hpp"
 #include "syncstack.hpp"
+
+#include <clickhouse/client.h>
+#include <thread>
+#include <unirec++/unirec.hpp>
+#include <variant>
 
 /**
  * @brief All possible types of parsed values sent into clickhouse.

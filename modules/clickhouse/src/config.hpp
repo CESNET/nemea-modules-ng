@@ -64,17 +64,30 @@ enum ColumnType {
  * @brief A struct containing all the configurable parameters
  */
 struct Config {
+	/**
+	* @brief Data from unirec template about column.
+	*
+	*/
 	struct Column {
 		std::string name;
 		ColumnType type;
 		ur_field_id_t fieldID;
 	};
 
+	/**
+	* @brief Endpoint for clickhouse database instance.
+	*
+	*/
 	struct Endpoint {
 		std::string host;
 		uint16_t port = 9000;
 	};
 
+	/**
+	* @brief Contains database endpoints, information for connecting to 
+	*		 them and into which table in them to insert data.
+	*
+	*/
 	struct Connection {
 		std::vector<Endpoint> endpoints;
 		std::string user;

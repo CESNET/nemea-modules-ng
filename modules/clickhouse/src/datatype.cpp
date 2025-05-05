@@ -131,210 +131,210 @@ template <ColumnType>
 struct DataTypeTraits {};
 
 template <>
-struct DataTypeTraits<ColumnType::UInt8> {
+struct DataTypeTraits<ColumnType::UINT8> {
 	using ColumnType = clickhouse::ColumnUInt8;
 	static constexpr std::string_view ClickhouseTypeName = "UInt8";
 	static constexpr auto Getter = &getters::get_value<uint8_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::UInt16> {
+struct DataTypeTraits<ColumnType::UINT16> {
 	using ColumnType = clickhouse::ColumnUInt16;
 	static constexpr std::string_view ClickhouseTypeName = "UInt16";
 	static constexpr auto Getter = &getters::get_value<uint16_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::UInt32> {
+struct DataTypeTraits<ColumnType::UINT32> {
 	using ColumnType = clickhouse::ColumnUInt32;
 	static constexpr std::string_view ClickhouseTypeName = "UInt32";
 	static constexpr auto Getter = &getters::get_value<uint32_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::UInt64> {
+struct DataTypeTraits<ColumnType::UINT64> {
 	using ColumnType = clickhouse::ColumnUInt64;
 	static constexpr std::string_view ClickhouseTypeName = "UInt64";
 	static constexpr auto Getter = &getters::get_value<uint64_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::Int8> {
+struct DataTypeTraits<ColumnType::INT8> {
 	using ColumnType = clickhouse::ColumnInt8;
 	static constexpr std::string_view ClickhouseTypeName = "Int8";
 	static constexpr auto Getter = &getters::get_value<int8_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::Int16> {
+struct DataTypeTraits<ColumnType::INT16> {
 	using ColumnType = clickhouse::ColumnInt16;
 	static constexpr std::string_view ClickhouseTypeName = "Int16";
 	static constexpr auto Getter = &getters::get_value<int16_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::Int32> {
+struct DataTypeTraits<ColumnType::INT32> {
 	using ColumnType = clickhouse::ColumnInt32;
 	static constexpr std::string_view ClickhouseTypeName = "Int32";
 	static constexpr auto Getter = &getters::get_value<int32_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::Int64> {
+struct DataTypeTraits<ColumnType::INT64> {
 	using ColumnType = clickhouse::ColumnInt64;
 	static constexpr std::string_view ClickhouseTypeName = "Int64";
 	static constexpr auto Getter = &getters::get_value<int64_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::UInt8Arr> {
+struct DataTypeTraits<ColumnType::UINT8_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(UInt8)";
 	static constexpr auto Getter = &getters::get_value_arr<uint8_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::UInt16Arr> {
+struct DataTypeTraits<ColumnType::UINT16_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt16>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(UInt16)";
 	static constexpr auto Getter = &getters::get_value_arr<uint16_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::UInt32Arr> {
+struct DataTypeTraits<ColumnType::UINT32_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt32>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(UInt32)";
 	static constexpr auto Getter = &getters::get_value_arr<uint32_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::UInt64Arr> {
+struct DataTypeTraits<ColumnType::UINT64_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt64>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(UInt64)";
 	static constexpr auto Getter = &getters::get_value_arr<uint64_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::Int8Arr> {
+struct DataTypeTraits<ColumnType::INT8_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnInt8>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(Int8)";
 	static constexpr auto Getter = &getters::get_value_arr<int8_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::Int16Arr> {
+struct DataTypeTraits<ColumnType::INT16_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnInt16>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(Int16)";
 	static constexpr auto Getter = &getters::get_value_arr<int16_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::Int32Arr> {
+struct DataTypeTraits<ColumnType::INT32_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnInt32>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(Int32)";
 	static constexpr auto Getter = &getters::get_value_arr<int32_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::Int64Arr> {
+struct DataTypeTraits<ColumnType::INT64_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnInt64>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(Int64)";
 	static constexpr auto Getter = &getters::get_value_arr<int64_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::Char> {
+struct DataTypeTraits<ColumnType::CHAR> {
 	using ColumnType = clickhouse::ColumnUInt8;
 	static constexpr std::string_view ClickhouseTypeName = "Uint8";
 	static constexpr auto Getter = &getters::get_value<uint8_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::CharArr> {
+struct DataTypeTraits<ColumnType::CHAR_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(Uint8)";
 	static constexpr auto Getter = &getters::get_value_arr<uint8_t>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::Float> {
+struct DataTypeTraits<ColumnType::FLOAT> {
 	using ColumnType = clickhouse::ColumnFloat32;
 	static constexpr std::string_view ClickhouseTypeName = "Float32";
 	static constexpr auto Getter = &getters::get_value<float>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::FloatArr> {
+struct DataTypeTraits<ColumnType::FLOAT_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnFloat32>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(Float32)";
 	static constexpr auto Getter = &getters::get_value_arr<float>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::Double> {
+struct DataTypeTraits<ColumnType::DOUBLE> {
 	using ColumnType = clickhouse::ColumnFloat64;
 	static constexpr std::string_view ClickhouseTypeName = "Float64";
 	static constexpr auto Getter = &getters::get_value<double>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::DoubleArr> {
+struct DataTypeTraits<ColumnType::DOUBLE_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnFloat64>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(Float64)";
 	static constexpr auto Getter = &getters::get_value_arr<double>;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::Ipaddr> {
+struct DataTypeTraits<ColumnType::IPADDR> {
 	using ColumnType = clickhouse::ColumnIPv6;
 	static constexpr std::string_view ClickhouseTypeName = "IPv6";
 	static constexpr auto Getter = &getters::get_ip;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::IpaddrArr> {
+struct DataTypeTraits<ColumnType::IPADDR_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnIPv6>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(IPv6)";
 	static constexpr auto Getter = &getters::get_ip_arr;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::Macaddr> {
+struct DataTypeTraits<ColumnType::MACADDR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(UInt8)";
 	static constexpr auto Getter = &getters::get_mac;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::MacaddrArr> {
+struct DataTypeTraits<ColumnType::MACADDR_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(Array(UInt8))";
 	static constexpr auto Getter = &getters::get_mac_arr;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::Time> {
+struct DataTypeTraits<ColumnType::TIME> {
 	using ColumnType = ColumnDateTime64<9>;
 	static constexpr std::string_view ClickhouseTypeName = "DateTime64(9)";
 	static constexpr auto Getter = &getters::get_time;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::TimeArr> {
+struct DataTypeTraits<ColumnType::TIME_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<ColumnDateTime64<9>>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(DateTime64(9))";
 	static constexpr auto Getter = &getters::get_time_arr;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::String> {
+struct DataTypeTraits<ColumnType::STRING> {
 	using ColumnType = clickhouse::ColumnString;
 	static constexpr std::string_view ClickhouseTypeName = "String";
 	static constexpr auto Getter = &getters::get_string;
 };
 
 template <>
-struct DataTypeTraits<ColumnType::Bytes> {
+struct DataTypeTraits<ColumnType::BYTES> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>;
 	static constexpr std::string_view ClickhouseTypeName = "Array(UInt8)";
 	static constexpr auto Getter = &getters::get_bytes;
@@ -344,95 +344,95 @@ template <typename Func>
 static void visit(ColumnType type, Func func)
 {
 	switch (type) {
-	case ColumnType::Int8:
-		func(DataTypeTraits<ColumnType::Int8> {});
+	case ColumnType::INT8:
+		func(DataTypeTraits<ColumnType::INT8> {});
 		break;
-	case ColumnType::Int16:
-		func(DataTypeTraits<ColumnType::Int16> {});
+	case ColumnType::INT16:
+		func(DataTypeTraits<ColumnType::INT16> {});
 		break;
-	case ColumnType::Int32:
-		func(DataTypeTraits<ColumnType::Int32> {});
+	case ColumnType::INT32:
+		func(DataTypeTraits<ColumnType::INT32> {});
 		break;
-	case ColumnType::Int64:
-		func(DataTypeTraits<ColumnType::Int64> {});
+	case ColumnType::INT64:
+		func(DataTypeTraits<ColumnType::INT64> {});
 		break;
-	case ColumnType::UInt8:
-		func(DataTypeTraits<ColumnType::UInt8> {});
+	case ColumnType::UINT8:
+		func(DataTypeTraits<ColumnType::UINT8> {});
 		break;
-	case ColumnType::UInt16:
-		func(DataTypeTraits<ColumnType::UInt16> {});
+	case ColumnType::UINT16:
+		func(DataTypeTraits<ColumnType::UINT16> {});
 		break;
-	case ColumnType::UInt32:
-		func(DataTypeTraits<ColumnType::UInt32> {});
+	case ColumnType::UINT32:
+		func(DataTypeTraits<ColumnType::UINT32> {});
 		break;
-	case ColumnType::UInt64:
-		func(DataTypeTraits<ColumnType::UInt64> {});
+	case ColumnType::UINT64:
+		func(DataTypeTraits<ColumnType::UINT64> {});
 		break;
-	case ColumnType::Char:
-		func(DataTypeTraits<ColumnType::Char> {});
+	case ColumnType::CHAR:
+		func(DataTypeTraits<ColumnType::CHAR> {});
 		break;
-	case ColumnType::Float:
-		func(DataTypeTraits<ColumnType::Float> {});
+	case ColumnType::FLOAT:
+		func(DataTypeTraits<ColumnType::FLOAT> {});
 		break;
-	case ColumnType::Double:
-		func(DataTypeTraits<ColumnType::Double> {});
+	case ColumnType::DOUBLE:
+		func(DataTypeTraits<ColumnType::DOUBLE> {});
 		break;
-	case ColumnType::Ipaddr:
-		func(DataTypeTraits<ColumnType::Ipaddr> {});
+	case ColumnType::IPADDR:
+		func(DataTypeTraits<ColumnType::IPADDR> {});
 		break;
-	case ColumnType::Time:
-		func(DataTypeTraits<ColumnType::Time> {});
+	case ColumnType::TIME:
+		func(DataTypeTraits<ColumnType::TIME> {});
 		break;
-	case ColumnType::String:
-		func(DataTypeTraits<ColumnType::String> {});
+	case ColumnType::STRING:
+		func(DataTypeTraits<ColumnType::STRING> {});
 		break;
-	case ColumnType::Int8Arr:
-		func(DataTypeTraits<ColumnType::Int8Arr> {});
+	case ColumnType::INT8_ARR:
+		func(DataTypeTraits<ColumnType::INT8_ARR> {});
 		break;
-	case ColumnType::Int16Arr:
-		func(DataTypeTraits<ColumnType::Int16Arr> {});
+	case ColumnType::INT16_ARR:
+		func(DataTypeTraits<ColumnType::INT16_ARR> {});
 		break;
-	case ColumnType::Int32Arr:
-		func(DataTypeTraits<ColumnType::Int32Arr> {});
+	case ColumnType::INT32_ARR:
+		func(DataTypeTraits<ColumnType::INT32_ARR> {});
 		break;
-	case ColumnType::Int64Arr:
-		func(DataTypeTraits<ColumnType::Int64Arr> {});
+	case ColumnType::INT64_ARR:
+		func(DataTypeTraits<ColumnType::INT64_ARR> {});
 		break;
-	case ColumnType::UInt8Arr:
-		func(DataTypeTraits<ColumnType::UInt8Arr> {});
+	case ColumnType::UINT8_ARR:
+		func(DataTypeTraits<ColumnType::UINT8_ARR> {});
 		break;
-	case ColumnType::UInt16Arr:
-		func(DataTypeTraits<ColumnType::UInt16Arr> {});
+	case ColumnType::UINT16_ARR:
+		func(DataTypeTraits<ColumnType::UINT16_ARR> {});
 		break;
-	case ColumnType::UInt32Arr:
-		func(DataTypeTraits<ColumnType::UInt32Arr> {});
+	case ColumnType::UINT32_ARR:
+		func(DataTypeTraits<ColumnType::UINT32_ARR> {});
 		break;
-	case ColumnType::UInt64Arr:
-		func(DataTypeTraits<ColumnType::UInt64Arr> {});
+	case ColumnType::UINT64_ARR:
+		func(DataTypeTraits<ColumnType::UINT64_ARR> {});
 		break;
-	case ColumnType::CharArr:
-		func(DataTypeTraits<ColumnType::CharArr> {});
+	case ColumnType::CHAR_ARR:
+		func(DataTypeTraits<ColumnType::CHAR_ARR> {});
 		break;
-	case ColumnType::FloatArr:
-		func(DataTypeTraits<ColumnType::FloatArr> {});
+	case ColumnType::FLOAT_ARR:
+		func(DataTypeTraits<ColumnType::FLOAT_ARR> {});
 		break;
-	case ColumnType::DoubleArr:
-		func(DataTypeTraits<ColumnType::DoubleArr> {});
+	case ColumnType::DOUBLE_ARR:
+		func(DataTypeTraits<ColumnType::DOUBLE_ARR> {});
 		break;
-	case ColumnType::IpaddrArr:
-		func(DataTypeTraits<ColumnType::IpaddrArr> {});
+	case ColumnType::IPADDR_ARR:
+		func(DataTypeTraits<ColumnType::IPADDR_ARR> {});
 		break;
-	case ColumnType::Macaddr:
-		func(DataTypeTraits<ColumnType::Macaddr> {});
+	case ColumnType::MACADDR:
+		func(DataTypeTraits<ColumnType::MACADDR> {});
 		break;
-	case ColumnType::MacaddrArr:
-		func(DataTypeTraits<ColumnType::MacaddrArr> {});
+	case ColumnType::MACADDR_ARR:
+		func(DataTypeTraits<ColumnType::MACADDR_ARR> {});
 		break;
-	case ColumnType::TimeArr:
-		func(DataTypeTraits<ColumnType::TimeArr> {});
+	case ColumnType::TIME_ARR:
+		func(DataTypeTraits<ColumnType::TIME_ARR> {});
 		break;
-	case ColumnType::Bytes:
-		func(DataTypeTraits<ColumnType::Bytes> {});
+	case ColumnType::BYTES:
+		func(DataTypeTraits<ColumnType::BYTES> {});
 		break;
 	default:
 		throw std::runtime_error("invalid data type");
@@ -443,47 +443,47 @@ template <typename Func>
 static void visit_non_arr(ColumnType type, Func func)
 {
 	switch (type) {
-	case ColumnType::Int8:
-		func(DataTypeTraits<ColumnType::Int8> {});
+	case ColumnType::INT8:
+		func(DataTypeTraits<ColumnType::INT8> {});
 		break;
-	case ColumnType::Int16:
-		func(DataTypeTraits<ColumnType::Int16> {});
+	case ColumnType::INT16:
+		func(DataTypeTraits<ColumnType::INT16> {});
 		break;
-	case ColumnType::Int32:
-		func(DataTypeTraits<ColumnType::Int32> {});
+	case ColumnType::INT32:
+		func(DataTypeTraits<ColumnType::INT32> {});
 		break;
-	case ColumnType::Int64:
-		func(DataTypeTraits<ColumnType::Int64> {});
+	case ColumnType::INT64:
+		func(DataTypeTraits<ColumnType::INT64> {});
 		break;
-	case ColumnType::UInt8:
-		func(DataTypeTraits<ColumnType::UInt8> {});
+	case ColumnType::UINT8:
+		func(DataTypeTraits<ColumnType::UINT8> {});
 		break;
-	case ColumnType::UInt16:
-		func(DataTypeTraits<ColumnType::UInt16> {});
+	case ColumnType::UINT16:
+		func(DataTypeTraits<ColumnType::UINT16> {});
 		break;
-	case ColumnType::UInt32:
-		func(DataTypeTraits<ColumnType::UInt32> {});
+	case ColumnType::UINT32:
+		func(DataTypeTraits<ColumnType::UINT32> {});
 		break;
-	case ColumnType::UInt64:
-		func(DataTypeTraits<ColumnType::UInt64> {});
+	case ColumnType::UINT64:
+		func(DataTypeTraits<ColumnType::UINT64> {});
 		break;
-	case ColumnType::Char:
-		func(DataTypeTraits<ColumnType::Char> {});
+	case ColumnType::CHAR:
+		func(DataTypeTraits<ColumnType::CHAR> {});
 		break;
-	case ColumnType::Float:
-		func(DataTypeTraits<ColumnType::Float> {});
+	case ColumnType::FLOAT:
+		func(DataTypeTraits<ColumnType::FLOAT> {});
 		break;
-	case ColumnType::Double:
-		func(DataTypeTraits<ColumnType::Double> {});
+	case ColumnType::DOUBLE:
+		func(DataTypeTraits<ColumnType::DOUBLE> {});
 		break;
-	case ColumnType::Ipaddr:
-		func(DataTypeTraits<ColumnType::Ipaddr> {});
+	case ColumnType::IPADDR:
+		func(DataTypeTraits<ColumnType::IPADDR> {});
 		break;
-	case ColumnType::Time:
-		func(DataTypeTraits<ColumnType::Time> {});
+	case ColumnType::TIME:
+		func(DataTypeTraits<ColumnType::TIME> {});
 		break;
-	case ColumnType::String:
-		func(DataTypeTraits<ColumnType::String> {});
+	case ColumnType::STRING:
+		func(DataTypeTraits<ColumnType::STRING> {});
 		break;
 	default:
 		throw std::runtime_error("invalid data type");
@@ -494,53 +494,53 @@ template <typename Func>
 static void visit_arr(ColumnType type, Func func)
 {
 	switch (type) {
-	case ColumnType::Int8Arr:
-		func(DataTypeTraits<ColumnType::Int8Arr> {});
+	case ColumnType::INT8_ARR:
+		func(DataTypeTraits<ColumnType::INT8_ARR> {});
 		break;
-	case ColumnType::Int16Arr:
-		func(DataTypeTraits<ColumnType::Int16Arr> {});
+	case ColumnType::INT16_ARR:
+		func(DataTypeTraits<ColumnType::INT16_ARR> {});
 		break;
-	case ColumnType::Int32Arr:
-		func(DataTypeTraits<ColumnType::Int32Arr> {});
+	case ColumnType::INT32_ARR:
+		func(DataTypeTraits<ColumnType::INT32_ARR> {});
 		break;
-	case ColumnType::Int64Arr:
-		func(DataTypeTraits<ColumnType::Int64Arr> {});
+	case ColumnType::INT64_ARR:
+		func(DataTypeTraits<ColumnType::INT64_ARR> {});
 		break;
-	case ColumnType::UInt8Arr:
-		func(DataTypeTraits<ColumnType::UInt8Arr> {});
+	case ColumnType::UINT8_ARR:
+		func(DataTypeTraits<ColumnType::UINT8_ARR> {});
 		break;
-	case ColumnType::UInt16Arr:
-		func(DataTypeTraits<ColumnType::UInt16Arr> {});
+	case ColumnType::UINT16_ARR:
+		func(DataTypeTraits<ColumnType::UINT16_ARR> {});
 		break;
-	case ColumnType::UInt32Arr:
-		func(DataTypeTraits<ColumnType::UInt32Arr> {});
+	case ColumnType::UINT32_ARR:
+		func(DataTypeTraits<ColumnType::UINT32_ARR> {});
 		break;
-	case ColumnType::UInt64Arr:
-		func(DataTypeTraits<ColumnType::UInt64Arr> {});
+	case ColumnType::UINT64_ARR:
+		func(DataTypeTraits<ColumnType::UINT64_ARR> {});
 		break;
-	case ColumnType::CharArr:
-		func(DataTypeTraits<ColumnType::CharArr> {});
+	case ColumnType::CHAR_ARR:
+		func(DataTypeTraits<ColumnType::CHAR_ARR> {});
 		break;
-	case ColumnType::FloatArr:
-		func(DataTypeTraits<ColumnType::FloatArr> {});
+	case ColumnType::FLOAT_ARR:
+		func(DataTypeTraits<ColumnType::FLOAT_ARR> {});
 		break;
-	case ColumnType::DoubleArr:
-		func(DataTypeTraits<ColumnType::DoubleArr> {});
+	case ColumnType::DOUBLE_ARR:
+		func(DataTypeTraits<ColumnType::DOUBLE_ARR> {});
 		break;
-	case ColumnType::IpaddrArr:
-		func(DataTypeTraits<ColumnType::IpaddrArr> {});
+	case ColumnType::IPADDR_ARR:
+		func(DataTypeTraits<ColumnType::IPADDR_ARR> {});
 		break;
-	case ColumnType::Macaddr:
-		func(DataTypeTraits<ColumnType::Macaddr> {});
+	case ColumnType::MACADDR:
+		func(DataTypeTraits<ColumnType::MACADDR> {});
 		break;
-	case ColumnType::MacaddrArr:
-		func(DataTypeTraits<ColumnType::MacaddrArr> {});
+	case ColumnType::MACADDR_ARR:
+		func(DataTypeTraits<ColumnType::MACADDR_ARR> {});
 		break;
-	case ColumnType::TimeArr:
-		func(DataTypeTraits<ColumnType::TimeArr> {});
+	case ColumnType::TIME_ARR:
+		func(DataTypeTraits<ColumnType::TIME_ARR> {});
 		break;
-	case ColumnType::Bytes:
-		func(DataTypeTraits<ColumnType::Bytes> {});
+	case ColumnType::BYTES:
+		func(DataTypeTraits<ColumnType::BYTES> {});
 		break;
 	default:
 		throw std::runtime_error("invalid data type");
@@ -549,7 +549,7 @@ static void visit_arr(ColumnType type, Func func)
 
 inline bool is_arr(ColumnType type)
 {
-	return type < ColumnType::Int8;
+	return type < ColumnType::INT8;
 }
 
 std::shared_ptr<clickhouse::Column> make_column(ColumnType type)

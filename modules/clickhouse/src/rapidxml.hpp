@@ -56,6 +56,10 @@ void parse_error_handler(const char* what, void* where);
 
 #include <exception> // For std::exception
 
+/**
+ * @brief Parse error
+ *
+ */
 #define RAPIDXML_PARSE_ERROR(what, where) throw parse_error(what, where)
 
 namespace rapidxml {

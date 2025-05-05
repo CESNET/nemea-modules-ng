@@ -56,7 +56,7 @@ using ValueVariant = std::variant<
  */
 using GetterFn = std::function<
 	void(Nemea::UnirecRecordView& record, ur_field_id_t fieldID, ValueVariant& value)>;
-	
+
 /**
  * @brief Lambda for writing value into clickhouse column.
  *

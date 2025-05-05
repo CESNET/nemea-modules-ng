@@ -25,9 +25,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <unirec++/unirec.hpp>
-
 #include <fstream>
-#include <iostream>
 
 using namespace Nemea;
 

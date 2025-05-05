@@ -20,43 +20,43 @@
  *
  */
 enum ColumnType {
-	Int8Arr,
-	Int16Arr,
-	Int32Arr,
-	Int64Arr,
+	INT8_ARR,
+	INT16_ARR,
+	INT32_ARR,
+	INT64_ARR,
 
-	UInt8Arr,
-	UInt16Arr,
-	UInt32Arr,
-	UInt64Arr,
+	UINT8_ARR,
+	UINT16_ARR,
+	UINT32_ARR,
+	UINT64_ARR,
 
-	CharArr,
-	FloatArr,
-	DoubleArr,
-	IpaddrArr,
-	MacaddrArr,
-	TimeArr,
-	Bytes,
+	CHAR_ARR,
+	FLOAT_ARR,
+	DOUBLE_ARR,
+	IPADDR_ARR,
+	MACADDR_ARR,
+	TIME_ARR,
+	BYTES,
 
-	Macaddr,
+	MACADDR,
 
-	Int8 = 100,
-	Int16,
-	Int32,
-	Int64,
+	INT8 = 100,
+	INT16,
+	INT32,
+	INT64,
 
-	UInt8,
-	UInt16,
-	UInt32,
-	UInt64,
+	UINT8,
+	UINT16,
+	UINT32,
+	UINT64,
 
-	Char,
-	Float,
-	Double,
+	CHAR,
+	FLOAT,
+	DOUBLE,
 
-	Ipaddr,
-	Time,
-	String,
+	IPADDR,
+	TIME,
+	STRING,
 };
 
 /**

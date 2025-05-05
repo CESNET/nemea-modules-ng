@@ -20,7 +20,7 @@
 #include <optional>
 #include <sstream>
 #include <stdexcept>
-#include <string.h>
+#include <cstring>
 
 /**
  * @brief Remove leading spaces from string.
@@ -113,21 +113,21 @@ static void parse_endpoints(rapidxml::xml_node<>* endpoints_node, Config& config
  *
  */
 static const std::map<std::string, ColumnType> string_to_columntype
-	= {{"int8", ColumnType::Int8},       {"int8*", ColumnType::Int8Arr},
-	   {"int16", ColumnType::Int16},     {"int16*", ColumnType::Int16Arr},
-	   {"int32", ColumnType::Int32},     {"int32*", ColumnType::Int32Arr},
-	   {"int64", ColumnType::Int64},     {"int64*", ColumnType::Int64Arr},
-	   {"uint8", ColumnType::UInt8},     {"uint8*", ColumnType::UInt8Arr},
-	   {"uint16", ColumnType::UInt16},   {"uint16*", ColumnType::UInt16Arr},
-	   {"uint32", ColumnType::UInt32},   {"uint32*", ColumnType::UInt32Arr},
-	   {"uint64", ColumnType::UInt64},   {"uint64*", ColumnType::UInt64Arr},
-	   {"char", ColumnType::Char},       {"char*", ColumnType::CharArr},
-	   {"float", ColumnType::Float},     {"float*", ColumnType::FloatArr},
-	   {"double", ColumnType::Double},   {"double*", ColumnType::DoubleArr},
-	   {"ipaddr", ColumnType::Ipaddr},   {"ipaddr*", ColumnType::IpaddrArr},
-	   {"macaddr", ColumnType::Macaddr}, {"macaddr*", ColumnType::MacaddrArr},
-	   {"time", ColumnType::Time},       {"time*", ColumnType::TimeArr},
-	   {"string", ColumnType::String},   {"bytes", ColumnType::Bytes}};
+	= {{"int8", ColumnType::INT8},       {"int8*", ColumnType::INT8_ARR},
+	   {"int16", ColumnType::INT16},     {"int16*", ColumnType::INT16_ARR},
+	   {"int32", ColumnType::INT32},     {"int32*", ColumnType::INT32_ARR},
+	   {"int64", ColumnType::INT64},     {"int64*", ColumnType::INT64_ARR},
+	   {"uint8", ColumnType::UINT8},     {"uint8*", ColumnType::UINT8_ARR},
+	   {"uint16", ColumnType::UINT16},   {"uint16*", ColumnType::UINT16_ARR},
+	   {"uint32", ColumnType::UINT32},   {"uint32*", ColumnType::UINT32_ARR},
+	   {"uint64", ColumnType::UINT64},   {"uint64*", ColumnType::UINT64_ARR},
+	   {"char", ColumnType::CHAR},       {"char*", ColumnType::CHAR_ARR},
+	   {"float", ColumnType::FLOAT},     {"float*", ColumnType::FLOAT_ARR},
+	   {"double", ColumnType::DOUBLE},   {"double*", ColumnType::DOUBLE_ARR},
+	   {"ipaddr", ColumnType::IPADDR},   {"ipaddr*", ColumnType::IPADDR_ARR},
+	   {"macaddr", ColumnType::MACADDR}, {"macaddr*", ColumnType::MACADDR_ARR},
+	   {"time", ColumnType::TIME},       {"time*", ColumnType::TIME_ARR},
+	   {"string", ColumnType::STRING},   {"bytes", ColumnType::BYTES}};
 
 static void parse_columns(rapidxml::xml_node<>* columns_node, Config& config)
 {

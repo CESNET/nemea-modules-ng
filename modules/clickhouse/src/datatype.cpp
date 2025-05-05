@@ -21,19 +21,19 @@ public:
 	}
 };
 
-namespace getters {
+namespace Getters {
 
 template <typename Value>
-static Value get_value(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
+static Value getValue(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
 {
 	Value value = record.getFieldAsType<Value>(fieldID);
-	return static_cast<Value>(value);
+	return value;
 }
 
 template <typename Value>
-static std::vector<Value> get_value_arr(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
+static std::vector<Value> getValueArr(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
 {
-	Nemea::UnirecArray<Value> arr = record.getFieldAsUnirecArray<Value>(fieldID);
+	Nemea::UnirecArray<Value> const arr = record.getFieldAsUnirecArray<Value>(fieldID);
 	std::vector<Value> result;
 	result.reserve(arr.size());
 	for (const auto& value : arr) {
@@ -42,9 +42,9 @@ static std::vector<Value> get_value_arr(Nemea::UnirecRecordView& record, ur_fiel
 	return result;
 }
 
-static std::vector<uint8_t> get_bytes(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
+static std::vector<uint8_t> getBytes(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
 {
-	Nemea::UnirecArray<std::byte> arr = record.getFieldAsUnirecArray<std::byte>(fieldID);
+	Nemea::UnirecArray<std::byte> const arr = record.getFieldAsUnirecArray<std::byte>(fieldID);
 	std::vector<uint8_t> result;
 	result.reserve(arr.size());
 	for (const auto& value : arr) {
@@ -53,79 +53,82 @@ static std::vector<uint8_t> get_bytes(Nemea::UnirecRecordView& record, ur_field_
 	return result;
 }
 
-static in6_addr get_ip(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
+static in6_addr getIp(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
 {
 	Nemea::IpAddress addr = record.getFieldAsType<Nemea::IpAddress>(fieldID);
 	return *((in6_addr*) &addr.ip);
 }
 
-static std::vector<in6_addr> get_ip_arr(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
+static std::vector<in6_addr> getIpArr(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
 {
-	Nemea::UnirecArray<Nemea::IpAddress> addr_arr
+	Nemea::UnirecArray<Nemea::IpAddress> const addrArr
 		= record.getFieldAsUnirecArray<Nemea::IpAddress>(fieldID);
 	std::vector<in6_addr> result;
-	result.reserve(addr_arr.size());
-	for (const auto& value : addr_arr) {
+	result.reserve(addrArr.size());
+	for (const auto& value : addrArr) {
 		result.push_back(*((in6_addr*) &value.ip));
 	}
 	return result;
 }
 
-static std::vector<uint8_t> get_mac(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
+static std::vector<uint8_t> getMac(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
 {
-	Nemea::MacAddress mac = record.getFieldAsType<Nemea::MacAddress>(fieldID);
+	Nemea::MacAddress const mac = record.getFieldAsType<Nemea::MacAddress>(fieldID);
 	std::vector<uint8_t> result;
-	result.reserve(6);
-	for (int i = 0; i < 6; i++) {
-		result.push_back(mac.mac.bytes[i]);
+	const int nMacBytes = 6;
+	result.reserve(nMacBytes);
+	for (const unsigned char byte : mac.mac.bytes) {
+		result.push_back(byte);
 	}
 	return result;
 }
 
 static std::vector<std::vector<uint8_t>>
-get_mac_arr(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
+getMacArr(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
 {
-	Nemea::UnirecArray<Nemea::MacAddress> mac_arr
+	Nemea::UnirecArray<Nemea::MacAddress> const macArr
 		= record.getFieldAsUnirecArray<Nemea::MacAddress>(fieldID);
 	std::vector<std::vector<uint8_t>> result;
-	result.reserve(mac_arr.size());
-	for (const auto& value : mac_arr) {
-		result.push_back(std::vector<uint8_t>());
-		for (int i = 0; i < 6; i++) {
-			result.back().push_back(value.mac.bytes[i]);
+	result.reserve(macArr.size());
+	for (const auto& value : macArr) {
+		result.emplace_back();
+		for (const unsigned char byte : value.mac.bytes) {
+			result.back().push_back(byte);
 		}
 	}
 	return result;
 }
 
-static uint64_t get_time(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
+static uint64_t getTime(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
 {
-	Nemea::UrTime time = record.getFieldAsType<Nemea::UrTime>(fieldID);
+	Nemea::UrTime const time = record.getFieldAsType<Nemea::UrTime>(fieldID);
+	const uint64_t nsecInSec = 1000000000;
 	return (
-		(static_cast<uint64_t>(ur_time_get_sec(time.time)) * 1000 * 1000 * 1000)
+		(static_cast<uint64_t>(ur_time_get_sec(time.time)) * nsecInSec)
 		+ static_cast<uint64_t>(ur_time_get_nsec(time.time)));
 }
 
-static std::vector<uint64_t> get_time_arr(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
+static std::vector<uint64_t> getTimeArr(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
 {
-	Nemea::UnirecArray<Nemea::UrTime> time_arr
+	Nemea::UnirecArray<Nemea::UrTime> const timeArr
 		= record.getFieldAsUnirecArray<Nemea::UrTime>(fieldID);
 	std::vector<uint64_t> result;
-	result.reserve(time_arr.size());
-	for (const auto& value : time_arr) {
+	result.reserve(timeArr.size());
+	const uint64_t nsecInSec = 1000000000;
+	for (const auto& value : timeArr) {
 		result.push_back(
-			(static_cast<uint64_t>(ur_time_get_sec(value.time)) * 1000 * 1000 * 1000)
+			(static_cast<uint64_t>(ur_time_get_sec(value.time)) * nsecInSec)
 			+ static_cast<uint64_t>(ur_time_get_nsec(value.time)));
 	}
 	return result;
 }
 
-static std::string get_string(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
+static std::string getString(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
 {
 	std::string str = record.getFieldAsType<std::string>(fieldID);
 	return str;
 }
-} // namespace getters
+} // namespace Getters
 
 template <ColumnType>
 struct DataTypeTraits {};
@@ -133,211 +136,211 @@ struct DataTypeTraits {};
 template <>
 struct DataTypeTraits<ColumnType::UINT8> {
 	using ColumnType = clickhouse::ColumnUInt8;
-	static constexpr std::string_view ClickhouseTypeName = "UInt8";
-	static constexpr auto Getter = &getters::get_value<uint8_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "UInt8";
+	static constexpr auto GETTER = &Getters::getValue<uint8_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::UINT16> {
 	using ColumnType = clickhouse::ColumnUInt16;
-	static constexpr std::string_view ClickhouseTypeName = "UInt16";
-	static constexpr auto Getter = &getters::get_value<uint16_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "UInt16";
+	static constexpr auto GETTER = &Getters::getValue<uint16_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::UINT32> {
 	using ColumnType = clickhouse::ColumnUInt32;
-	static constexpr std::string_view ClickhouseTypeName = "UInt32";
-	static constexpr auto Getter = &getters::get_value<uint32_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "UInt32";
+	static constexpr auto GETTER = &Getters::getValue<uint32_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::UINT64> {
 	using ColumnType = clickhouse::ColumnUInt64;
-	static constexpr std::string_view ClickhouseTypeName = "UInt64";
-	static constexpr auto Getter = &getters::get_value<uint64_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "UInt64";
+	static constexpr auto GETTER = &Getters::getValue<uint64_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::INT8> {
 	using ColumnType = clickhouse::ColumnInt8;
-	static constexpr std::string_view ClickhouseTypeName = "Int8";
-	static constexpr auto Getter = &getters::get_value<int8_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Int8";
+	static constexpr auto GETTER = &Getters::getValue<int8_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::INT16> {
 	using ColumnType = clickhouse::ColumnInt16;
-	static constexpr std::string_view ClickhouseTypeName = "Int16";
-	static constexpr auto Getter = &getters::get_value<int16_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Int16";
+	static constexpr auto GETTER = &Getters::getValue<int16_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::INT32> {
 	using ColumnType = clickhouse::ColumnInt32;
-	static constexpr std::string_view ClickhouseTypeName = "Int32";
-	static constexpr auto Getter = &getters::get_value<int32_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Int32";
+	static constexpr auto GETTER = &Getters::getValue<int32_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::INT64> {
 	using ColumnType = clickhouse::ColumnInt64;
-	static constexpr std::string_view ClickhouseTypeName = "Int64";
-	static constexpr auto Getter = &getters::get_value<int64_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Int64";
+	static constexpr auto GETTER = &Getters::getValue<int64_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::UINT8_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(UInt8)";
-	static constexpr auto Getter = &getters::get_value_arr<uint8_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(UInt8)";
+	static constexpr auto GETTER = &Getters::getValueArr<uint8_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::UINT16_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt16>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(UInt16)";
-	static constexpr auto Getter = &getters::get_value_arr<uint16_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(UInt16)";
+	static constexpr auto GETTER = &Getters::getValueArr<uint16_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::UINT32_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt32>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(UInt32)";
-	static constexpr auto Getter = &getters::get_value_arr<uint32_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(UInt32)";
+	static constexpr auto GETTER = &Getters::getValueArr<uint32_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::UINT64_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt64>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(UInt64)";
-	static constexpr auto Getter = &getters::get_value_arr<uint64_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(UInt64)";
+	static constexpr auto GETTER = &Getters::getValueArr<uint64_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::INT8_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnInt8>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(Int8)";
-	static constexpr auto Getter = &getters::get_value_arr<int8_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(Int8)";
+	static constexpr auto GETTER = &Getters::getValueArr<int8_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::INT16_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnInt16>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(Int16)";
-	static constexpr auto Getter = &getters::get_value_arr<int16_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(Int16)";
+	static constexpr auto GETTER = &Getters::getValueArr<int16_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::INT32_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnInt32>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(Int32)";
-	static constexpr auto Getter = &getters::get_value_arr<int32_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(Int32)";
+	static constexpr auto GETTER = &Getters::getValueArr<int32_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::INT64_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnInt64>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(Int64)";
-	static constexpr auto Getter = &getters::get_value_arr<int64_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(Int64)";
+	static constexpr auto GETTER = &Getters::getValueArr<int64_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::CHAR> {
 	using ColumnType = clickhouse::ColumnUInt8;
-	static constexpr std::string_view ClickhouseTypeName = "Uint8";
-	static constexpr auto Getter = &getters::get_value<uint8_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Uint8";
+	static constexpr auto GETTER = &Getters::getValue<uint8_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::CHAR_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(Uint8)";
-	static constexpr auto Getter = &getters::get_value_arr<uint8_t>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(Uint8)";
+	static constexpr auto GETTER = &Getters::getValueArr<uint8_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::FLOAT> {
 	using ColumnType = clickhouse::ColumnFloat32;
-	static constexpr std::string_view ClickhouseTypeName = "Float32";
-	static constexpr auto Getter = &getters::get_value<float>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Float32";
+	static constexpr auto GETTER = &Getters::getValue<float>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::FLOAT_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnFloat32>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(Float32)";
-	static constexpr auto Getter = &getters::get_value_arr<float>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(Float32)";
+	static constexpr auto GETTER = &Getters::getValueArr<float>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::DOUBLE> {
 	using ColumnType = clickhouse::ColumnFloat64;
-	static constexpr std::string_view ClickhouseTypeName = "Float64";
-	static constexpr auto Getter = &getters::get_value<double>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Float64";
+	static constexpr auto GETTER = &Getters::getValue<double>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::DOUBLE_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnFloat64>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(Float64)";
-	static constexpr auto Getter = &getters::get_value_arr<double>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(Float64)";
+	static constexpr auto GETTER = &Getters::getValueArr<double>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::IPADDR> {
 	using ColumnType = clickhouse::ColumnIPv6;
-	static constexpr std::string_view ClickhouseTypeName = "IPv6";
-	static constexpr auto Getter = &getters::get_ip;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "IPv6";
+	static constexpr auto GETTER = &Getters::getIp;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::IPADDR_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnIPv6>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(IPv6)";
-	static constexpr auto Getter = &getters::get_ip_arr;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(IPv6)";
+	static constexpr auto GETTER = &Getters::getIpArr;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::MACADDR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(UInt8)";
-	static constexpr auto Getter = &getters::get_mac;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(UInt8)";
+	static constexpr auto GETTER = &Getters::getMac;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::MACADDR_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(Array(UInt8))";
-	static constexpr auto Getter = &getters::get_mac_arr;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(Array(UInt8))";
+	static constexpr auto GETTER = &Getters::getMacArr;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::TIME> {
-	using ColumnType = ColumnDateTime64<9>;
-	static constexpr std::string_view ClickhouseTypeName = "DateTime64(9)";
-	static constexpr auto Getter = &getters::get_time;
+	using ColumnType = ColumnDateTime64<g_TIME_PRECISION>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "DateTime64(9)";
+	static constexpr auto GETTER = &Getters::getTime;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::TIME_ARR> {
-	using ColumnType = clickhouse::ColumnArrayT<ColumnDateTime64<9>>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(DateTime64(9))";
-	static constexpr auto Getter = &getters::get_time_arr;
+	using ColumnType = clickhouse::ColumnArrayT<ColumnDateTime64<g_TIME_PRECISION>>;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(DateTime64(9))";
+	static constexpr auto GETTER = &Getters::getTimeArr;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::STRING> {
 	using ColumnType = clickhouse::ColumnString;
-	static constexpr std::string_view ClickhouseTypeName = "String";
-	static constexpr auto Getter = &getters::get_string;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "String";
+	static constexpr auto GETTER = &Getters::getString;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::BYTES> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>;
-	static constexpr std::string_view ClickhouseTypeName = "Array(UInt8)";
-	static constexpr auto Getter = &getters::get_bytes;
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(UInt8)";
+	static constexpr auto GETTER = &Getters::getBytes;
 };
 
 template <typename Func>
@@ -440,7 +443,7 @@ static void visit(ColumnType type, Func func)
 }
 
 template <typename Func>
-static void visit_non_arr(ColumnType type, Func func)
+static void visitNonArr(ColumnType type, Func func)
 {
 	switch (type) {
 	case ColumnType::INT8:
@@ -491,7 +494,7 @@ static void visit_non_arr(ColumnType type, Func func)
 }
 
 template <typename Func>
-static void visit_arr(ColumnType type, Func func)
+static void visitArr(ColumnType type, Func func)
 {
 	switch (type) {
 	case ColumnType::INT8_ARR:
@@ -547,15 +550,15 @@ static void visit_arr(ColumnType type, Func func)
 	}
 }
 
-inline bool is_arr(ColumnType type)
+inline bool isArr(ColumnType type)
 {
 	return type < ColumnType::INT8;
 }
 
-std::shared_ptr<clickhouse::Column> make_column(ColumnType type)
+std::shared_ptr<clickhouse::Column> makeColumn(ColumnType type)
 {
 	std::shared_ptr<clickhouse::Column> column;
-	if (is_arr(type)) {
+	if (isArr(type)) {
 		visit(type, [&](auto traits) {
 			using ColType = typename decltype(traits)::ColumnType;
 			column = std::make_shared<ColType>();
@@ -569,27 +572,27 @@ std::shared_ptr<clickhouse::Column> make_column(ColumnType type)
 	return column;
 }
 
-GetterFn make_getter(ColumnType type)
+GetterFn makeGetter(ColumnType type)
 {
 	GetterFn getter;
 	visit(type, [&](auto traits) {
 		getter = [](Nemea::UnirecRecordView& record, ur_field_id_t fieldID, ValueVariant& value) {
-			value = decltype(traits)::Getter(record, fieldID);
+			value = decltype(traits)::GETTER(record, fieldID);
 		};
 	});
 	return getter;
 }
 
-ColumnWriterFn make_columnwriter(ColumnType type)
+ColumnWriterFn makeColumnwriter(ColumnType type)
 {
 	ColumnWriterFn columnwriter;
 
-	if (is_arr(type)) {
-		visit_arr(type, [&](auto traits) {
+	if (isArr(type)) {
+		visitArr(type, [&](auto traits) {
 			columnwriter = [](ValueVariant* value, clickhouse::Column& column) {
 				using ColumnType = typename decltype(traits)::ColumnType;
 				using ValueType = std::invoke_result_t<
-					decltype(decltype(traits)::Getter),
+					decltype(decltype(traits)::GETTER),
 					Nemea::UnirecRecordView&,
 					ur_field_type_t>;
 				auto* col = dynamic_cast<ColumnType*>(&column);
@@ -599,12 +602,12 @@ ColumnWriterFn make_columnwriter(ColumnType type)
 			};
 		});
 	} else {
-		visit_non_arr(type, [&](auto traits) {
+		visitNonArr(type, [&](auto traits) {
 			columnwriter = [](ValueVariant* value, clickhouse::Column& column) {
 				using ColumnType
 					= clickhouse::ColumnNullableT<typename decltype(traits)::ColumnType>;
 				using ValueType = std::invoke_result_t<
-					decltype(decltype(traits)::Getter),
+					decltype(decltype(traits)::GETTER),
 					Nemea::UnirecRecordView&,
 					ur_field_type_t>;
 				auto* col = dynamic_cast<ColumnType*>(&column);
@@ -620,9 +623,9 @@ ColumnWriterFn make_columnwriter(ColumnType type)
 	return columnwriter;
 }
 
-std::string type_to_clickhouse(ColumnType type)
+std::string typeToClickhouse(ColumnType type)
 {
 	std::string result;
-	visit(type, [&](auto traits) { result = traits.ClickhouseTypeName; });
+	visit(type, [&](auto traits) { result = traits.CLICKHOUSE_TYPE_NAME; });
 	return result;
 }

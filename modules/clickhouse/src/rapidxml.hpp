@@ -1,5 +1,6 @@
 #ifndef RAPIDXML_HPP_INCLUDED
 #define RAPIDXML_HPP_INCLUDED
+// NOLINTBEGIN
 
 // Copyright (C) 2006, 2009 Marcin Kalicinski
 // Version 1.13
@@ -2497,5 +2498,7 @@ const unsigned char lookup_tables<Dummy>::lookup_upcase[256] = {
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
+
+// NOLINTEND
 
 #endif

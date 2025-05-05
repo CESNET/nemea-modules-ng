@@ -27,7 +27,7 @@ public:
 	 */
 	void put(Item item)
 	{
-		std::lock_guard<std::mutex> lock(m_mutex);
+		std::lock_guard<std::mutex> const lock(m_mutex);
 		m_items.push(item);
 		m_size = m_items.size();
 		m_avail_cv.notify_all();

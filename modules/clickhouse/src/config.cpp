@@ -12,6 +12,7 @@
 #include "rapidxml_print.hpp"
 
 #include <algorithm>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <limits>
@@ -20,18 +21,18 @@
 #include <optional>
 #include <sstream>
 #include <stdexcept>
-#include <cstring>
+#include <utility>
 
 /**
  * @brief Remove leading spaces from string.
  *
  * @param s
  */
-static inline void trim_left(std::string& s)
+static inline void trimLeft(std::string& str)
 {
-	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
-				return !std::isspace(ch);
-			}));
+	str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](unsigned char chr) {
+				  return std::isspace(chr) == 0;
+			  }));
 }
 
 /**
@@ -39,71 +40,73 @@ static inline void trim_left(std::string& s)
  *
  * @param s
  */
-static inline void trim(std::string& s)
+static inline void trim(std::string& str)
 {
-	s.erase(
-		std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) { return !std::isspace(ch); })
+	str.erase(
+		std::find_if(
+			str.rbegin(),
+			str.rend(),
+			[](unsigned char chr) { return std::isspace(chr) == 0; })
 			.base(),
-		s.end());
+		str.end());
 
-	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
-				return !std::isspace(ch);
-			}));
+	str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](unsigned char chr) {
+				  return std::isspace(chr) == 0;
+			  }));
 }
 
-static bool parse_bool(const char* bool_string)
+static bool parseBool(const char* boolString)
 {
-	if (!strcmp(bool_string, "true")) {
+	if (strcmp(boolString, "true") == 0) {
 		return true;
-
-	} else if (!strcmp(bool_string, "false")) {
-		return false;
-
-	} else {
-		std::stringstream ss;
-		ss << "Incorrect bool argument value: " << bool_string;
-		throw std::runtime_error(ss.str());
 	}
+	if (strcmp(boolString, "false") == 0) {
+		return false;
+	}
+
+	std::stringstream sstream;
+	sstream << "Incorrect bool argument value: " << boolString;
+	throw std::runtime_error(sstream.str());
 }
 
-static int parse_integer(const char* int_string)
+static int parseInteger(const char* intString)
 {
-	return std::stoi(std::string(int_string));
+	return std::stoi(std::string(intString));
 }
 
-static Config::Endpoint parse_endpoint(rapidxml::xml_node<>* endpoint_node)
+static Config::Endpoint parseEndpoint(rapidxml::xml_node<>* endpointNode)
 {
 	Config::Endpoint endpoint;
 
-	for (rapidxml::xml_node<>* node = endpoint_node->first_node(); node;
+	for (rapidxml::xml_node<>* node = endpointNode->first_node(); node != nullptr;
 		 node = node->next_sibling()) {
-		if (!strcmp(node->name(), "host")) {
+		if (strcmp(node->name(), "host") == 0) {
 			endpoint.host = node->value();
 
-		} else if (!strcmp(node->name(), "port")) {
-			endpoint.port = parse_integer(node->value());
+		} else if (strcmp(node->name(), "port") == 0) {
+			endpoint.port = parseInteger(node->value());
 
 		} else {
-			std::stringstream ss;
-			ss << "Invalid endpoint parameter: " << node->name();
-			throw std::runtime_error(ss.str());
+			std::stringstream sstream;
+			sstream << "Invalid endpoint parameter: " << node->name();
+			throw std::runtime_error(sstream.str());
 		}
 	}
 
 	return endpoint;
 }
 
-static void parse_endpoints(rapidxml::xml_node<>* endpoints_node, Config& config)
+static void parseEndpoints(rapidxml::xml_node<>* endpointsNode, Config& config)
 {
-	for (rapidxml::xml_node<>* node = endpoints_node->first_node(); node;
+	for (rapidxml::xml_node<>* node = endpointsNode->first_node(); node != nullptr;
 		 node = node->next_sibling()) {
-		if (!strcmp(node->name(), "endpoint")) {
-			config.connection.endpoints.push_back(parse_endpoint(node));
+		if (strcmp(node->name(), "endpoint") == 0) {
+			config.connection.endpoints.push_back(parseEndpoint(node));
 
 		} else {
-			std::stringstream ss;
-			ss << "Endpoints can only have endpoint not: " << node->name();
-			throw std::runtime_error(ss.str());
+			std::stringstream sstream;
+			sstream << "Endpoints can only have endpoint not: " << node->name();
+			throw std::runtime_error(sstream.str());
 		}
 	}
 }
@@ -112,7 +115,7 @@ static void parse_endpoints(rapidxml::xml_node<>* endpoints_node, Config& config
  * @brief type from unirec template into local enum.
  *
  */
-static const std::map<std::string, ColumnType> string_to_columntype
+static const std::map<std::string, ColumnType> g_string_to_columntype
 	= {{"int8", ColumnType::INT8},       {"int8*", ColumnType::INT8_ARR},
 	   {"int16", ColumnType::INT16},     {"int16*", ColumnType::INT16_ARR},
 	   {"int32", ColumnType::INT32},     {"int32*", ColumnType::INT32_ARR},
@@ -129,32 +132,32 @@ static const std::map<std::string, ColumnType> string_to_columntype
 	   {"time", ColumnType::TIME},       {"time*", ColumnType::TIME_ARR},
 	   {"string", ColumnType::STRING},   {"bytes", ColumnType::BYTES}};
 
-static void parse_columns(rapidxml::xml_node<>* columns_node, Config& config)
+static void parseColumns(rapidxml::xml_node<>* columnsNode, Config& config)
 {
-	std::stringstream csv_string(columns_node->value());
-	std::string cur_csv_value;
+	std::stringstream csvString(columnsNode->value());
+	std::string curCsvValue;
 
-	while (std::getline(csv_string, cur_csv_value, ',')) {
+	while (std::getline(csvString, curCsvValue, ',')) {
 		// Type/Name can't have space. Trim leading and trailing spaces.
 		// Leading spaces for name are trimmed below.
-		trim(cur_csv_value);
+		trim(curCsvValue);
 
 		Config::Column column;
-		int space_pos = cur_csv_value.find(' ');
+		size_t const spacePos = curCsvValue.find(' ');
 
-		std::string type = cur_csv_value.substr(0, space_pos);
-		std::string name = cur_csv_value.substr(space_pos + 1);
+		std::string const type = curCsvValue.substr(0, spacePos);
+		std::string name = curCsvValue.substr(spacePos + 1);
 
 		try {
-			column.type = string_to_columntype.at(type);
+			column.type = g_string_to_columntype.at(type);
 
 		} catch (std::out_of_range& ex) {
-			std::stringstream ss;
-			ss << "Incorrect column type: " << cur_csv_value.substr(0, space_pos);
-			throw std::runtime_error(ss.str());
+			std::stringstream sstream;
+			sstream << "Incorrect column type: " << curCsvValue.substr(0, spacePos);
+			throw std::runtime_error(sstream.str());
 		}
 
-		trim_left(name);
+		trimLeft(name);
 		column.name = name;
 
 		column.fieldID = 0;
@@ -162,98 +165,102 @@ static void parse_columns(rapidxml::xml_node<>* columns_node, Config& config)
 		config.columns.push_back(column);
 
 		// Template stored in input interface format. For ensuring format.
-		config.template_column_csv += type + " " + name + ",";
+		config.templateColumnCsv += type;
+		config.templateColumnCsv += " ";
+		config.templateColumnCsv += name;
+		config.templateColumnCsv += ",";
 	}
 
 	// Trailing comma
-	config.template_column_csv.pop_back();
+	config.templateColumnCsv.pop_back();
 }
 
-static void parse_connection(rapidxml::xml_node<>* connection_node, Config& config)
+static void parseConnection(rapidxml::xml_node<>* connectionNode, Config& config)
 {
-	for (rapidxml::xml_node<>* node = connection_node->first_node(); node;
+	for (rapidxml::xml_node<>* node = connectionNode->first_node(); node != nullptr;
 		 node = node->next_sibling()) {
-		if (!strcmp(node->name(), "endpoints")) {
-			parse_endpoints(node, config);
+		if (strcmp(node->name(), "endpoints") == 0) {
+			parseEndpoints(node, config);
 
-		} else if (!strcmp(node->name(), "user")) {
+		} else if (strcmp(node->name(), "user") == 0) {
 			config.connection.user = node->value();
 
-		} else if (!strcmp(node->name(), "password")) {
+		} else if (strcmp(node->name(), "password") == 0) {
 			config.connection.password = node->value();
 
-		} else if (!strcmp(node->name(), "database")) {
+		} else if (strcmp(node->name(), "database") == 0) {
 			config.connection.database = node->value();
 
-		} else if (!strcmp(node->name(), "table")) {
+		} else if (strcmp(node->name(), "table") == 0) {
 			config.connection.table = node->value();
 
 		} else {
-			std::stringstream ss;
-			ss << "Incorrect connection argument name: " << node->name();
-			throw std::runtime_error(ss.str());
+			std::stringstream sstream;
+			sstream << "Incorrect connection argument name: " << node->name();
+			throw std::runtime_error(sstream.str());
 		}
 	}
 }
 
-static void parse_params(rapidxml::xml_node<>* params_node, Config& config)
+static void parseParams(rapidxml::xml_node<>* paramsNode, Config& config)
 {
-	for (rapidxml::xml_node<>* node = params_node->first_node(); node;
+	for (rapidxml::xml_node<>* node = paramsNode->first_node(); node != nullptr;
 		 node = node->next_sibling()) {
-		if (!strcmp(node->name(), "connection")) {
-			parse_connection(node, config);
+		if (strcmp(node->name(), "connection") == 0) {
+			parseConnection(node, config);
 
-		} else if (!strcmp(node->name(), "splitBiflow")) {
-			config.split_biflow = parse_bool(node->value());
+		} else if (strcmp(node->name(), "splitBiflow") == 0) {
+			config.splitBiflow = parseBool(node->value());
 
-		} else if (!strcmp(node->name(), "biflowEmptyAutoignore")) {
-			config.biflow_empty_autoignore = parse_bool(node->value());
+		} else if (strcmp(node->name(), "biflowEmptyAutoignore") == 0) {
+			config.biflowEmptyAutoignore = parseBool(node->value());
 
-		} else if (!strcmp(node->name(), "blocks")) {
-			config.blocks = parse_integer(node->value());
+		} else if (strcmp(node->name(), "blocks") == 0) {
+			config.blocks = parseInteger(node->value());
 
-		} else if (!strcmp(node->name(), "inserterThreads")) {
-			config.inserter_threads = parse_integer(node->value());
+		} else if (strcmp(node->name(), "inserterThreads") == 0) {
+			config.inserterThreads = parseInteger(node->value());
 
-		} else if (!strcmp(node->name(), "blockInsertThreshold")) {
-			config.block_insert_threshold = parse_integer(node->value());
+		} else if (strcmp(node->name(), "blockInsertThreshold") == 0) {
+			config.blockInsertThreshold = parseInteger(node->value());
 
-		} else if (!strcmp(node->name(), "blockInsertMaxDelaySecs")) {
-			config.block_insert_max_delay_secs = parse_integer(node->value());
+		} else if (strcmp(node->name(), "blockInsertMaxDelaySecs") == 0) {
+			config.blockInsertMaxDelaySecs = parseInteger(node->value());
 
-		} else if (!strcmp(node->name(), "columns")) {
-			parse_columns(node, config);
+		} else if (strcmp(node->name(), "columns") == 0) {
+			parseColumns(node, config);
 
 		} else {
-			std::stringstream ss;
-			ss << "Incorrect argument argument name: " << node->name();
-			throw std::runtime_error(ss.str());
+			std::stringstream sstream;
+			sstream << "Incorrect argument argument name: " << node->name();
+			throw std::runtime_error(sstream.str());
 		}
 	}
 }
 
-static void parse_root(rapidxml::xml_node<>* root_node, Config& config)
+static void parseRoot(rapidxml::xml_node<>* rootNode, Config& config)
 {
 	// Root element has to be output
-	if (strcmp(root_node->name(), "output")) {
+	if (strcmp(rootNode->name(), "output") != 0) {
 		throw std::runtime_error("Malformatted xml");
 	}
 
-	for (rapidxml::xml_node<>* node = root_node->first_node(); node; node = node->next_sibling()) {
-		if (!strcmp(node->name(), "params")) {
-			parse_params(node, config);
+	for (rapidxml::xml_node<>* node = rootNode->first_node(); node != nullptr;
+		 node = node->next_sibling()) {
+		if (strcmp(node->name(), "params") == 0) {
+			parseParams(node, config);
 		}
 	}
 }
 
-std::string load_file(std::string filename)
+std::string loadFile(const std::string& filename)
 {
-	std::ifstream file(filename);
+	std::ifstream const file(filename);
 
 	if (!file) {
-		std::stringstream ss;
-		ss << "Could not open config file: " << filename;
-		throw std::runtime_error(ss.str());
+		std::stringstream sstream;
+		sstream << "Could not open config file: " << filename;
+		throw std::runtime_error(sstream.str());
 	}
 
 	std::ostringstream buffer;
@@ -261,17 +268,17 @@ std::string load_file(std::string filename)
 	return buffer.str();
 }
 
-Config parse_config(std::string filename)
+Config parseConfig(const std::string& filename)
 {
-	std::string xml_string = load_file(filename);
+	std::string xmlString = loadFile(filename);
 
 	Config config {};
 
 	rapidxml::xml_document<> doc;
 
-	doc.parse<0>(xml_string.data());
+	doc.parse<0>(xmlString.data());
 
-	parse_root(doc.first_node(), config);
+	parseRoot(doc.first_node(), config);
 
 	return config;
 }

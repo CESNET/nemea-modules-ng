@@ -11,8 +11,9 @@
 #include "datatype.hpp"
 
 #include <sstream>
+#include <utility>
 
-static constexpr int ERR_TABLE_NOT_FOUND = 60;
+static constexpr int g_ERR_TABLE_NOT_FOUND = 60;
 
 /**
  * @brief Describes table predefined in clickhouse database.
@@ -22,9 +23,9 @@ static constexpr int ERR_TABLE_NOT_FOUND = 60;
  * @return std::vector<std::pair<std::string, std::string>>
  */
 static std::vector<std::pair<std::string, std::string>>
-describe_table(clickhouse::Client& client, const std::string& table)
+describeTable(clickhouse::Client& client, const std::string& table)
 {
-	std::vector<std::pair<std::string, std::string>> name_and_type;
+	std::vector<std::pair<std::string, std::string>> nameAndType;
 	try {
 		client.Select("DESCRIBE TABLE " + table, [&](const clickhouse::Block& block) {
 			if (block.GetColumnCount() > 0 && block.GetRowCount() > 0) {
@@ -32,20 +33,19 @@ describe_table(clickhouse::Client& client, const std::string& table)
 				const auto& name = block[0]->As<clickhouse::ColumnString>();
 				const auto& type = block[1]->As<clickhouse::ColumnString>();
 				for (size_t i = 0; i < block.GetRowCount(); i++) {
-					name_and_type.emplace_back(name->At(i), type->At(i));
+					nameAndType.emplace_back(name->At(i), type->At(i));
 				}
 			}
 		});
 	} catch (const clickhouse::ServerException& exc) {
-		if (exc.GetCode() == ERR_TABLE_NOT_FOUND) {
-			std::stringstream ss;
-			ss << "Table " << table << " does not exist.";
-			throw std::runtime_error(ss.str());
-		} else {
-			throw;
+		if (exc.GetCode() == g_ERR_TABLE_NOT_FOUND) {
+			std::stringstream sstream;
+			sstream << "Table " << table << " does not exist.";
+			throw std::runtime_error(sstream.str());
 		}
+		throw;
 	}
-	return name_and_type;
+	return nameAndType;
 }
 
 /**
@@ -55,76 +55,76 @@ describe_table(clickhouse::Client& client, const std::string& table)
  * @param table name from config
  * @param columns initialized based on config
  */
-static void ensure_schema(
+static void ensureSchema(
 	clickhouse::Client& client,
 	const std::string& table,
 	const std::vector<ColumnCtx>& columns)
 {
 	// Check that the database has the necessary columns
-	auto db_columns = describe_table(client, table);
+	auto dbColumns = describeTable(client, table);
 
-	auto schema_hint = [&]() {
-		std::stringstream ss;
-		ss << "hint:\n";
-		ss << "CREATE TABLE " << table << "(\n";
-		size_t i = 0;
+	auto schemaHint = [&]() {
+		std::stringstream sstream;
+		sstream << "hint:\n";
+		sstream << "CREATE TABLE " << table << "(\n";
+		size_t columnIndex = 0;
 		for (const auto& column : columns) {
-			const auto& clickhouse_type = type_to_clickhouse(columns[i].type);
-			ss << "    \"" << column.name << "\" " << clickhouse_type
-			   << (i < columns.size() - 1 ? "," : "") << '\n';
-			i++;
+			const auto& clickhouseType = typeToClickhouse(columns[columnIndex].type);
+			sstream << "    \"" << column.name << "\" " << clickhouseType
+					<< (columnIndex < columns.size() - 1 ? "," : "") << '\n';
+			columnIndex++;
 		}
-		ss << ");";
-		return ss.str();
+		sstream << ");";
+		return sstream.str();
 	};
 
-	if (columns.size() != db_columns.size()) {
-		std::stringstream ss;
-		ss << "Config has " << columns.size() << " columns but table \"" << table << "\" has "
-		   << db_columns.size() << "\n"
-		   << schema_hint();
-		throw std::runtime_error(ss.str());
+	if (columns.size() != dbColumns.size()) {
+		std::stringstream sstream;
+		sstream << "Config has " << columns.size() << " columns but table \"" << table << "\" has "
+				<< dbColumns.size() << "\n"
+				<< schemaHint();
+		throw std::runtime_error(sstream.str());
 	}
 
-	for (size_t i = 0; i < db_columns.size(); i++) {
-		const auto& expected_name = columns[i].name;
-		const auto& expected_type = type_to_clickhouse(columns[i].type);
-		const auto& [actual_name, actual_type] = db_columns[i];
+	for (size_t i = 0; i < dbColumns.size(); i++) {
+		const auto& expectedName = columns[i].name;
+		const auto& expectedType = typeToClickhouse(columns[i].type);
+		const auto& [actual_name, actual_type] = dbColumns[i];
 
-		if (expected_name != actual_name) {
-			std::stringstream ss;
-			ss << "Expected column #" << i << " in table \"" << table << "\" to be named \""
-			   << expected_name << "\" but it is \"" << actual_name << "\"\n"
-			   << schema_hint();
-			throw std::runtime_error(ss.str());
+		if (expectedName != actual_name) {
+			std::stringstream sstream;
+			sstream << "Expected column #" << i << " in table \"" << table << "\" to be named \""
+					<< expectedName << "\" but it is \"" << actual_name << "\"\n"
+					<< schemaHint();
+			throw std::runtime_error(sstream.str());
 		}
 
-		if (expected_type != actual_type) {
-			std::stringstream ss;
-			ss << "Expected column #" << i << " in table \"" << table << "\" to be of type \""
-			   << expected_type << "\" but it is \"" << actual_type << "\"\n"
-			   << schema_hint();
-			throw std::runtime_error(ss.str());
+		if (expectedType != actual_type) {
+			std::stringstream sstream;
+			sstream << "Expected column #" << i << " in table \"" << table << "\" to be of type \""
+					<< expectedType << "\" but it is \"" << actual_type << "\"\n"
+					<< schemaHint();
+			throw std::runtime_error(sstream.str());
 		}
 	}
 }
 
 Inserter::Inserter(
-	int id,
+	int inserterId,
 	Logger& logger,
-	clickhouse::ClientOptions client_opts,
+	clickhouse::ClientOptions clientOpts,
 	const std::vector<ColumnCtx>& columns,
 	const std::string& table,
-	SyncQueue<BlockCtx*>& filled_blocks,
-	SyncStack<BlockCtx*>& empty_blocks)
+	SyncQueue<BlockCtx*>& filledBlocks,
+	SyncStack<BlockCtx*>& emptyBlocks)
 
-	: m_id(id)
+	: m_id(inserterId)
 	, m_logger(logger)
-	, m_client_opts(client_opts)
+	, m_client_opts(std::move(clientOpts))
 	, m_columns(columns)
 	, m_table(table)
-	, m_filled_blocks(filled_blocks)
-	, m_empty_blocks(empty_blocks)
+	, m_filled_blocks(filledBlocks)
+	, m_empty_blocks(emptyBlocks)
 {
 }
 
@@ -142,12 +142,12 @@ void Inserter::start()
 
 void Inserter::insert(clickhouse::Block& block)
 {
-	bool needs_reconnect = false;
+	bool needsReconnect = false;
 	while (!m_stop_signal) {
 		try {
-			if (needs_reconnect) {
+			if (needsReconnect) {
 				m_client->ResetConnectionEndpoint();
-				ensure_schema(*m_client.get(), m_table, m_columns);
+				ensureSchema(*m_client, m_table, m_columns);
 				m_logger.warn(
 					"[Worker {}}] Connected to {}:{} due to error with previous endpoint",
 					m_id,
@@ -160,7 +160,7 @@ void Inserter::insert(clickhouse::Block& block)
 
 		} catch (const std::exception& ex) {
 			m_logger.error("[Worker {}] Insert failed: {} - retrying in 1 second", m_id, ex.what());
-			needs_reconnect = true;
+			needsReconnect = true;
 		}
 
 		std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -170,16 +170,18 @@ void Inserter::insert(clickhouse::Block& block)
 void Inserter::run()
 {
 	m_client = std::make_unique<clickhouse::Client>(m_client_opts);
-	ensure_schema(*m_client.get(), m_table, m_columns);
-	m_logger.info(
-		"[Worker {}] Connected to {}:{}",
-		m_id,
-		m_client->GetCurrentEndpoint()->host.c_str(),
-		m_client->GetCurrentEndpoint()->port);
+	ensureSchema(*m_client, m_table, m_columns);
+	auto endpoint = m_client->GetCurrentEndpoint();
+	if (endpoint) {
+		m_logger
+			.info("[Worker {}] Connected to {}:{}", m_id, endpoint->host.c_str(), endpoint->port);
+	} else {
+		m_logger.warn("[Worker {}] Connected, but endpoint is not available.", m_id);
+	}
 
 	while (!m_stop_signal) {
 		BlockCtx* block = m_filled_blocks.get();
-		if (!block) {
+		if (block == nullptr) {
 			// we might get null as a way to get unblocked and process stop signal
 			continue;
 		}
@@ -206,7 +208,7 @@ void Inserter::join()
 	m_thread.join();
 }
 
-void Inserter::check_error()
+void Inserter::checkError()
 {
 	if (m_errored) {
 		std::rethrow_exception(m_exception);

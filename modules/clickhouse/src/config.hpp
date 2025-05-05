@@ -19,7 +19,7 @@
  * @brief Possible unirec column type.
  *
  */
-enum ColumnType {
+enum ColumnType : uint8_t {
 	INT8_ARR,
 	INT16_ARR,
 	INT32_ARR,
@@ -64,6 +64,12 @@ enum ColumnType {
  * @brief A struct containing all the configurable parameters
  */
 struct Config {
+	static const uint16_t DEFAULT_PORT = 9000;
+	static const uint64_t DEFAULT_INSERTER_THREADS = 32;
+	static const uint64_t DEFAULT_BLOCKS = 256;
+	static const uint64_t DEFAULT_BLOCK_INSERT_THRESHOLD = 100000;
+	static const uint64_t DEFAULT_MAX_BLOCK_INSERT_DELAY = 10;
+
 	/**
 	 * @brief Data from unirec template about column.
 	 *
@@ -80,7 +86,7 @@ struct Config {
 	 */
 	struct Endpoint {
 		std::string host;
-		uint16_t port = 9000;
+		uint16_t port = DEFAULT_PORT;
 	};
 
 	/**
@@ -98,13 +104,13 @@ struct Config {
 
 	Connection connection;
 	std::vector<Config::Column> columns;
-	std::string template_column_csv;
-	uint64_t inserter_threads = 32;
-	uint64_t blocks = 256;
-	uint64_t block_insert_threshold = 100000;
-	uint64_t block_insert_max_delay_secs = 10;
-	bool split_biflow = true;
-	bool biflow_empty_autoignore = true;
+	std::string templateColumnCsv;
+	uint64_t inserterThreads = DEFAULT_INSERTER_THREADS;
+	uint64_t blocks = DEFAULT_BLOCKS;
+	uint64_t blockInsertThreshold = DEFAULT_BLOCK_INSERT_THRESHOLD;
+	uint64_t blockInsertMaxDelaySecs = DEFAULT_MAX_BLOCK_INSERT_DELAY;
+	bool splitBiflow = true;
+	bool biflowEmptyAutoignore = true;
 };
 
 /**
@@ -113,4 +119,4 @@ struct Config {
  * @param xml The config as a XML string
  * @return The parsed config
  */
-Config parse_config(std::string filename);
+Config parseConfig(const std::string& filename);

@@ -44,21 +44,22 @@ public:
 	 *
 	 * @param record Unirec record view to parse
 	 */
-	void process_record(Nemea::UnirecRecordView& record);
+	void processRecord(Nemea::UnirecRecordView& record);
 
 	/**
 	 * @brief changes unirec ids of fields after getting template in main.
 	 *
 	 */
-	void update_fieldIDs();
+	void updateFieldIDs();
 
 	/**
-	 * @brief Stores config specified by argument.
+	 * @brief Returns config specified by argument to program.
 	 *
 	 */
-	const Config m_config;
+	Config getConfig();
 
 private:
+	const Config M_CONFIG;
 	Logger& m_logger;
 	std::vector<ColumnCtx> m_columns;
 
@@ -68,9 +69,6 @@ private:
 	SyncStack<BlockCtx*> m_empty_blocks;
 	SyncQueue<BlockCtx*> m_filled_blocks;
 
-	uint64_t m_rows_written_total = 0;
-	uint64_t m_recs_processed_total = 0;
-	uint64_t m_recs_processed_since_last = 0;
 	std::time_t m_start_time = 0;
 	std::time_t m_last_stats_print_time = 0;
 	std::time_t m_last_insert_time = 0;

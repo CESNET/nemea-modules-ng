@@ -22,10 +22,10 @@
 #include <atomic>
 #include <clickhouse/client.h>
 #include <csignal>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <unirec++/unirec.hpp>
-#include <fstream>
 
 using namespace Nemea;
 
@@ -54,17 +54,19 @@ void handleFormatChange(UnirecInputInterface& interface, Manager& manager)
 {
 	interface.changeTemplate();
 
-	ur_template_t* x = interface.getTemplate();
-	char* res = ur_template_string_delimiter(x, ',');
+	ur_template_t* changedTemplate = interface.getTemplate();
+	auto res = std::unique_ptr<char, decltype(&free)>(
+		ur_template_string_delimiter(changedTemplate, ','),
+		&free);
 
-	if (manager.m_config.template_column_csv != res) {
+	const Config cfg = manager.getConfig();
+
+	if (cfg.templateColumnCsv != res.get()) {
 		throw std::runtime_error(
 			"Template in input interface doesn't match template in configuration.");
 	}
 
-	manager.update_fieldIDs();
-
-	free(res);
+	manager.updateFieldIDs();
 }
 
 /**
@@ -80,7 +82,7 @@ void processNextRecord(UnirecInputInterface& interface, Manager& manager)
 		return;
 	}
 
-	manager.process_record(*unirecRecord);
+	manager.processRecord(*unirecRecord);
 }
 
 /**
@@ -142,7 +144,7 @@ int main(int argc, char** argv)
 
 	Config config;
 	try {
-		config = parse_config(program.get<std::string>("--config"));
+		config = parseConfig(program.get<std::string>("--config"));
 
 	} catch (const std::exception& ex) {
 		logger.error(ex.what());

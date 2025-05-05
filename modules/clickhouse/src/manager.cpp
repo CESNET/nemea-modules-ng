@@ -11,6 +11,7 @@
 #include "datatype.hpp"
 
 #include <unirec++/unirec.hpp>
+#include <utility>
 
 /**
  * @brief Initializes columns from config and corresponding lambdas for handling them.
@@ -18,20 +19,20 @@
  * @param columns_cfg Columns from config
  * @return std::vector<ColumnCtx> Prepared columns for sending to clickhouse.
  */
-static std::vector<ColumnCtx> prepare_columns(const std::vector<Config::Column>& columns_cfg)
+static std::vector<ColumnCtx> prepareColumns(const std::vector<Config::Column>& columnsCfg)
 {
 	std::vector<ColumnCtx> columns;
 
-	for (const auto& column_cfg : columns_cfg) {
+	for (const auto& columnCfg : columnsCfg) {
 		ColumnCtx column {};
 
-		column.name = column_cfg.name;
-		column.type = column_cfg.type;
-		column.fieldID = column_cfg.type;
+		column.name = columnCfg.name;
+		column.type = columnCfg.type;
+		column.fieldID = columnCfg.type;
 
-		column.getter = make_getter(column_cfg.type);
-		column.column_writer = make_columnwriter(column_cfg.type);
-		column.column_factory = [=]() { return make_column(column_cfg.type); };
+		column.getter = makeGetter(columnCfg.type);
+		column.columnWriter = makeColumnwriter(columnCfg.type);
+		column.columnFactory = [=]() { return makeColumn(columnCfg.type); };
 
 		columns.emplace_back(std::move(column));
 	}
@@ -40,43 +41,44 @@ static std::vector<ColumnCtx> prepare_columns(const std::vector<Config::Column>&
 }
 
 Manager::Manager(Config config)
-	: m_config(config)
+	: M_CONFIG(std::move(config))
 	, m_logger(Logger::getInstance())
 {
-	m_columns = prepare_columns(m_config.columns);
+	m_columns = prepareColumns(M_CONFIG.columns);
 
 	std::vector<clickhouse::Endpoint> endpoints;
-	for (const Config::Endpoint& endpoint_cfg : m_config.connection.endpoints) {
-		endpoints.push_back(clickhouse::Endpoint {endpoint_cfg.host, endpoint_cfg.port});
+	endpoints.reserve(M_CONFIG.connection.endpoints.size());
+	for (const Config::Endpoint& endpointCfg : M_CONFIG.connection.endpoints) {
+		endpoints.push_back(clickhouse::Endpoint {endpointCfg.host, endpointCfg.port});
 	}
 
 	// Prepare blocks
-	m_logger.info("Preparing {} blocks", m_config.blocks);
-	for (unsigned int i = 0; i < m_config.blocks; i++) {
+	m_logger.info("Preparing {} blocks", M_CONFIG.blocks);
+	for (unsigned int i = 0; i < M_CONFIG.blocks; i++) {
 		m_blocks.emplace_back(std::make_unique<BlockCtx>());
 		BlockCtx& block = *m_blocks.back().get();
 		for (const auto& column : m_columns) {
-			block.columns.emplace_back(column.column_factory());
+			block.columns.emplace_back(column.columnFactory());
 			block.block.AppendColumn(column.name, block.columns.back());
 		}
 		m_empty_blocks.put(&block);
 	}
 
 	// Prepare inserters
-	m_logger.info("Preparing {} inserter threads", m_config.inserter_threads);
-	for (unsigned int i = 0; i < m_config.inserter_threads; i++) {
-		auto client_opts = clickhouse::ClientOptions()
-							   .SetEndpoints(endpoints)
-							   .SetUser(m_config.connection.user)
-							   .SetPassword(m_config.connection.password)
-							   .SetDefaultDatabase(m_config.connection.database);
+	m_logger.info("Preparing {} inserter threads", M_CONFIG.inserterThreads);
+	for (unsigned int i = 0; i < M_CONFIG.inserterThreads; i++) {
+		auto clientOpts = clickhouse::ClientOptions()
+							  .SetEndpoints(endpoints)
+							  .SetUser(M_CONFIG.connection.user)
+							  .SetPassword(M_CONFIG.connection.password)
+							  .SetDefaultDatabase(M_CONFIG.connection.database);
 
 		m_inserters.emplace_back(std::make_unique<Inserter>(
 			m_inserters.size() + 1,
 			m_logger,
-			client_opts,
+			clientOpts,
 			m_columns,
-			m_config.connection.table,
+			M_CONFIG.connection.table,
 			m_filled_blocks,
 			m_empty_blocks));
 	}
@@ -90,27 +92,27 @@ Manager::Manager(Config config)
 	m_logger.info("Clickhouse plugin is ready");
 }
 
-void Manager::process_record(Nemea::UnirecRecordView& record)
+void Manager::processRecord(Nemea::UnirecRecordView& record)
 {
 	// Get new empty block if there is no current block
-	if (!m_current_block) {
+	if (m_current_block == nullptr) {
 		m_current_block = m_empty_blocks.get();
 	}
 
 	for (ColumnCtx& ctx : m_columns) {
-		ctx.getter(record, ctx.fieldID, ctx.value_buffer);
-		ctx.has_value = true;
+		ctx.getter(record, ctx.fieldID, ctx.valueBuffer);
+		ctx.hasValue = true;
 	}
 
 	for (size_t i = 0; i < m_columns.size(); i++) {
-		m_columns[i].column_writer(
-			m_columns[i].has_value ? &m_columns[i].value_buffer : nullptr,
+		m_columns[i].columnWriter(
+			m_columns[i].hasValue ? &m_columns[i].valueBuffer : nullptr,
 			*m_current_block->columns[i].get());
 	}
 
 	m_current_block->rows++;
 
-	std::time_t now = std::time(nullptr);
+	std::time_t const now = std::time(nullptr);
 	if (m_start_time == 0) {
 		m_start_time = now;
 		m_last_insert_time = now;
@@ -119,8 +121,8 @@ void Manager::process_record(Nemea::UnirecRecordView& record)
 
 	// Send the block for insertion if it is sufficiently full or a block hasn't been sent in a long
 	// enough time
-	if (m_current_block->rows >= m_config.block_insert_threshold
-		|| (uint64_t(now - m_last_insert_time) >= m_config.block_insert_max_delay_secs
+	if (m_current_block->rows >= M_CONFIG.blockInsertThreshold
+		|| (uint64_t(now - m_last_insert_time) >= M_CONFIG.blockInsertMaxDelaySecs
 			&& m_current_block->rows > 0)) {
 		m_filled_blocks.put(m_current_block);
 		m_current_block = nullptr;
@@ -129,20 +131,20 @@ void Manager::process_record(Nemea::UnirecRecordView& record)
 
 	// Check for any exceptions was thrown by the inserter threads
 	for (auto& inserter : m_inserters) {
-		inserter->check_error();
+		inserter->checkError();
 	}
 }
 
-void Manager::update_fieldIDs()
+void Manager::updateFieldIDs()
 {
 	// Export what's left in the last block
-	if (m_current_block && m_current_block->rows > 0) {
+	if ((m_current_block != nullptr) && m_current_block->rows > 0) {
 		m_filled_blocks.put(m_current_block);
 		m_current_block = nullptr;
 	}
 
 	for (auto& column : m_columns) {
-		column.fieldID = ur_get_id_by_name(column.name.c_str());
+		column.fieldID = static_cast<ur_field_id_t>(ur_get_id_by_name(column.name.c_str()));
 
 		if (column.fieldID == UR_E_INVALID_NAME) {
 			printf("Invalid field name: %s\n", column.name.c_str());
@@ -152,10 +154,15 @@ void Manager::update_fieldIDs()
 	m_logger.info("Updated field ids");
 }
 
+Config Manager::getConfig()
+{
+	return this->M_CONFIG;
+}
+
 void Manager::stop()
 {
 	// Export what's left in the last block
-	if (m_current_block && m_current_block->rows > 0) {
+	if ((m_current_block != nullptr) && m_current_block->rows > 0) {
 		m_filled_blocks.put(m_current_block);
 		m_current_block = nullptr;
 	}

@@ -1,5 +1,6 @@
 #ifndef RAPIDXML_PRINT_HPP_INCLUDED
 #define RAPIDXML_PRINT_HPP_INCLUDED
+// NOLINTBEGIN
 
 // Copyright (C) 2006, 2009 Marcin Kalicinski
 // Version 1.13
@@ -473,5 +474,7 @@ inline std::basic_ostream<Ch>& operator<<(std::basic_ostream<Ch>& out, const xml
 #endif
 
 } // namespace rapidxml
+
+// NOLINTEND
 
 #endif

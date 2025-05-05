@@ -83,12 +83,12 @@ struct ColumnCtx {
 	ColumnType type;
 	ur_field_id_t fieldID;
 
-	ColumnFactoryFn column_factory = nullptr;
+	ColumnFactoryFn columnFactory = nullptr;
 	GetterFn getter = nullptr;
-	ColumnWriterFn column_writer = nullptr;
+	ColumnWriterFn columnWriter = nullptr;
 
-	bool has_value = false;
-	ValueVariant value_buffer;
+	bool hasValue = false;
+	ValueVariant valueBuffer;
 };
 
 /**
@@ -120,13 +120,13 @@ public:
 	 * @param empty_blocks A queue of blocks that have been sent and are able to be reused
 	 */
 	Inserter(
-		int id,
+		int inserterId,
 		Logger& logger,
-		clickhouse::ClientOptions client_opts,
+		clickhouse::ClientOptions clientOpts,
 		const std::vector<ColumnCtx>& columns,
 		const std::string& table,
-		SyncQueue<BlockCtx*>& filled_blocks,
-		SyncStack<BlockCtx*>& empty_blocks);
+		SyncQueue<BlockCtx*>& filledBlocks,
+		SyncStack<BlockCtx*>& emptyBlocks);
 
 	/**
 	 * @brief Start the inserter thread
@@ -147,7 +147,7 @@ public:
 	 * @brief Check if the inserter thread has encountered an error, and if so, rethrow the captured
 	 * exception
 	 */
-	void check_error();
+	void checkError();
 
 private:
 	int m_id;

@@ -209,12 +209,6 @@ static void parseParams(rapidxml::xml_node<>* paramsNode, Config& config)
 		if (strcmp(node->name(), "connection") == 0) {
 			parseConnection(node, config);
 
-		} else if (strcmp(node->name(), "splitBiflow") == 0) {
-			config.splitBiflow = parseBool(node->value());
-
-		} else if (strcmp(node->name(), "biflowEmptyAutoignore") == 0) {
-			config.biflowEmptyAutoignore = parseBool(node->value());
-
 		} else if (strcmp(node->name(), "blocks") == 0) {
 			config.blocks = parseInteger(node->value());
 

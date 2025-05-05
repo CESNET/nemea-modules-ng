@@ -44,30 +44,59 @@ class Logger
 	: Nonmoveable
 	, Noncopyable {
 public:
+	/**
+	 * @brief Gets instance
+	 *
+	 * @return Logger
+	 */
 	static Logger& getInstance()
 	{
 		static Logger instance;
 		return instance;
 	}
 
+	/**
+	 * @brief Log info.
+	 *
+	 * @param msg message
+	 * @param args args
+	 */
 	template <typename... Args>
 	void info(const std::string& msg, const Args&... args)
 	{
 		m_logger->info(msg, args...);
 	}
 
+	/**
+	 * @brief Log debug info.
+	 *
+	 * @param msg message
+	 * @param args args
+	 */
 	template <typename... Args>
 	void debug(const std::string& msg, const Args&... args)
 	{
 		m_logger->debug(msg, args...);
 	}
 
+	/**
+	 * @brief Log warnings.
+	 *
+	 * @param msg message
+	 * @param args args
+	 */
 	template <typename... Args>
 	void warn(const std::string& msg, const Args&... args)
 	{
 		m_logger->warn(msg, args...);
 	}
 
+	/**
+	 * @brief Log errors.
+	 *
+	 * @param msg message
+	 * @param args args
+	 */
 	template <typename... Args>
 	void error(const std::string& msg, const Args&... args)
 	{

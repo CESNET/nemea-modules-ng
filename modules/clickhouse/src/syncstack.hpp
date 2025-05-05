@@ -60,8 +60,8 @@ public:
 	std::size_t size() { return m_size; }
 
 private:
-	std::atomic_size_t m_size = 0;
-	std::stack<Item> m_items;
-	std::mutex m_mutex;
-	std::condition_variable m_avail_cv;
+	std::atomic_size_t m_size = 0; ///< current number of items in the queue
+	std::stack<Item> m_items; ///< underlying container for stacked items
+	std::mutex m_mutex; ///< mutex for synchronizing access
+	std::condition_variable m_avail_cv; ///< signals availability of items
 };

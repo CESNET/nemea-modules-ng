@@ -79,16 +79,16 @@ using ColumnFactoryFn = std::function<std::shared_ptr<clickhouse::Column>()>;
  *
  */
 struct ColumnCtx {
-	std::string name;
-	ColumnType type;
-	ur_field_id_t fieldID;
+	std::string name; ///< Column name
+	ColumnType type; ///< Column type
+	ur_field_id_t fieldID; ///< unirec template field id
 
-	ColumnFactoryFn columnFactory = nullptr;
-	GetterFn getter = nullptr;
-	ColumnWriterFn columnWriter = nullptr;
+	ColumnFactoryFn columnFactory = nullptr; ///< lambda for creating columns
+	GetterFn getter = nullptr; ///< lambda for converting unirec data to clickhouse column
+	ColumnWriterFn columnWriter = nullptr; ///< lambda for writinng column value
 
-	bool hasValue = false;
-	ValueVariant valueBuffer;
+	bool hasValue = false; ///< If a value was stored to column
+	ValueVariant valueBuffer; ///< Stored value
 };
 
 /**
@@ -96,8 +96,19 @@ struct ColumnCtx {
  *
  */
 struct BlockCtx {
+	/**
+	 * @brief Vector of column data to be inserted into ClickHouse.
+	 */
 	std::vector<std::shared_ptr<clickhouse::Column>> columns;
+
+	/**
+	 * @brief ClickHouse block structure used for insertion.
+	 */
 	clickhouse::Block block;
+
+	/**
+	 * @brief Number of rows in the block.
+	 */
 	unsigned int rows;
 };
 
@@ -112,12 +123,13 @@ public:
 	/**
 	 * @brief Instantiate an inserter instance
 	 *
+	 * @param inserterId id
 	 * @param logger The logger
-	 * @param client_opts The Clickhouse client options
+	 * @param clientOpts The Clickhouse client options
 	 * @param columns The column definitions
 	 * @param table The table to insert the data into
-	 * @param filled_blocks A queue of blocks ready to be sent
-	 * @param empty_blocks A queue of blocks that have been sent and are able to be reused
+	 * @param filledBlocks A queue of blocks ready to be sent
+	 * @param emptyBlocks A queue of blocks that have been sent and are able to be reused
 	 */
 	Inserter(
 		int inserterId,
@@ -150,22 +162,22 @@ public:
 	void checkError();
 
 private:
-	int m_id;
-	Logger& m_logger;
-	std::thread m_thread;
-	std::atomic_bool m_stop_signal = false;
-	std::atomic_bool m_errored = false;
-	std::exception_ptr m_exception = nullptr;
+	int m_id; ///< unique thread or task identifier
+	Logger& m_logger; ///< logging utility reference
+	std::thread m_thread; ///< worker thread
+	std::atomic_bool m_stop_signal = false; ///< signals thread to stop
+	std::atomic_bool m_errored = false; ///< indicates if an error occurred
+	std::exception_ptr m_exception = nullptr; ///< stores exception thrown in thread
 
-	clickhouse::ClientOptions m_client_opts;
-	const std::vector<ColumnCtx>& m_columns; // defines clickhouse table schema
-	const std::string& m_table;
-	SyncQueue<BlockCtx*>& m_filled_blocks;
-	SyncStack<BlockCtx*>& m_empty_blocks;
+	clickhouse::ClientOptions m_client_opts; ///< ClickHouse client configuration
+	const std::vector<ColumnCtx>& m_columns; ///< defines ClickHouse table schema
+	const std::string& m_table; ///< target ClickHouse table name
+	SyncQueue<BlockCtx*>& m_filled_blocks; ///< queue of blocks ready to insert
+	SyncStack<BlockCtx*>& m_empty_blocks; ///< stack of reusable empty blocks
 
-	std::unique_ptr<clickhouse::Client> m_client;
+	std::unique_ptr<clickhouse::Client> m_client; ///< ClickHouse client instance
 
-	void connect();
-	void run();
-	void insert(clickhouse::Block& block);
+	void connect(); ///< establishes connection to ClickHouse
+	void run(); ///< thread entry point
+	void insert(clickhouse::Block& block); ///< inserts a block into ClickHouse
 };

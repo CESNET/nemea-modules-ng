@@ -64,20 +64,21 @@ enum ColumnType : uint8_t {
  * @brief A struct containing all the configurable parameters
  */
 struct Config {
-	static const uint16_t DEFAULT_PORT = 9000;
-	static const uint64_t DEFAULT_INSERTER_THREADS = 32;
-	static const uint64_t DEFAULT_BLOCKS = 256;
-	static const uint64_t DEFAULT_BLOCK_INSERT_THRESHOLD = 100000;
-	static const uint64_t DEFAULT_MAX_BLOCK_INSERT_DELAY = 10;
+	static const uint16_t DEFAULT_PORT = 9000; ///< Default port of clickhouse db
+	static const uint64_t DEFAULT_INSERTER_THREADS = 32; ///< Default num of inserters
+	static const uint64_t DEFAULT_BLOCKS = 256; ///< Default num of blocks
+	static const uint64_t DEFAULT_BLOCK_INSERT_THRESHOLD
+		= 100000; ///< Default num of columns to trigger insert
+	static const uint64_t DEFAULT_MAX_BLOCK_INSERT_DELAY = 10; ///< Default max time before insert
 
 	/**
 	 * @brief Data from unirec template about column.
 	 *
 	 */
 	struct Column {
-		std::string name;
-		ColumnType type;
-		ur_field_id_t fieldID;
+		std::string name; ///< column name
+		ColumnType type; ///< column type
+		ur_field_id_t fieldID; ///< column unirec id
 	};
 
 	/**
@@ -85,8 +86,8 @@ struct Config {
 	 *
 	 */
 	struct Endpoint {
-		std::string host;
-		uint16_t port = DEFAULT_PORT;
+		std::string host; ///< db hostname
+		uint16_t port = DEFAULT_PORT; ///< db port
 	};
 
 	/**
@@ -95,22 +96,22 @@ struct Config {
 	 *
 	 */
 	struct Connection {
-		std::vector<Endpoint> endpoints;
-		std::string user;
-		std::string password;
-		std::string database;
-		std::string table;
+		std::vector<Endpoint> endpoints; ///< Endpoints of databases to send to
+		std::string user; ///< username for connection
+		std::string password; ///< password for connection
+		std::string database; ///< database in instance
+		std::string table; ///< table name in database
 	};
 
-	Connection connection;
-	std::vector<Config::Column> columns;
-	std::string templateColumnCsv;
-	uint64_t inserterThreads = DEFAULT_INSERTER_THREADS;
-	uint64_t blocks = DEFAULT_BLOCKS;
-	uint64_t blockInsertThreshold = DEFAULT_BLOCK_INSERT_THRESHOLD;
-	uint64_t blockInsertMaxDelaySecs = DEFAULT_MAX_BLOCK_INSERT_DELAY;
-	bool splitBiflow = true;
-	bool biflowEmptyAutoignore = true;
+	Connection connection; ///< Clickhouse database connection info
+	std::vector<Config::Column> columns; ///< Columns found in config
+	std::string templateColumnCsv; ///< For comparing with unirec template when it changes
+	uint64_t inserterThreads = DEFAULT_INSERTER_THREADS; ///< num of inserters
+	uint64_t blocks = DEFAULT_BLOCKS; ///< Number of blocks for storing
+	uint64_t blockInsertThreshold
+		= DEFAULT_BLOCK_INSERT_THRESHOLD; ///< Higher than triggers insertion
+	uint64_t blockInsertMaxDelaySecs
+		= DEFAULT_MAX_BLOCK_INSERT_DELAY; ///< Longer than triggers insertion
 };
 
 /**

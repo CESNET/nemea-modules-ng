@@ -55,21 +55,22 @@ public:
 	/**
 	 * @brief Returns config specified by argument to program.
 	 *
+	 * @return Config
 	 */
 	Config getConfig();
 
 private:
-	const Config M_CONFIG;
-	Logger& m_logger;
-	std::vector<ColumnCtx> m_columns;
+	const Config M_CONFIG; ///< application configuration
+	Logger& m_logger; ///< logging utility reference
+	std::vector<ColumnCtx> m_columns; ///< ClickHouse table schema definition
 
-	BlockCtx* m_current_block = nullptr;
-	std::vector<std::unique_ptr<Inserter>> m_inserters;
-	std::vector<std::unique_ptr<BlockCtx>> m_blocks;
-	SyncStack<BlockCtx*> m_empty_blocks;
-	SyncQueue<BlockCtx*> m_filled_blocks;
+	BlockCtx* m_current_block = nullptr; ///< pointer to the currently filling block
+	std::vector<std::unique_ptr<Inserter>> m_inserters; ///< inserter worker instances
+	std::vector<std::unique_ptr<BlockCtx>> m_blocks; ///< owned memory blocks
+	SyncStack<BlockCtx*> m_empty_blocks; ///< pool of empty blocks for reuse
+	SyncQueue<BlockCtx*> m_filled_blocks; ///< queue of blocks ready for insertion
 
-	std::time_t m_start_time = 0;
-	std::time_t m_last_stats_print_time = 0;
-	std::time_t m_last_insert_time = 0;
+	std::time_t m_start_time = 0; ///< application start time
+	std::time_t m_last_stats_print_time = 0; ///< last stats print timestamp
+	std::time_t m_last_insert_time = 0; ///< last data insert timestamp
 };

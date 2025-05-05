@@ -26,7 +26,7 @@
 /**
  * @brief Remove leading spaces from string.
  *
- * @param s
+ * @param str
  */
 static inline void trimLeft(std::string& str)
 {
@@ -38,7 +38,7 @@ static inline void trimLeft(std::string& str)
 /**
  * @brief Remove spaces from string on both sides.
  *
- * @param s
+ * @param str
  */
 static inline void trim(std::string& str)
 {
@@ -53,20 +53,6 @@ static inline void trim(std::string& str)
 	str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](unsigned char chr) {
 				  return std::isspace(chr) == 0;
 			  }));
-}
-
-static bool parseBool(const char* boolString)
-{
-	if (strcmp(boolString, "true") == 0) {
-		return true;
-	}
-	if (strcmp(boolString, "false") == 0) {
-		return false;
-	}
-
-	std::stringstream sstream;
-	sstream << "Incorrect bool argument value: " << boolString;
-	throw std::runtime_error(sstream.str());
 }
 
 static int parseInteger(const char* intString)

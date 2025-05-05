@@ -248,14 +248,14 @@ struct DataTypeTraits<ColumnType::INT64_ARR> {
 template <>
 struct DataTypeTraits<ColumnType::CHAR> {
 	using ColumnType = clickhouse::ColumnUInt8;
-	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Uint8";
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "UInt8";
 	static constexpr auto GETTER = &Getters::getValue<uint8_t>;
 };
 
 template <>
 struct DataTypeTraits<ColumnType::CHAR_ARR> {
 	using ColumnType = clickhouse::ColumnArrayT<clickhouse::ColumnUInt8>;
-	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(Uint8)";
+	static constexpr std::string_view CLICKHOUSE_TYPE_NAME = "Array(UInt8)";
 	static constexpr auto GETTER = &Getters::getValueArr<uint8_t>;
 };
 

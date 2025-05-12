@@ -32,6 +32,11 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       os: ${{ matrix.os }}
+  tests:
+    needs: [build-os-matrix, build]
+    uses: ./.github/workflows/tests.yml
+    with:
+      os: "oraclelinux:9"
   rpm-install:
     needs: [build-os-matrix, build]
     strategy:

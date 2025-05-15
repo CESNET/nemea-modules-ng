@@ -10,7 +10,7 @@
 #pragma once
 
 #include "config.hpp"
-#include "logger.hpp"
+#include "logger/logger.hpp"
 #include "syncqueue.hpp"
 #include "syncstack.hpp"
 
@@ -18,6 +18,29 @@
 #include <thread>
 #include <unirec++/unirec.hpp>
 #include <variant>
+
+/**
+ * @brief Noncopyable for inheritance.
+ *
+ */
+class Noncopyable {
+public:
+	Noncopyable() = default; // Default constructor is fine
+	Noncopyable(const Noncopyable&) = delete; // Delete copy constructor
+	Noncopyable& operator=(const Noncopyable&) = delete; // Delete copy assignment operator
+};
+
+/**
+ * @brief Nonmoveable for inheritance.
+ *
+ */
+class Nonmoveable {
+public:
+	Nonmoveable() = default; // Default constructor is fine
+	Nonmoveable(Nonmoveable&&) = delete; // Delete move constructor
+	Nonmoveable& operator=(Nonmoveable&&) = delete; // Delete move assignment operator
+};
+
 
 /**
  * @brief All possible types of parsed values sent into clickhouse.
@@ -133,7 +156,7 @@ public:
 	 */
 	Inserter(
 		int inserterId,
-		Logger& logger,
+		std::shared_ptr<spdlog::logger>,
 		clickhouse::ClientOptions clientOpts,
 		const std::vector<ColumnCtx>& columns,
 		const std::string& table,
@@ -163,7 +186,7 @@ public:
 
 private:
 	int m_id; ///< unique thread or task identifier
-	Logger& m_logger; ///< logging utility reference
+	std::shared_ptr<spdlog::logger> m_logger; ///< logging utility reference
 	std::thread m_thread; ///< worker thread
 	std::atomic_bool m_stop_signal = false; ///< signals thread to stop
 	std::atomic_bool m_errored = false; ///< indicates if an error occurred

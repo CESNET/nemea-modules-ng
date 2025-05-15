@@ -16,36 +16,93 @@
 static constexpr int g_ERR_TABLE_NOT_FOUND = 60;
 
 /**
+ * @brief Clickhouse column description
+ * 
+ */
+struct ColumnDescription {
+	std::string name; // clickhouse column name
+	std::string type; // clickhouse data type as string
+};
+
+/**
+ * @brief Extracts all column descriptions from a clickhouse block
+ * 
+ * @param block
+ * @return std::vector<ColumnDescription> 
+ */
+static std::vector<ColumnDescription>
+extractBlockDescription(const clickhouse::Block& block)
+{
+    std::vector<ColumnDescription> columnDescriptions;
+
+	std::size_t rowCount = block.GetRowCount();
+
+    if (block.GetColumnCount() < 2 || rowCount == 0) {
+        return columnDescriptions;
+    }
+
+	const uint8_t columnNameIndex = 0;
+	const uint8_t columnTypeIndex = 1;
+
+    const auto& nameColumns = block[columnNameIndex]->As<clickhouse::ColumnString>();
+    const auto& typeColumns = block[columnTypeIndex]->As<clickhouse::ColumnString>();
+
+    columnDescriptions.reserve(block.GetRowCount());
+	
+    for (std::size_t rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+        ColumnDescription columnDescription {
+            .name = std::string(nameColumns->At(rowIndex)),
+            .type = std::string(typeColumns->At(rowIndex)),
+        };
+        columnDescriptions.emplace_back(columnDescription);
+    }
+
+    return columnDescriptions;
+}
+
+std::vector<ColumnDescription>
+selectTableDescription(clickhouse::Client& client, const std::string& table)
+{
+    std::vector<ColumnDescription> columnDescriptions;
+    const auto selectCallback = [&](const clickhouse::Block& block) {
+        auto partial = extractBlockDescription(block);
+        columnDescriptions.insert(columnDescriptions.end(),
+							std::make_move_iterator(partial.begin()),
+							std::make_move_iterator(partial.end()));
+    };
+
+    const std::string query = "DESCRIBE TABLE " + table;
+
+    client.Select(query, selectCallback);
+
+	return columnDescriptions;
+}
+
+/**
  * @brief Describes table predefined in clickhouse database.
  *
  * @param client
  * @param table name from config
  * @return std::vector<std::pair<std::string, std::string>>
  */
-static std::vector<std::pair<std::string, std::string>>
-describeTable(clickhouse::Client& client, const std::string& table)
+static std::vector<ColumnDescription>
+describeTable(clickhouse::Client& client, const std::string& tableName)
 {
-	std::vector<std::pair<std::string, std::string>> nameAndType;
+	std::vector<ColumnDescription> description;
+
 	try {
-		client.Select("DESCRIBE TABLE " + table, [&](const clickhouse::Block& block) {
-			if (block.GetColumnCount() > 0 && block.GetRowCount() > 0) {
-				// debug_print_block(block);
-				const auto& name = block[0]->As<clickhouse::ColumnString>();
-				const auto& type = block[1]->As<clickhouse::ColumnString>();
-				for (size_t i = 0; i < block.GetRowCount(); i++) {
-					nameAndType.emplace_back(name->At(i), type->At(i));
-				}
-			}
-		});
+		return selectTableDescription(client, tableName);
+
 	} catch (const clickhouse::ServerException& exc) {
 		if (exc.GetCode() == g_ERR_TABLE_NOT_FOUND) {
 			std::stringstream sstream;
-			sstream << "Table " << table << " does not exist.";
+			sstream << "Table " << tableName << " does not exist.";
 			throw std::runtime_error(sstream.str());
 		}
 		throw;
 	}
-	return nameAndType;
+
+	return description;
 }
 
 /**
@@ -60,7 +117,7 @@ static void ensureSchema(
 	const std::string& table,
 	const std::vector<ColumnCtx>& columns)
 {
-	// Check that the database has the necessary columns
+	// Load clickhouse columns
 	auto dbColumns = describeTable(client, table);
 
 	auto schemaHint = [&]() {
@@ -111,7 +168,7 @@ static void ensureSchema(
 
 Inserter::Inserter(
 	int inserterId,
-	Logger& logger,
+	std::shared_ptr<spdlog::logger> logger,
 	clickhouse::ClientOptions clientOpts,
 	const std::vector<ColumnCtx>& columns,
 	const std::string& table,
@@ -148,7 +205,7 @@ void Inserter::insert(clickhouse::Block& block)
 			if (needsReconnect) {
 				m_client->ResetConnectionEndpoint();
 				ensureSchema(*m_client, m_table, m_columns);
-				m_logger.warn(
+				m_logger->warn(
 					"[Worker {}}] Connected to {}:{} due to error with previous endpoint",
 					m_id,
 					m_client->GetCurrentEndpoint()->host.c_str(),
@@ -159,7 +216,7 @@ void Inserter::insert(clickhouse::Block& block)
 			break;
 
 		} catch (const std::exception& ex) {
-			m_logger.error("[Worker {}] Insert failed: {} - retrying in 1 second", m_id, ex.what());
+			m_logger->error("[Worker {}] Insert failed: {} - retrying in 1 second", m_id, ex.what());
 			needsReconnect = true;
 		}
 
@@ -174,9 +231,9 @@ void Inserter::run()
 	auto endpoint = m_client->GetCurrentEndpoint();
 	if (endpoint) {
 		m_logger
-			.info("[Worker {}] Connected to {}:{}", m_id, endpoint->host.c_str(), endpoint->port);
+			->info("[Worker {}] Connected to {}:{}", m_id, endpoint->host.c_str(), endpoint->port);
 	} else {
-		m_logger.warn("[Worker {}] Connected, but endpoint is not available.", m_id);
+		m_logger->warn("[Worker {}] Connected, but endpoint is not available.", m_id);
 	}
 
 	while (!m_stop_signal) {

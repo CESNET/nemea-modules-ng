@@ -61,7 +61,7 @@ public:
 
 private:
 	const Config M_CONFIG; ///< application configuration
-	Logger& m_logger; ///< logging utility reference
+	std::shared_ptr<spdlog::logger> m_logger; ///< logging utility reference
 	std::vector<ColumnCtx> m_columns; ///< ClickHouse table schema definition
 
 	BlockCtx* m_current_block = nullptr; ///< pointer to the currently filling block

@@ -14,7 +14,7 @@
  */
 
 #include "config.hpp"
-#include "logger.hpp"
+#include "logger/logger.hpp"
 #include "manager.hpp"
 #include "unirec/unirec-telemetry.hpp"
 
@@ -33,8 +33,8 @@ std::atomic<bool> g_stopFlag(false);
 
 void signalHandler(int signum)
 {
-	auto& logger = Logger::getInstance();
-	logger.info("Interrupt signal {} received", signum);
+	auto logger = Nm::loggerGet("main");
+	logger->info("Interrupt signal {} received", signum);
 	g_stopFlag.store(true);
 }
 
@@ -121,7 +121,8 @@ int main(int argc, char** argv)
 
 	Unirec unirec({1, 0, "clickhouse", "Unirec clickhouse module"});
 
-	auto& logger = Logger::getInstance();
+	Nm::loggerInit();
+	auto logger = Nm::loggerGet("main");
 
 	signal(SIGINT, signalHandler);
 
@@ -131,14 +132,14 @@ int main(int argc, char** argv)
 		std::cerr << program;
 		return EXIT_SUCCESS;
 	} catch (std::exception& ex) {
-		logger.error(ex.what());
+		logger->error(ex.what());
 		return EXIT_FAILURE;
 	}
 
 	try {
 		program.parse_args(argc, argv);
 	} catch (const std::exception& ex) {
-		logger.error(ex.what());
+		logger->error(ex.what());
 		return EXIT_FAILURE;
 	}
 
@@ -147,7 +148,7 @@ int main(int argc, char** argv)
 		config = parseConfig(program.get<std::string>("--config"));
 
 	} catch (const std::exception& ex) {
-		logger.error(ex.what());
+		logger->error(ex.what());
 		return EXIT_FAILURE;
 	}
 
@@ -155,7 +156,7 @@ int main(int argc, char** argv)
 	try {
 		manager = std::make_unique<Manager>(config);
 	} catch (const std::exception& ex) {
-		logger.error(ex.what());
+		logger->error(ex.what());
 		return EXIT_FAILURE;
 	}
 
@@ -164,12 +165,12 @@ int main(int argc, char** argv)
 
 		processUnirecRecords(interface, *manager);
 
-		logger.info("here");
+		logger->info("here");
 
 		manager->stop();
 
 	} catch (std::exception& ex) {
-		logger.error(ex.what());
+		logger->error(ex.what());
 		return EXIT_FAILURE;
 	}
 

@@ -555,21 +555,35 @@ inline bool isArr(ColumnType type)
 	return type < ColumnType::INT8;
 }
 
-std::shared_ptr<clickhouse::Column> makeColumn(ColumnType type)
+std::shared_ptr<clickhouse::Column> makeArrColumn(ColumnType type)
 {
 	std::shared_ptr<clickhouse::Column> column;
-	if (isArr(type)) {
-		visit(type, [&](auto traits) {
-			using ColType = typename decltype(traits)::ColumnType;
-			column = std::make_shared<ColType>();
-		});
-	} else {
-		visit(type, [&](auto traits) {
-			using ColType = clickhouse::ColumnNullableT<typename decltype(traits)::ColumnType>;
-			column = std::make_shared<ColType>();
-		});
-	}
+	visit(type, [&](auto traits) {
+		using ColType = typename decltype(traits)::ColumnType;
+		column = std::make_shared<ColType>();
+	});
+
 	return column;
+}
+
+std::shared_ptr<clickhouse::Column> makeNonArrColumn(ColumnType type)
+{
+	std::shared_ptr<clickhouse::Column> column;
+	visit(type, [&](auto traits) {
+		using ColType = clickhouse::ColumnNullableT<typename decltype(traits)::ColumnType>;
+		column = std::make_shared<ColType>();
+	});
+
+	return column;
+}
+
+std::shared_ptr<clickhouse::Column> makeColumn(ColumnType type)
+{
+	if (isArr(type)) {
+		return makeArrColumn(type);
+	} else {
+		return makeNonArrColumn(type);
+	}
 }
 
 GetterFn makeGetter(ColumnType type)
@@ -583,44 +597,58 @@ GetterFn makeGetter(ColumnType type)
 	return getter;
 }
 
-ColumnWriterFn makeColumnwriter(ColumnType type)
+ColumnWriterFn makeArrColumnwriter(ColumnType type)
 {
 	ColumnWriterFn columnwriter;
 
-	if (isArr(type)) {
-		visitArr(type, [&](auto traits) {
-			columnwriter = [](ValueVariant* value, clickhouse::Column& column) {
-				using ColumnType = typename decltype(traits)::ColumnType;
-				using ValueType = std::invoke_result_t<
-					decltype(decltype(traits)::GETTER),
-					Nemea::UnirecRecordView&,
-					ur_field_type_t>;
-				auto* col = dynamic_cast<ColumnType*>(&column);
-				if (value) {
-					col->Append(std::get<ValueType>(*value));
-				}
-			};
-		});
-	} else {
-		visitNonArr(type, [&](auto traits) {
-			columnwriter = [](ValueVariant* value, clickhouse::Column& column) {
-				using ColumnType
-					= clickhouse::ColumnNullableT<typename decltype(traits)::ColumnType>;
-				using ValueType = std::invoke_result_t<
-					decltype(decltype(traits)::GETTER),
-					Nemea::UnirecRecordView&,
-					ur_field_type_t>;
-				auto* col = dynamic_cast<ColumnType*>(&column);
-				if (!value) {
-					col->Append(std::nullopt);
-				} else {
-					col->Append(std::get<ValueType>(*value));
-				}
-			};
-		});
-	}
+	visitArr(type, [&](auto traits) {
+		columnwriter = [](ValueVariant* value, clickhouse::Column& column) {
+			using ColumnType = typename decltype(traits)::ColumnType;
+			using ValueType = std::invoke_result_t<
+				decltype(decltype(traits)::GETTER),
+				Nemea::UnirecRecordView&,
+				ur_field_type_t>;
+			auto* col = dynamic_cast<ColumnType*>(&column);
+			if (value) {
+				col->Append(std::get<ValueType>(*value));
+			}
+		};
+	});
 
 	return columnwriter;
+}
+
+ColumnWriterFn makeNonArrColumnwriter(ColumnType type)
+{
+	ColumnWriterFn columnwriter;
+
+	visitNonArr(type, [&](auto traits) {
+		columnwriter = [](ValueVariant* value, clickhouse::Column& column) {
+			using ColumnType
+				= clickhouse::ColumnNullableT<typename decltype(traits)::ColumnType>;
+			using ValueType = std::invoke_result_t<
+				decltype(decltype(traits)::GETTER),
+				Nemea::UnirecRecordView&,
+				ur_field_type_t>;
+			auto* col = dynamic_cast<ColumnType*>(&column);
+			if (!value) {
+				col->Append(std::nullopt);
+			} else {
+				col->Append(std::get<ValueType>(*value));
+			}
+		};
+	});
+
+	return columnwriter;
+}
+
+ColumnWriterFn makeColumnwriter(ColumnType type)
+{
+	if (isArr(type)) {
+		return makeArrColumnwriter(type);
+	} else {
+		return makeNonArrColumnwriter(type);
+	}
 }
 
 std::string typeToClickhouse(ColumnType type)

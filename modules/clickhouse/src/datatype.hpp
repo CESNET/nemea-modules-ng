@@ -45,7 +45,6 @@ using ValueVariant = std::variant<
 	std::vector<in6_addr>,
 	std::string>;
 
-
 /**
  * @brief Lambda for converting unirec column data to clickhouse column.
  *
@@ -64,7 +63,6 @@ using ColumnWriterFn = std::function<void(ValueVariant* value, clickhouse::Colum
  *
  */
 using ColumnFactoryFn = std::function<std::shared_ptr<clickhouse::Column>()>;
-
 
 /**
  * @brief Column specification.

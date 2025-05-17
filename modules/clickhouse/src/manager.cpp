@@ -64,7 +64,32 @@ Manager::Manager(Config config)
 		m_empty_blocks.put(&block);
 	}
 
-	m_logger->info("Manager is ready");
+	// Prepare inserters
+	m_logger->info("Preparing {} inserter threads", M_CONFIG.inserterThreads);
+	for (unsigned int i = 0; i < M_CONFIG.inserterThreads; i++) {
+		auto clientOpts = clickhouse::ClientOptions()
+							  .SetEndpoints(endpoints)
+							  .SetUser(M_CONFIG.connection.user)
+							  .SetPassword(M_CONFIG.connection.password)
+							  .SetDefaultDatabase(M_CONFIG.connection.database);
+
+		m_inserters.emplace_back(std::make_unique<Inserter>(
+			m_inserters.size() + 1,
+			m_logger,
+			clientOpts,
+			m_columns,
+			M_CONFIG.connection.table,
+			m_filled_blocks,
+			m_empty_blocks));
+	}
+
+	// Start inserter threads
+	m_logger->info("Starting inserter threads");
+	for (auto& inserter : m_inserters) {
+		inserter->start();
+	}
+
+	m_logger->info("Clickhouse plugin is ready");
 }
 
 void Manager::processRecord(Nemea::UnirecRecordView& record)
@@ -103,6 +128,11 @@ void Manager::processRecord(Nemea::UnirecRecordView& record)
 		m_current_block = nullptr;
 		m_last_insert_time = now;
 	}
+
+	// Check for any exceptions was thrown by the inserter threads
+	for (auto& inserter : m_inserters) {
+		inserter->checkError();
+	}
 }
 
 void Manager::updateFieldIDs()
@@ -124,7 +154,7 @@ void Manager::updateFieldIDs()
 	m_logger->info("Updated field ids");
 }
 
-Config Manager::getConfig()
+Config Manager::getConfig() const
 {
 	return this->M_CONFIG;
 }
@@ -135,5 +165,21 @@ void Manager::stop()
 	if ((m_current_block != nullptr) && m_current_block->rows > 0) {
 		m_filled_blocks.put(m_current_block);
 		m_current_block = nullptr;
+	}
+
+	// Stop all the threads and wait for them to finish
+	m_logger->info("Sending stop signal to inserter threads...");
+	for (auto& inserter : m_inserters) {
+		inserter->stop();
+	}
+	for (const auto& inserter : m_inserters) {
+		(void) inserter;
+		// Wake up the inserter threads in case they are waiting on a .get()
+		m_filled_blocks.put(nullptr);
+	}
+
+	m_logger->info("Waiting for inserter threads to finish...");
+	for (auto& inserter : m_inserters) {
+		inserter->join();
 	}
 }

@@ -17,7 +17,7 @@ namespace Sampler {
  */
 struct SamplerStats {
 	uint64_t sampledRecords = 0; ///< Number of sampled records.
-	uint64_t totalRecords = 0;  ///< Total number of records.
+	uint64_t totalRecords = 0; ///< Total number of records.
 };
 
 /**

@@ -8,36 +8,11 @@
 
 #pragma once
 
-#include "config.hpp"
-#include "syncstack.hpp"
-#include "syncqueue.hpp"
 #include "datatype.hpp"
-#include "logger/logger.hpp"
+#include "inserter.hpp"
 
-#include <unirec++/unirec.hpp>
 #include <clickhouse/client.h>
-
-/**
- * @brief Noncopyable for inheritance.
- *
- */
-class Noncopyable {
-public:
-	Noncopyable() = default; // Default constructor is fine
-	Noncopyable(const Noncopyable&) = delete; // Delete copy constructor
-	Noncopyable& operator=(const Noncopyable&) = delete; // Delete copy assignment operator
-};
-
-/**
- * @brief Nonmoveable for inheritance.
- *
- */
-class Nonmoveable {
-public:
-	Nonmoveable() = default; // Default constructor is fine
-	Nonmoveable(Nonmoveable&&) = delete; // Delete move constructor
-	Nonmoveable& operator=(Nonmoveable&&) = delete; // Delete move assignment operator
-};
+#include <unirec++/unirec.hpp>
 
 /**
  * @brief Converts Unirec records to clickhouse format, buffers them and
@@ -85,7 +60,7 @@ public:
 	 *
 	 * @return Config
 	 */
-	Config getConfig();
+	Config getConfig() const;
 
 private:
 	const Config M_CONFIG; ///< application configuration
@@ -93,6 +68,7 @@ private:
 	std::vector<ColumnCtx> m_columns; ///< ClickHouse table schema definition
 
 	BlockCtx* m_current_block = nullptr; ///< pointer to the currently filling block
+    std::vector<std::unique_ptr<Inserter>> m_inserters; ///< inserter worker instances
 	std::vector<std::unique_ptr<BlockCtx>> m_blocks; ///< owned memory blocks
 	SyncStack<BlockCtx*> m_empty_blocks; ///< pool of empty blocks for reuse
 	SyncQueue<BlockCtx*> m_filled_blocks; ///< queue of blocks ready for insertion

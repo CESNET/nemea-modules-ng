@@ -13,16 +13,16 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include "config.hpp"
 #include "logger/logger.hpp"
 #include "manager.hpp"
-#include "config.hpp"
 
-#include <unirec++/unirec.hpp>
 #include <argparse/argparse.hpp>
 #include <clickhouse/client.h>
 #include <csignal>
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
+#include <unirec++/unirec.hpp>
 
 using namespace Nemea;
 
@@ -173,4 +173,3 @@ int main(int argc, char** argv)
 
 	return EXIT_SUCCESS;
 }
-                                          

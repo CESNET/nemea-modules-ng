@@ -57,7 +57,7 @@ public:
 	 *
 	 * @return The number of items in the queue
 	 */
-	std::size_t size() { return m_size; }
+	std::size_t size() const { return m_size; }
 
 private:
 	std::atomic_size_t m_size = 0; ///< current number of items in the queue

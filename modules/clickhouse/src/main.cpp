@@ -14,6 +14,7 @@
  */
 
 #include "logger/logger.hpp"
+#include "manager.hpp"
 #include "config.hpp"
 
 #include <unirec++/unirec.hpp>
@@ -34,26 +35,70 @@ void signalHandler(int signum)
 	g_stopFlag.store(true);
 }
 
-void handleFormatChange(UnirecInputInterface& interface)
+/**
+ * @brief Handle format change exception by adjusting the template and check template
+ *        against the one defined in config.
+ *
+ * This function is called when a `FormatChangeException` is caught in the main loop.
+ * It adjusts the template in the input interface to handle the format change but in this
+ * case the program only continues if the template is the same as defined in config. Meaning
+ * it only continues if the template changes to the same one.
+ *
+ * @param interface input interface for Unirec communication.
+ * @param manager Manager instance which buffers and sends data to clickhouse.
+ */
+void handleFormatChange(UnirecInputInterface& interface, Manager& manager)
 {
 	interface.changeTemplate();
+
+	ur_template_t* changedTemplate = interface.getTemplate();
+	auto res = std::unique_ptr<char, decltype(&free)>(
+		ur_template_string_delimiter(changedTemplate, ','),
+		&free);
+
+	const Config cfg = manager.getConfig();
+
+	if (cfg.templateColumnCsv != res.get()) {
+		throw std::runtime_error(
+			"Template in input interface doesn't match template in configuration.");
+	}
+
+	manager.updateFieldIDs();
 }
 
-void processNextRecord(UnirecInputInterface& interface)
+/**
+ * @brief Process unirec record in manager and forward to
+ *
+ * @param interface input interface for Unirec communication.
+ * @param manager Manager instance which buffers and sends data to clickhouse.
+ */
+void processNextRecord(UnirecInputInterface& interface, Manager& manager)
 {
 	std::optional<UnirecRecordView> unirecRecord = interface.receive();
 	if (!unirecRecord) {
 		return;
 	}
+
+	manager.processRecord(*unirecRecord);
 }
 
-void processUnirecRecords(UnirecInputInterface& interface)
+/**
+ * @brief Process Unirec records.
+ *
+ * The `processUnirecRecords` function continuously receives Unirec records through the provided
+ * input interface (`interface`). Each received record is processed, buffered and
+ * then sent to a clickhouse database.
+ *
+ * @param interface input interface for Unirec communication.
+ * @param manager Manager instance which buffers and sends data to clickhouse.
+ */
+void processUnirecRecords(UnirecInputInterface& interface, Manager& manager)
 {
 	while (!g_stopFlag.load()) {
 		try {
-			processNextRecord(interface);
+			processNextRecord(interface, manager);
 		} catch (FormatChangeException& ex) {
-			handleFormatChange(interface);
+			handleFormatChange(interface, manager);
 		} catch (EoFException& ex) {
 			break;
 		} catch (std::exception& ex) {
@@ -62,22 +107,23 @@ void processUnirecRecords(UnirecInputInterface& interface)
 	}
 }
 
-int main(int argc, char** argv) {
-    argparse::ArgumentParser program("Unirec Clickhouse");
+int main(int argc, char** argv)
+{
+	argparse::ArgumentParser program("Unirec Clickhouse");
 
-    program.add_argument("-c", "--config")
+	program.add_argument("-c", "--config")
 		.required()
 		.help("specify the xml config file. Format is in readme.")
 		.metavar("xml_file");
 
-    Unirec unirec({1, 0, "clickhouse", "Unirec clickhouse module"});
+	Unirec unirec({1, 0, "clickhouse", "Unirec clickhouse module"});
 
-    Nm::loggerInit();
+	Nm::loggerInit();
 	auto logger = Nm::loggerGet("main");
 
-    signal(SIGINT, signalHandler);
+	signal(SIGINT, signalHandler);
 
-    try {
+	try {
 		unirec.init(argc, argv);
 	} catch (HelpException& ex) {
 		std::cerr << program;
@@ -87,25 +133,38 @@ int main(int argc, char** argv) {
 		return EXIT_FAILURE;
 	}
 
-    try {
+	try {
 		program.parse_args(argc, argv);
 	} catch (const std::exception& ex) {
 		logger->error(ex.what());
 		return EXIT_FAILURE;
 	}
 
-    Config config;
+	Config config;
 	try {
 		config = parseConfig(program.get<std::string>("--config"));
+
 	} catch (const std::exception& ex) {
 		logger->error(ex.what());
 		return EXIT_FAILURE;
 	}
 
-    try {
+	std::unique_ptr<Manager> manager;
+	try {
+		manager = std::make_unique<Manager>(config);
+	} catch (const std::exception& ex) {
+		logger->error(ex.what());
+		return EXIT_FAILURE;
+	}
+
+	try {
 		UnirecInputInterface interface = unirec.buildInputInterface();
 
-		processUnirecRecords(interface);
+		processUnirecRecords(interface, *manager);
+
+		logger->info("here");
+
+		manager->stop();
 
 	} catch (std::exception& ex) {
 		logger->error(ex.what());
@@ -114,3 +173,4 @@ int main(int argc, char** argv) {
 
 	return EXIT_SUCCESS;
 }
+                                          

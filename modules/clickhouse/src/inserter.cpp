@@ -17,7 +17,7 @@ static constexpr int g_ERR_TABLE_NOT_FOUND = 60;
 
 /**
  * @brief Clickhouse column description
- * 
+ *
  */
 struct ColumnDescription {
 	std::string name; // clickhouse column name
@@ -26,54 +26,54 @@ struct ColumnDescription {
 
 /**
  * @brief Extracts all column descriptions from a clickhouse block
- * 
+ *
  * @param block
- * @return std::vector<ColumnDescription> 
+ * @return std::vector<ColumnDescription>
  */
-static std::vector<ColumnDescription>
-extractBlockDescription(const clickhouse::Block& block)
+static std::vector<ColumnDescription> extractBlockDescription(const clickhouse::Block& block)
 {
-    std::vector<ColumnDescription> columnDescriptions;
+	std::vector<ColumnDescription> columnDescriptions;
 
-	std::size_t rowCount = block.GetRowCount();
+	const std::size_t rowCount = block.GetRowCount();
 
-    if (block.GetColumnCount() < 2 || rowCount == 0) {
-        return columnDescriptions;
-    }
+	if (block.GetColumnCount() < 2 || rowCount == 0) {
+		return columnDescriptions;
+	}
 
 	const uint8_t columnNameIndex = 0;
 	const uint8_t columnTypeIndex = 1;
 
-    const auto& nameColumns = block[columnNameIndex]->As<clickhouse::ColumnString>();
-    const auto& typeColumns = block[columnTypeIndex]->As<clickhouse::ColumnString>();
+	const auto& nameColumns = block[columnNameIndex]->As<clickhouse::ColumnString>();
+	const auto& typeColumns = block[columnTypeIndex]->As<clickhouse::ColumnString>();
 
-    columnDescriptions.reserve(block.GetRowCount());
-	
-    for (std::size_t rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-        ColumnDescription columnDescription {
-            .name = std::string(nameColumns->At(rowIndex)),
-            .type = std::string(typeColumns->At(rowIndex)),
-        };
-        columnDescriptions.emplace_back(columnDescription);
-    }
+	columnDescriptions.reserve(block.GetRowCount());
 
-    return columnDescriptions;
+	for (std::size_t rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+		const ColumnDescription columnDescription {
+			.name = std::string(nameColumns->At(rowIndex)),
+			.type = std::string(typeColumns->At(rowIndex)),
+		};
+		columnDescriptions.emplace_back(columnDescription);
+	}
+
+	return columnDescriptions;
 }
 
 std::vector<ColumnDescription>
 selectTableDescription(clickhouse::Client& client, const std::string& table)
 {
-    std::vector<ColumnDescription> columnDescriptions;
-    const auto selectCallback = [&](const clickhouse::Block& block) {
-        auto partial = extractBlockDescription(block);
-        columnDescriptions.insert(columnDescriptions.end(),
-							std::make_move_iterator(partial.begin()),
-							std::make_move_iterator(partial.end()));
-    };
+	std::vector<ColumnDescription> columnDescriptions;
+	const auto selectCallback = [&](const clickhouse::Block& block) {
+		auto partial = extractBlockDescription(block);
+		columnDescriptions.insert(
+			columnDescriptions.end(),
+			std::make_move_iterator(partial.begin()),
+			std::make_move_iterator(partial.end()));
+	};
 
-    const std::string query = "DESCRIBE TABLE " + table;
+	const std::string query = "DESCRIBE TABLE " + table;
 
-    client.Select(query, selectCallback);
+	client.Select(query, selectCallback);
 
 	return columnDescriptions;
 }
@@ -176,7 +176,7 @@ Inserter::Inserter(
 	SyncStack<BlockCtx*>& emptyBlocks)
 
 	: m_id(inserterId)
-	, m_logger(logger)
+	, m_logger(std::move(logger))
 	, m_client_opts(std::move(clientOpts))
 	, m_columns(columns)
 	, m_table(table)
@@ -216,7 +216,10 @@ void Inserter::insert(clickhouse::Block& block)
 			break;
 
 		} catch (const std::exception& ex) {
-			m_logger->error("[Worker {}] Insert failed: {} - retrying in 1 second", m_id, ex.what());
+			m_logger->error(
+				"[Worker {}] Insert failed: {} - retrying in 1 second",
+				m_id,
+				ex.what());
 			needsReconnect = true;
 		}
 

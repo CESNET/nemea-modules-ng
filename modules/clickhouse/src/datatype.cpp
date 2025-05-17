@@ -581,9 +581,8 @@ std::shared_ptr<clickhouse::Column> makeColumn(ColumnType type)
 {
 	if (isArr(type)) {
 		return makeArrColumn(type);
-	} else {
-		return makeNonArrColumn(type);
 	}
+	return makeNonArrColumn(type);
 }
 
 GetterFn makeGetter(ColumnType type)
@@ -624,8 +623,7 @@ ColumnWriterFn makeNonArrColumnwriter(ColumnType type)
 
 	visitNonArr(type, [&](auto traits) {
 		columnwriter = [](ValueVariant* value, clickhouse::Column& column) {
-			using ColumnType
-				= clickhouse::ColumnNullableT<typename decltype(traits)::ColumnType>;
+			using ColumnType = clickhouse::ColumnNullableT<typename decltype(traits)::ColumnType>;
 			using ValueType = std::invoke_result_t<
 				decltype(decltype(traits)::GETTER),
 				Nemea::UnirecRecordView&,
@@ -646,9 +644,8 @@ ColumnWriterFn makeColumnwriter(ColumnType type)
 {
 	if (isArr(type)) {
 		return makeArrColumnwriter(type);
-	} else {
-		return makeNonArrColumnwriter(type);
 	}
+	return makeNonArrColumnwriter(type);
 }
 
 std::string typeToClickhouse(ColumnType type)

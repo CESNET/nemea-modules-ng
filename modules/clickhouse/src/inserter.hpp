@@ -41,7 +41,6 @@ public:
 	Nonmoveable& operator=(Nonmoveable&&) = delete; // Delete move assignment operator
 };
 
-
 /**
  * @brief All possible types of parsed values sent into clickhouse.
  *
@@ -156,7 +155,7 @@ public:
 	 */
 	Inserter(
 		int inserterId,
-		std::shared_ptr<spdlog::logger>,
+		std::shared_ptr<spdlog::logger> logger,
 		clickhouse::ClientOptions clientOpts,
 		const std::vector<ColumnCtx>& columns,
 		const std::string& table,

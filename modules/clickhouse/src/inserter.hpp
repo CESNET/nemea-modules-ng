@@ -9,11 +9,11 @@
 
 #pragma once
 
+#include "clickhouse.hpp"
 #include "datatype.hpp"
 #include "logger/logger.hpp"
 #include "syncqueue.hpp"
 #include "syncstack.hpp"
-#include "clickhouse.hpp"
 
 #include <thread>
 #include <unirec++/unirec.hpp>

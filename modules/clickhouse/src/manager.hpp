@@ -10,8 +10,8 @@
 
 #include "datatype.hpp"
 #include "inserter.hpp"
+#include "clickhouse.hpp"
 
-#include <clickhouse/client.h>
 #include <unirec++/unirec.hpp>
 
 /**

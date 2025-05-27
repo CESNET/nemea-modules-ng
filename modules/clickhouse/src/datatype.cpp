@@ -48,7 +48,7 @@ static std::vector<uint8_t> getBytes(Nemea::UnirecRecordView& record, ur_field_i
 	std::vector<uint8_t> result;
 	result.reserve(arr.size());
 	for (const auto& value : arr) {
-		result.push_back((char) value);
+		result.push_back(static_cast<unsigned char>(value));
 	}
 	return result;
 }

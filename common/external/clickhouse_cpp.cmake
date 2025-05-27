@@ -9,6 +9,10 @@ FetchContent_Declare(
 	GIT_SHALLOW ON
 )
 
+set(DEBUG_DEPENDENCIES OFF)
+
+add_compile_options(-Wno-pedantic -Wno-conversion -Wno-sign-conversion)
+
 FetchContent_MakeAvailable(clickhouse_cpp)
 
 add_library(clickhouse_cpp::client ALIAS clickhouse-cpp-lib)

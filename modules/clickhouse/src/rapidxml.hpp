@@ -15,6 +15,10 @@
 #include <new> // For placement new
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+
 // On MSVC, disable "conditional expression is constant" warning (level 4).
 // This warning is almost impossible to avoid with certain types of templated code
 #ifdef _MSC_VER
@@ -2493,6 +2497,8 @@ const unsigned char lookup_tables<Dummy>::lookup_upcase[256] = {
 
 // Undefine internal macros
 #undef RAPIDXML_PARSE_ERROR
+
+#pragma GCC diagnostic pop
 
 // On MSVC, restore warnings state
 #ifdef _MSC_VER

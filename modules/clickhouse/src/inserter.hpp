@@ -13,8 +13,8 @@
 #include "logger/logger.hpp"
 #include "syncqueue.hpp"
 #include "syncstack.hpp"
+#include "clickhouse.hpp"
 
-#include <clickhouse/client.h>
 #include <thread>
 #include <unirec++/unirec.hpp>
 #include <variant>

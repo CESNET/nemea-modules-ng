@@ -69,7 +69,7 @@ static Config::Endpoint parseEndpoint(rapidxml::xml_node<>* endpointNode)
 			endpoint.host = node->value();
 
 		} else if (strcmp(node->name(), "port") == 0) {
-			endpoint.port = parseInteger(node->value());
+			endpoint.port = static_cast<uint16_t>(parseInteger(node->value()));
 
 		} else {
 			std::stringstream sstream;
@@ -195,16 +195,16 @@ static void parseParams(rapidxml::xml_node<>* paramsNode, Config& config)
 			parseConnection(node, config);
 
 		} else if (strcmp(node->name(), "blocks") == 0) {
-			config.blocks = parseInteger(node->value());
+			config.blocks = static_cast<uint64_t>(parseInteger(node->value()));
 
 		} else if (strcmp(node->name(), "inserterThreads") == 0) {
-			config.inserterThreads = parseInteger(node->value());
+			config.inserterThreads = static_cast<uint64_t>(parseInteger(node->value()));
 
 		} else if (strcmp(node->name(), "blockInsertThreshold") == 0) {
-			config.blockInsertThreshold = parseInteger(node->value());
+			config.blockInsertThreshold = static_cast<uint64_t>(parseInteger(node->value()));
 
 		} else if (strcmp(node->name(), "blockInsertMaxDelaySecs") == 0) {
-			config.blockInsertMaxDelaySecs = parseInteger(node->value());
+			config.blockInsertMaxDelaySecs = static_cast<uint64_t>(parseInteger(node->value()));
 
 		} else if (strcmp(node->name(), "columns") == 0) {
 			parseColumns(node, config);

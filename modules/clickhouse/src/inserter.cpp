@@ -49,8 +49,8 @@ static std::vector<ColumnDescription> extractBlockDescription(const clickhouse::
 
 	for (std::size_t rowIndex = 0; rowIndex < rowCount; rowIndex++) {
 		const ColumnDescription columnDescription {
-			.name = std::string(nameColumns->At(rowIndex)),
-			.type = std::string(typeColumns->At(rowIndex)),
+			std::string(nameColumns->At(rowIndex)),
+			std::string(typeColumns->At(rowIndex))
 		};
 		columnDescriptions.emplace_back(columnDescription);
 	}

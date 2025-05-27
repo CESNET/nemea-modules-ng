@@ -9,8 +9,8 @@
 #pragma once
 
 #include "config.hpp"
+#include "clickhouse.hpp"
 
-#include <clickhouse/client.h>
 #include <memory>
 #include <unirec++/unirec.hpp>
 

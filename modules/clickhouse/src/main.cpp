@@ -16,9 +16,9 @@
 #include "config.hpp"
 #include "logger/logger.hpp"
 #include "manager.hpp"
+#include "clickhouse.hpp"
 
 #include <argparse/argparse.hpp>
-#include <clickhouse/client.h>
 #include <csignal>
 #include <iostream>
 #include <stdexcept>

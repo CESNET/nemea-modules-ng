@@ -13,10 +13,10 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include "clickhouse.hpp"
 #include "config.hpp"
 #include "logger/logger.hpp"
 #include "manager.hpp"
-#include "clickhouse.hpp"
 
 #include <argparse/argparse.hpp>
 #include <csignal>

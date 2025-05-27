@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "config.hpp"
 #include "clickhouse.hpp"
+#include "config.hpp"
 
 #include <memory>
 #include <unirec++/unirec.hpp>

@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "clickhouse.hpp"
 #include "datatype.hpp"
 #include "inserter.hpp"
-#include "clickhouse.hpp"
 
 #include <unirec++/unirec.hpp>
 
@@ -68,7 +68,7 @@ private:
 	std::vector<ColumnCtx> m_columns; ///< ClickHouse table schema definition
 
 	BlockCtx* m_current_block = nullptr; ///< pointer to the currently filling block
-    std::vector<std::unique_ptr<Inserter>> m_inserters; ///< inserter worker instances
+	std::vector<std::unique_ptr<Inserter>> m_inserters; ///< inserter worker instances
 	std::vector<std::unique_ptr<BlockCtx>> m_blocks; ///< owned memory blocks
 	SyncStack<BlockCtx*> m_empty_blocks; ///< pool of empty blocks for reuse
 	SyncQueue<BlockCtx*> m_filled_blocks; ///< queue of blocks ready for insertion

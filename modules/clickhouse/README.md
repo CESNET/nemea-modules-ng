@@ -16,7 +16,7 @@ By default it is the first one and the others are used if the previous ones fail
 - `-vvv`             Be even more verbose.
 
 ### Module specific parameters
-- `-c, --config <int>`  Count of records that hash table can keep simultaneously. Default value is 2^20
+- `-c, --config <int>`  YAML config specifying connections params and data columns
 
 ## Usage
 The module expects the ClickHouse database to already contain the table with
@@ -90,6 +90,8 @@ ORDER BY TIME_FIRST
 ```
 
 ## Configuration
+YAML config
+
 ### Config specification
 | Parameter | Description | Default |
 |-----------|-------------|---------|
@@ -106,46 +108,58 @@ ORDER BY TIME_FIRST
 | **inserterThreads** | Number of threads used for data insertion to ClickHouse. In other words, the number of ClickHouse connections that are concurrently used. | 8 |
 | **blockInsertThreshold** | Number of rows to be buffered into a block before the block is sent out to be inserted into the database. | 100000 |
 | **blockInsertMaxDelaySecs** | Maximum number of seconds to wait before a block gets sent out to be inserted into the database even if the threshold has not been reached yet. | 10 |
-| **columns** | The fields that each row will consist of. It is in unirec template format. (([TYPE] [NAME],)*([TYPE] [NAME])) | |
+| **columns** | List of fields which each row consists of. It is in unirec template format. ([TYPE] [NAME]) | |
 
 
 ### Example configuration
-```XML
-<output>
-    <name>Clickhouse output</name>
-    <plugin>clickhouse</plugin>
-    <params>
-        <connection>
-            <endpoints>
-                <endpoint>
-                    <host>localhost</host>
-                    <port>9000</port>
-                </endpoint>
-            </endpoints>
-            <user>clickhouse</user>
-            <password>clickhouse</password>
-            <database>clickhouse</database>
-            <table>flows</table>
-        </connection>
-        <inserterThreads>32</inserterThreads>
-        <blocks>1024</blocks>
-        <blockInsertThreshold>100000</blockInsertThreshold>
-        <columns>ipaddr DST_IP,ipaddr SRC_IP,uint64 BYTES,
-                 uint64 BYTES_REV,uint64 LINK_BIT_FIELD,time TIME_FIRST,
-                 time TIME_LAST,uint32 PACKETS,uint32 PACKETS_REV,
-                 uint16 DST_PORT,uint16 SRC_PORT,uint8 FLOW_END_REASON,
-                 uint8 PROTOCOL,uint8 TCP_FLAGS,uint8 TCP_FLAGS_REV,
-                 bytes IDP_CONTENT,bytes IDP_CONTENT_REV,
-                 int8* PPI_PKT_DIRECTIONS,uint8* PPI_PKT_FLAGS,
-                 bytes TLS_JA3_FINGERPRINT,string TLS_SNI,
-                 uint16* PPI_PKT_LENGTHS,uint32* DBI_BRST_BYTES,
-                 uint32* DBI_BRST_PACKETS,uint32* D_PHISTS_IPT,
-                 uint32* D_PHISTS_SIZES,uint32* SBI_BRST_BYTES,
-                 uint32* SBI_BRST_PACKETS,uint32* S_PHISTS_IPT,
-                 uint32* S_PHISTS_SIZES,time* DBI_BRST_TIME_START,
-                 time* DBI_BRST_TIME_STOP,time* PPI_PKT_TIMES,
-                 time* SBI_BRST_TIME_START,time* SBI_BRST_TIME_STOP
-        </columns>
-    </params>
-</output>
+```YAML
+connection:
+  endpoints:
+    - host: localhost
+      port: 9000
+  username: clickhouse
+  password: clickhouse
+  database: clickhouse
+  table: flows
+
+inserterThreads: 32
+blocks: 1024
+blockInsertThreshold: 100000
+
+columns:
+  - ipaddr DST_IP
+  - ipaddr SRC_IP
+  - uint64 BYTES
+  - uint64 BYTES_REV
+  - uint64 LINK_BIT_FIELD
+  - time TIME_FIRST
+  - time TIME_LAST
+  - uint32 PACKETS
+  - uint32 PACKETS_REV
+  - uint16 DST_PORT
+  - uint16 SRC_PORT
+  - uint8 FLOW_END_REASON
+  - uint8 PROTOCOL
+  - uint8 TCP_FLAGS
+  - uint8 TCP_FLAGS_REV
+  - bytes IDP_CONTENT
+  - bytes IDP_CONTENT_REV
+  - int8* PPI_PKT_DIRECTIONS
+  - uint8* PPI_PKT_FLAGS
+  - bytes TLS_JA3_FINGERPRINT
+  - string TLS_SNI
+  - uint16* PPI_PKT_LENGTHS
+  - uint32* DBI_BRST_BYTES
+  - uint32* DBI_BRST_PACKETS
+  - uint32* D_PHISTS_IPT
+  - uint32* D_PHISTS_SIZES
+  - uint32* SBI_BRST_BYTES
+  - uint32* SBI_BRST_PACKETS
+  - uint32* S_PHISTS_IPT
+  - uint32* S_PHISTS_SIZES
+  - time* DBI_BRST_TIME_START
+  - time* DBI_BRST_TIME_STOP
+  - time* PPI_PKT_TIMES
+  - time* SBI_BRST_TIME_START
+  - time* SBI_BRST_TIME_STOP
 ```

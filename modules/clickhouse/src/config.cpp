@@ -8,7 +8,7 @@
  */
 
 #include "config.hpp"
-#include "rapidxml.hpp"
+#include "yaml-cpp/yaml.h"
 
 #include <algorithm>
 #include <cstring>
@@ -54,45 +54,29 @@ static inline void trim(std::string& str)
 			  }));
 }
 
-static int parseInteger(const char* intString)
-{
-	return std::stoi(std::string(intString));
-}
-
-static Config::Endpoint parseEndpoint(rapidxml::xml_node<>* endpointNode)
+static Config::Endpoint parseEndpoint(const YAML::Node& node)
 {
 	Config::Endpoint endpoint;
 
-	for (rapidxml::xml_node<>* node = endpointNode->first_node(); node != nullptr;
-		 node = node->next_sibling()) {
-		if (strcmp(node->name(), "host") == 0) {
-			endpoint.host = node->value();
+	if (node["host"]) {
+		endpoint.host = node["host"].as<std::string>();
 
-		} else if (strcmp(node->name(), "port") == 0) {
-			endpoint.port = static_cast<uint16_t>(parseInteger(node->value()));
-
-		} else {
-			std::stringstream sstream;
-			sstream << "Invalid endpoint parameter: " << node->name();
-			throw std::runtime_error(sstream.str());
+		if (node["port"]) {
+			endpoint.port = node["port"].as<uint16_t>();
 		}
+	} else {
+		std::stringstream sstream;
+		sstream << "Host parameter missing";
+		throw std::runtime_error(sstream.str());
 	}
 
 	return endpoint;
 }
 
-static void parseEndpoints(rapidxml::xml_node<>* endpointsNode, Config& config)
+static void parseEndpoints(const YAML::Node& node, Config& config)
 {
-	for (rapidxml::xml_node<>* node = endpointsNode->first_node(); node != nullptr;
-		 node = node->next_sibling()) {
-		if (strcmp(node->name(), "endpoint") == 0) {
-			config.connection.endpoints.push_back(parseEndpoint(node));
-
-		} else {
-			std::stringstream sstream;
-			sstream << "Endpoints can only have endpoint not: " << node->name();
-			throw std::runtime_error(sstream.str());
-		}
+	for (const YAML::Node endpoint : node) {
+		config.connection.endpoints.push_back(parseEndpoint(endpoint));
 	}
 }
 
@@ -117,28 +101,26 @@ static const std::map<std::string, ColumnType> g_string_to_columntype
 	   {"time", ColumnType::TIME},       {"time*", ColumnType::TIME_ARR},
 	   {"string", ColumnType::STRING},   {"bytes", ColumnType::BYTES}};
 
-static void parseColumns(rapidxml::xml_node<>* columnsNode, Config& config)
+static void parseColumns(YAML::Node &columnsNode, Config& config)
 {
-	std::stringstream csvString(columnsNode->value());
-	std::string curCsvValue;
-
-	while (std::getline(csvString, curCsvValue, ',')) {
+	for (const YAML::Node& col : columnsNode) {
+		auto colValue = col.as<std::string>();
 		// Type/Name can't have space. Trim leading and trailing spaces.
 		// Leading spaces for name are trimmed below.
-		trim(curCsvValue);
+		trim(colValue);
 
 		Config::Column column;
-		size_t const spacePos = curCsvValue.find(' ');
+		size_t const spacePos = colValue.find(' ');
 
-		std::string const type = curCsvValue.substr(0, spacePos);
-		std::string name = curCsvValue.substr(spacePos + 1);
+		std::string const type = colValue.substr(0, spacePos);
+		std::string name = colValue.substr(spacePos + 1);
 
 		try {
 			column.type = g_string_to_columntype.at(type);
 
 		} catch (std::out_of_range& ex) {
 			std::stringstream sstream;
-			sstream << "Incorrect column type: " << curCsvValue.substr(0, spacePos);
+			sstream << "Incorrect column type: " << colValue.substr(0, spacePos);
 			throw std::runtime_error(sstream.str());
 		}
 
@@ -160,104 +142,69 @@ static void parseColumns(rapidxml::xml_node<>* columnsNode, Config& config)
 	config.templateColumnCsv.pop_back();
 }
 
-static void parseConnection(rapidxml::xml_node<>* connectionNode, Config& config)
+static void parseConnection(const YAML::Node& node, Config& config)
 {
-	for (rapidxml::xml_node<>* node = connectionNode->first_node(); node != nullptr;
-		 node = node->next_sibling()) {
-		if (strcmp(node->name(), "endpoints") == 0) {
-			parseEndpoints(node, config);
+	parseEndpoints(node["endpoints"], config);
 
-		} else if (strcmp(node->name(), "user") == 0) {
-			config.connection.user = node->value();
+	if (node["username"] && node["password"] && node["database"] && node["table"]) {
+		config.connection.user = node["username"].as<std::string>();
+		config.connection.password = node["password"].as<std::string>();
+		config.connection.database = node["database"].as<std::string>();
+		config.connection.table = node["table"].as<std::string>();
 
-		} else if (strcmp(node->name(), "password") == 0) {
-			config.connection.password = node->value();
-
-		} else if (strcmp(node->name(), "database") == 0) {
-			config.connection.database = node->value();
-
-		} else if (strcmp(node->name(), "table") == 0) {
-			config.connection.table = node->value();
-
-		} else {
-			std::stringstream sstream;
-			sstream << "Incorrect connection argument name: " << node->name();
-			throw std::runtime_error(sstream.str());
-		}
-	}
-}
-
-static void parseParams(rapidxml::xml_node<>* paramsNode, Config& config)
-{
-	for (rapidxml::xml_node<>* node = paramsNode->first_node(); node != nullptr;
-		 node = node->next_sibling()) {
-		if (strcmp(node->name(), "connection") == 0) {
-			parseConnection(node, config);
-
-		} else if (strcmp(node->name(), "blocks") == 0) {
-			config.blocks = static_cast<uint64_t>(parseInteger(node->value()));
-
-		} else if (strcmp(node->name(), "inserterThreads") == 0) {
-			config.inserterThreads = static_cast<uint64_t>(parseInteger(node->value()));
-
-		} else if (strcmp(node->name(), "blockInsertThreshold") == 0) {
-			config.blockInsertThreshold = static_cast<uint64_t>(parseInteger(node->value()));
-
-		} else if (strcmp(node->name(), "blockInsertMaxDelaySecs") == 0) {
-			config.blockInsertMaxDelaySecs = static_cast<uint64_t>(parseInteger(node->value()));
-
-		} else if (strcmp(node->name(), "columns") == 0) {
-			parseColumns(node, config);
-
-		} else {
-			std::stringstream sstream;
-			sstream << "Incorrect argument argument name: " << node->name();
-			throw std::runtime_error(sstream.str());
-		}
-	}
-}
-
-static void parseRoot(rapidxml::xml_node<>* rootNode, Config& config)
-{
-	// Root element has to be output
-	if (strcmp(rootNode->name(), "output") != 0) {
-		throw std::runtime_error("Malformatted xml");
-	}
-
-	for (rapidxml::xml_node<>* node = rootNode->first_node(); node != nullptr;
-		 node = node->next_sibling()) {
-		if (strcmp(node->name(), "params") == 0) {
-			parseParams(node, config);
-		}
-	}
-}
-
-std::string loadFile(const std::string& filename)
-{
-	std::ifstream const file(filename);
-
-	if (!file) {
+	} else {
 		std::stringstream sstream;
-		sstream << "Could not open config file: " << filename;
+		sstream << "Argument in connection missing";
 		throw std::runtime_error(sstream.str());
 	}
+}
 
-	std::ostringstream buffer;
-	buffer << file.rdbuf();
-	return buffer.str();
+static void parseBlocks(const YAML::Node& node, Config& config)
+{
+	if (node) {
+		config.blocks = node.as<uint64_t>();
+	}
+}
+
+static void parseInserterThreads(const YAML::Node& node, Config& config)
+{
+	if (node) {
+		config.inserterThreads = node.as<uint64_t>();
+	}
+}
+
+static void parseBlockInsertThreshold(const YAML::Node& node, Config& config)
+{
+	if (node) {
+		config.blockInsertThreshold = node.as<uint64_t>();
+	}
+}
+
+static void parseBlockInsertMaxDelaySecs(const YAML::Node& node, Config& config)
+{
+	if (node) {
+		config.blockInsertMaxDelaySecs = node.as<uint64_t>();
+	}
+}
+
+static void parseRoot(const YAML::Node& node, Config& config)
+{
+	parseConnection(node["connection"], config);
+	parseColumns(node["columns"], config);
+
+	parseBlocks(node["blocks"], config);
+	parseInserterThreads(node["inserterThreads"], config);
+	parseBlockInsertThreshold(node["blockInsertThreshold"], config);
+	parseBlockInsertMaxDelaySecs(node["blockInsertMaxDelaySecs"], config);
 }
 
 Config parseConfig(const std::string& filename)
 {
-	std::string xmlString = loadFile(filename);
-
 	Config config {};
 
-	rapidxml::xml_document<> doc;
+	const YAML::Node root = YAML::LoadFile(filename);
 
-	doc.parse<0>(xmlString.data());
-
-	parseRoot(doc.first_node(), config);
+	parseRoot(root, config);
 
 	return config;
 }

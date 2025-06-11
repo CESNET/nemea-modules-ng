@@ -13,6 +13,7 @@ target_link_libraries(clickhouse PRIVATE
 	unirec::unirec
 	trap::trap
 	argparse
+	yaml-cpp
 )
 
 install(TARGETS clickhouse DESTINATION ${INSTALL_DIR_BIN})

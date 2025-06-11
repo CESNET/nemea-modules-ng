@@ -20,7 +20,7 @@
  *
  */
 enum ColumnType : uint8_t {
-	INT8_ARR,
+	INT8_ARR = 0,
 	INT16_ARR,
 	INT32_ARR,
 	INT64_ARR,

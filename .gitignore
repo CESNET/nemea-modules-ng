@@ -9,3 +9,6 @@ build/
 
 # Clangd cache files
 .clang/
+
+# Direnv files
+.direnv

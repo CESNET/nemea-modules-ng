@@ -101,7 +101,7 @@ static const std::map<std::string, ColumnType> g_string_to_columntype
 	   {"time", ColumnType::TIME},       {"time*", ColumnType::TIME_ARR},
 	   {"string", ColumnType::STRING},   {"bytes", ColumnType::BYTES}};
 
-static void parseColumns(YAML::Node &columnsNode, Config& config)
+static void parseColumns(const YAML::Node& columnsNode, Config& config)
 {
 	for (const YAML::Node& col : columnsNode) {
 		auto colValue = col.as<std::string>();

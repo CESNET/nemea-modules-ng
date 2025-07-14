@@ -146,6 +146,15 @@ static void ensureSchema(
 		const auto& expectedType = typeToClickhouse(columns[i].type);
 		const auto& [actual_name, actual_type] = dbColumns[i];
 
+		// strip Nullable(...) wrapper for comparison
+		std::string actualBaseType = actual_type;
+		static const std::string nullablePrefix = "Nullable(";
+		if (actual_type.rfind(nullablePrefix, 0) == 0 && actual_type.back() == ')') {
+			actualBaseType = actual_type.substr(
+				nullablePrefix.size(), actual_type.size() - nullablePrefix.size() - 1
+			);
+		}
+
 		if (expectedName != actual_name) {
 			std::stringstream sstream;
 			sstream << "Expected column #" << i << " in table \"" << table << "\" to be named \""
@@ -154,7 +163,8 @@ static void ensureSchema(
 			throw std::runtime_error(sstream.str());
 		}
 
-		if (expectedType != actual_type) {
+		// compare expected to stripped actual type
+		if (expectedType != actualBaseType) {
 			std::stringstream sstream;
 			sstream << "Expected column #" << i << " in table \"" << table << "\" to be of type \""
 					<< expectedType << "\" but it is \"" << actual_type << "\"\n"

@@ -11,6 +11,7 @@
 #include "datatype.hpp"
 
 #include <iostream>
+#include <cstring>
 
 template <unsigned Precision>
 class ColumnDateTime64 : public clickhouse::ColumnDateTime64 {
@@ -56,7 +57,21 @@ static std::vector<uint8_t> getBytes(Nemea::UnirecRecordView& record, ur_field_i
 static in6_addr getIp(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
 {
 	Nemea::IpAddress addr = record.getFieldAsType<Nemea::IpAddress>(fieldID);
-	return *((in6_addr*) &addr.ip);
+	in6_addr result;
+	
+	if (addr.isIpv4()) {
+		// Convert IPv4 to IPv4-mapped IPv6 format: ::ffff:x.x.x.x
+		std::memset(&result, 0, sizeof(result));
+		result.s6_addr[10] = 0xff;
+		result.s6_addr[11] = 0xff;
+		// Copy the IPv4 bytes (stored at bytes 8-11 in the Nemea structure)
+		std::memcpy(&result.s6_addr[12], &addr.ip.bytes[8], 4);
+	} else {
+		// For IPv6, copy the entire 16-byte structure
+		std::memcpy(&result, &addr.ip, sizeof(result));
+	}
+	
+	return result;
 }
 
 static std::vector<in6_addr> getIpArr(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
@@ -65,8 +80,22 @@ static std::vector<in6_addr> getIpArr(Nemea::UnirecRecordView& record, ur_field_
 		= record.getFieldAsUnirecArray<Nemea::IpAddress>(fieldID);
 	std::vector<in6_addr> result;
 	result.reserve(addrArr.size());
-	for (const auto& value : addrArr) {
-		result.push_back(*((in6_addr*) &value.ip));
+	for (const auto& addr : addrArr) {
+		in6_addr converted;
+		
+		if (addr.isIpv4()) {
+			// Convert IPv4 to IPv4-mapped IPv6 format: ::ffff:x.x.x.x
+			std::memset(&converted, 0, sizeof(converted));
+			converted.s6_addr[10] = 0xff;
+			converted.s6_addr[11] = 0xff;
+			// Copy the IPv4 bytes (stored at bytes 8-11 in the Nemea structure)
+			std::memcpy(&converted.s6_addr[12], &addr.ip.bytes[8], 4);
+		} else {
+			// For IPv6, copy the entire 16-byte structure
+			std::memcpy(&converted, &addr.ip, sizeof(converted));
+		}
+		
+		result.push_back(converted);
 	}
 	return result;
 }

@@ -12,7 +12,7 @@ target_link_libraries(geolite PRIVATE
 	unirec::unirec
 	trap::trap
 	argparse
-	xxhash
+	maxminddb
 )
 
 install(TARGETS geolite DESTINATION ${INSTALL_DIR_BIN})

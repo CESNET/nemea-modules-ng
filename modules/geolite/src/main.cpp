@@ -1,12 +1,8 @@
-#include <array>
-#include <bitset>
-#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 
 #include "geolite.hpp"
 #include <argparse/argparse.hpp>
-#include <atomic>
 #include <maxminddb.h>
 #include <netdb.h>
 #include <unirec++/bidirectionalInterface.hpp>
@@ -14,59 +10,122 @@
 #include <unirec++/ipAddress.hpp>
 #include <unirec++/outputInterface.hpp>
 #include <unirec++/unirec.hpp>
+#include <unirec++/unirecRecordView.hpp>
 #include <unirec/ipaddr.h>
 #include <unirec/unirec.h>
 
 #define DEFAULT_DIRECTION true
 
-#define CITY_OUTPUTSPEC                                                                            \
-	= "ipaddr ip, string country_name, string city_name, float latitude, float longitude"
+#define SRC_MAXDB_FIELDS                                                                           \
+	", string SRC_CITY_NAME, string SRC_COUNTRY_NAME, double SRC_LATITUDE, double SRC_LONGITUDE, " \
+	"string SRC_POSTAL_CODE"
+
+#define DST_MAXDB_FIELDS                                                                           \
+	", string DST_CITY_NAME, string DST_COUNTRY_NAME, double DST_LATITUDE, double DST_LONGITUDE, " \
+	"string DST_POSTAL_CODE"
 
 using namespace Nemea;
 
-// static std::atomic<bool> g_stopFlag(false);
+static IpAddress
+getIp(std::optional<UnirecRecordView>& inputUnirecView, Geolite::Geolite& maxdb, IpAddress& fieldIp)
+{
+	auto ipId = static_cast<ur_field_id_t>(ur_get_id_by_name(maxdb.getIpField()));
+	if (ipId == UR_E_INVALID_NAME) {
+		throw std::runtime_error(
+			std::string("Name/s for Unirec IP fields not found in Unirec communication"));
+	}
 
-// static void processNextRecord(UnirecBidirectionalInterface& biInterface, Geolite::Geolite maxdb)
-// {
-// 	std::optional<UnirecRecordView> unirecRecord = biInterface.receive();
-// 	if (!unirecRecord) {
-// 		return;
-// 	}
-//
-// 	auto unirecId = static_cast<ur_field_id_t>(ur_get_id_by_name(maxdb.getIpField()));
-// 	if (unirecId == UR_E_INVALID_NAME) {
-// 		throw std::runtime_error(std::string("Invalid Unirec name:") + maxdb.getIpField());
-// 		return;
-// 	}
-//
-// 	maxdb.setIpAddress(unirecRecord->getFieldAsType<IpAddress>(unirecId));
-// 	std::string cityName;
-// 	try {
-// 		cityName = maxdb.getCityName();
-// 	} catch (const std::exception& ex) {
-// 		cityName = "";
-// 	}
-//
-// 	// TODO: create new fields
-//
-// 	biInterface.send(*unirecRecord);
-// }
+	try {
+		fieldIp = inputUnirecView->getFieldAsType<IpAddress>(ipId);
+		fieldIp << std::cout << '\n';
+	} catch (const std::exception& ex) {
+		std::cerr << ex.what() << '\n';
+	}
+	return fieldIp;
+}
+static void processNextRecord(
+	UnirecInputInterface& input,
+	UnirecOutputInterface& output,
+	Geolite::Geolite& maxdb)
+{
+	std::cout << "about to receive something ...." << '\n';
+	std::optional<UnirecRecordView> inputUnirecView = input.receive();
+	if (!inputUnirecView) {
+		std::cerr << "Unable to create record" << '\n';
+		return;
+	}
 
-// static void processUnirecRecords(UnirecBidirectionalInterface& biInterface, Geolite::Geolite&
-// maxdb)
-// {
-// 	while (!g_stopFlag.load()) {
-// 		try {
-// 			processNextRecord(biInterface, maxdb);
-// 		} catch (FormatChangeException& ex) {
-// 			biInterface.changeTemplate();
-// 		} catch (const EoFException& ex) {
-// 			break;
-// 		} catch (const std::exception& ex) {
-// 			throw;
-// 		}
-// 	}
-// }
+	IpAddress fieldIp;
+	getIp(inputUnirecView, maxdb, fieldIp);
+
+	// TODO: write new class
+
+	auto unirecRecord = output.getUnirecRecord();
+
+	auto cityId = static_cast<ur_field_id_t>(ur_get_id_by_name("CITY_NAME"));
+	if (cityId == UR_E_INVALID_NAME) {
+		throw std::runtime_error(std::string("Unable to access Geolite Unirec fields"));
+	}
+	unirecRecord.setFieldFromType(std::string("Prague"), cityId);
+
+	try {
+		auto* hopefullyCity = unirecRecord.getFieldAsType<char*>(cityId);
+		std::cout << "city: " << hopefullyCity << '\n';
+	} catch (const std::exception& ex) {
+		std::cerr << ex.what() << '\n';
+	}
+
+	output.send(unirecRecord);
+	std::cout << "to the black hole it goes" << '\n';
+
+	auto unirecId = static_cast<ur_field_id_t>(ur_get_id_by_name(maxdb.getIpField()));
+	if (unirecId == UR_E_INVALID_NAME) {
+		throw std::runtime_error(std::string("Invalid Unirec name:") + maxdb.getIpField());
+		return;
+	}
+
+	maxdb.setIpAddress(unirecRecord.getFieldAsType<IpAddress>(unirecId));
+	std::string cityName;
+	try {
+		cityName = maxdb.getCityName();
+	} catch (const std::exception& ex) {
+		cityName = "";
+	}
+
+	output.send(unirecRecord);
+}
+
+static void handleTemplateChange(UnirecInputInterface& input, UnirecOutputInterface& output)
+{
+	input.changeTemplate();
+	auto* templateDef = input.getTemplate();
+	if (templateDef == nullptr) {
+		// TODO: catch this error
+		throw std::runtime_error(std::string("Unable to get template from trap input"));
+	}
+	std::string stringTemp = static_cast<std::string>(ur_template_string(templateDef));
+	stringTemp += SRC_MAXDB_FIELDS;
+	stringTemp += DST_MAXDB_FIELDS;
+	output.changeTemplate(stringTemp);
+}
+
+static void processUnirecRecords(
+	UnirecInputInterface& input,
+	UnirecOutputInterface& output,
+	Geolite::Geolite& maxdb)
+{
+	while (true) {
+		try {
+			processNextRecord(input, output, maxdb);
+		} catch (FormatChangeException& ex) {
+			handleTemplateChange(input, output);
+		} catch (const EoFException& ex) {
+			break;
+		} catch (const std::exception& ex) {
+			throw;
+		}
+	}
+}
 int main(int argc, char** argv)
 {
 	// TODO: add logger support
@@ -129,77 +188,16 @@ int main(int argc, char** argv)
 
 	maxdb.setIpField(pField);
 
-	// UnirecBidirectionalInterface biInterface = unirec.buildBidirectionalInterface();
-	// unirec.defineUnirecField("F_CITY", UR_TYPE_STRING);
-
 	UnirecInputInterface input = unirec.buildInputInterface();
 	UnirecOutputInterface output = unirec.buildOutputInterface();
 
-	while (true) {
-		try {
-			std::cout << "about to receive something ...." << '\n';
-			std::optional<UnirecRecordView> unirecView = input.receive();
-			if (!unirecView) {
-				std::cerr << "unable to create record" << '\n';
-			}
-			// UnirecRecord newUnirecRecord = output.createUnirecRecord();
-			// std::cout << "new record created" << '\n';
-			//
-			// newUnirecRecord.copyFieldsFrom(*unirecView);
-			// std::cout << "items hopefully copied" << '\n';
-
-			auto ipId = static_cast<ur_field_id_t>(ur_get_id_by_name(maxdb.getIpField()));
-			if (ipId == UR_E_INVALID_NAME) {
-				std::cout << "invalid field name" << '\n';
-				return EXIT_FAILURE;
-			}
-			try {
-				auto hopefullyIp = unirecView->getFieldAsType<IpAddress>(ipId);
-				hopefullyIp << std::cout << '\n';
-			} catch (const std::exception& ex) {
-				std::cerr << ex.what() << '\n';
-			}
-			auto unirecRecord = output.getUnirecRecord();
-			auto cityId = static_cast<ur_field_id_t>(ur_get_id_by_name("CITY_NAME"));
-			if (ipId == UR_E_INVALID_NAME) {
-				std::cout << "invalid field name" << '\n';
-				return EXIT_FAILURE;
-			}
-			unirecRecord.setFieldFromType(std::string("Prague"), cityId);
-
-			try {
-				auto* hopefullyCity = unirecRecord.getFieldAsType<char*>(cityId);
-				std::cout << "city: " << hopefullyCity << '\n';
-			} catch (const std::exception& ex) {
-				std::cerr << ex.what() << '\n';
-			}
-
-			output.send(unirecRecord);
-			std::cout << "to the black hole it goes" << '\n';
-
-		} catch (FormatChangeException& ex) {
-			input.changeTemplate();
-			auto* templateDef = input.getTemplate();
-			if (templateDef == nullptr) {
-				std::cerr << "Unable to get template from trap input" << '\n';
-				return EXIT_FAILURE;
-			}
-			auto* orgStringTemp = ur_template_string(templateDef);
-			std::string newStringTemp = orgStringTemp;
-			newStringTemp += ", string CITY_NAME";
-			output.changeTemplate(newStringTemp);
-		} catch (const EoFException& ex) {
-			break;
-		} catch (const std::exception& ex) {
-			throw;
-		}
+	try {
+		processUnirecRecords(input, output, maxdb);
+	} catch (const std::exception& ex) {
+		std::cerr << "Unirec error: " << ex.what() << '\n';
+		return EXIT_FAILURE;
 	}
-	// try {
-	// 	processUnirecRecords(biInterface, maxdb);
-	// } catch (const std::exception& ex) {
-	// 	std::cerr << ex.what() << "\n";
-	// 	return EXIT_FAILURE;
-	// }
+
 	(void) direction;
 
 	maxdb.exit();

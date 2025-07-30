@@ -1,19 +1,19 @@
 #include <array>
+#include <bitset>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
 
 #include "geolite.hpp"
 #include <argparse/argparse.hpp>
+#include <atomic>
+#include <maxminddb.h>
 #include <netdb.h>
 #include <unirec++/bidirectionalInterface.hpp>
 #include <unirec++/inputInterface.hpp>
 #include <unirec++/ipAddress.hpp>
 #include <unirec++/outputInterface.hpp>
 #include <unirec++/unirec.hpp>
-// TODO: why do i need this
-#include <atomic>
-#include <maxminddb.h>
 #include <unirec/ipaddr.h>
 #include <unirec/unirec.h>
 
@@ -24,7 +24,6 @@
 
 using namespace Nemea;
 
-// TODO: why do i need this
 // static std::atomic<bool> g_stopFlag(false);
 
 // static void processNextRecord(UnirecBidirectionalInterface& biInterface, Geolite::Geolite maxdb)
@@ -130,49 +129,65 @@ int main(int argc, char** argv)
 
 	maxdb.setIpField(pField);
 
-	UnirecBidirectionalInterface biInterface = unirec.buildBidirectionalInterface();
+	// UnirecBidirectionalInterface biInterface = unirec.buildBidirectionalInterface();
 	// unirec.defineUnirecField("F_CITY", UR_TYPE_STRING);
 
-	// UnirecInputInterface inputInterface = unirec.buildInputInterface();
-	// UnirecOutputInterface outputInterface = unirec.buildOutputInterface();
+	UnirecInputInterface input = unirec.buildInputInterface();
+	UnirecOutputInterface output = unirec.buildOutputInterface();
 
 	while (true) {
 		try {
 			std::cout << "about to receive something ...." << '\n';
-			std::optional<UnirecRecordView> unirecView = biInterface.receive();
+			std::optional<UnirecRecordView> unirecView = input.receive();
 			if (!unirecView) {
 				std::cerr << "unable to create record" << '\n';
 			}
-			UnirecRecord newUnirecRecord = biInterface.createUnirecRecord();
-			std::cout << "new record created" << '\n';
-
-			newUnirecRecord.copyFieldsFrom(*unirecView);
-			std::cout << "items hopefully copied" << '\n';
+			// UnirecRecord newUnirecRecord = output.createUnirecRecord();
+			// std::cout << "new record created" << '\n';
+			//
+			// newUnirecRecord.copyFieldsFrom(*unirecView);
+			// std::cout << "items hopefully copied" << '\n';
 
 			auto ipId = static_cast<ur_field_id_t>(ur_get_id_by_name(maxdb.getIpField()));
-			auto bytes = static_cast<ur_field_id_t>(ur_get_id_by_name(""));
 			if (ipId == UR_E_INVALID_NAME) {
-				std::cout << "invalid field name";
+				std::cout << "invalid field name" << '\n';
+				return EXIT_FAILURE;
 			}
-			auto hopefullyIp = unirecView->getFieldAsType<IpAddress>(ipId);
-
-			if (hopefullyIp.isIpv4()) {
-				std::cout << "ip4" << '\n';
-				char str[INET_ADDRSTRLEN]; // Enough for IPv4
-
-				inet_ntop(AF_INET, hopefullyIp.ip.ui32, str, INET_ADDRSTRLEN);
-				std::cout << "IPv4: " << str << '\n';
-			} else {
-				std::cout << "ip6" << '\n';
+			try {
+				auto hopefullyIp = unirecView->getFieldAsType<IpAddress>(ipId);
+				hopefullyIp << std::cout << '\n';
+			} catch (const std::exception& ex) {
+				std::cerr << ex.what() << '\n';
 			}
-			std::cout << *hopefullyIp.ip.ui64 << '\n';
-			std::cout << "bytes: " << bytes << '\n';
+			auto unirecRecord = output.getUnirecRecord();
+			auto cityId = static_cast<ur_field_id_t>(ur_get_id_by_name("CITY_NAME"));
+			if (ipId == UR_E_INVALID_NAME) {
+				std::cout << "invalid field name" << '\n';
+				return EXIT_FAILURE;
+			}
+			unirecRecord.setFieldFromType(std::string("Prague"), cityId);
 
-			biInterface.send(newUnirecRecord);
+			try {
+				auto* hopefullyCity = unirecRecord.getFieldAsType<char*>(cityId);
+				std::cout << "city: " << hopefullyCity << '\n';
+			} catch (const std::exception& ex) {
+				std::cerr << ex.what() << '\n';
+			}
+
+			output.send(unirecRecord);
 			std::cout << "to the black hole it goes" << '\n';
 
 		} catch (FormatChangeException& ex) {
-			biInterface.changeTemplate();
+			input.changeTemplate();
+			auto* templateDef = input.getTemplate();
+			if (templateDef == nullptr) {
+				std::cerr << "Unable to get template from trap input" << '\n';
+				return EXIT_FAILURE;
+			}
+			auto* orgStringTemp = ur_template_string(templateDef);
+			std::string newStringTemp = orgStringTemp;
+			newStringTemp += ", string CITY_NAME";
+			output.changeTemplate(newStringTemp);
 		} catch (const EoFException& ex) {
 			break;
 		} catch (const std::exception& ex) {

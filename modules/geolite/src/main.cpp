@@ -26,73 +26,78 @@
 
 using namespace Nemea;
 
-static IpAddress
-getIp(std::optional<UnirecRecordView>& inputUnirecView, Geolite::Geolite& maxdb, IpAddress& fieldIp)
+static void getIp(std::optional<UnirecRecordView>& inputUnirecView, Geolite::Geolite& maxdb)
 {
 	auto ipId = static_cast<ur_field_id_t>(ur_get_id_by_name(maxdb.getIpField()));
 	if (ipId == UR_E_INVALID_NAME) {
 		throw std::runtime_error(
 			std::string("Name/s for Unirec IP fields not found in Unirec communication"));
 	}
-
+	IpAddress fieldIp;
 	try {
 		fieldIp = inputUnirecView->getFieldAsType<IpAddress>(ipId);
-		fieldIp << std::cout << '\n';
 	} catch (const std::exception& ex) {
-		std::cerr << ex.what() << '\n';
+		throw;
 	}
-	return fieldIp;
+	maxdb.setIpAddress(fieldIp);
 }
+
 static void processNextRecord(
 	UnirecInputInterface& input,
 	UnirecOutputInterface& output,
 	Geolite::Geolite& maxdb)
 {
+	// ask for new record
 	std::cout << "about to receive something ...." << '\n';
 	std::optional<UnirecRecordView> inputUnirecView = input.receive();
+
+	// check if not empty
 	if (!inputUnirecView) {
-		std::cerr << "Unable to create record" << '\n';
+		throw std::runtime_error(std::string("Unable to create record"));
 		return;
 	}
 
-	IpAddress fieldIp;
-	getIp(inputUnirecView, maxdb, fieldIp);
-
-	// TODO: write new class
-
-	auto unirecRecord = output.getUnirecRecord();
-
-	auto cityId = static_cast<ur_field_id_t>(ur_get_id_by_name("CITY_NAME"));
-	if (cityId == UR_E_INVALID_NAME) {
-		throw std::runtime_error(std::string("Unable to access Geolite Unirec fields"));
-	}
-	unirecRecord.setFieldFromType(std::string("Prague"), cityId);
-
+	// get ip for record
 	try {
-		auto* hopefullyCity = unirecRecord.getFieldAsType<char*>(cityId);
-		std::cout << "city: " << hopefullyCity << '\n';
+		getIp(inputUnirecView, maxdb);
 	} catch (const std::exception& ex) {
-		std::cerr << ex.what() << '\n';
+		throw std::runtime_error(std::string("Error while getting IP address: ") + ex.what());
+		return;
 	}
-
-	output.send(unirecRecord);
-	std::cout << "to the black hole it goes" << '\n';
 
 	auto unirecId = static_cast<ur_field_id_t>(ur_get_id_by_name(maxdb.getIpField()));
 	if (unirecId == UR_E_INVALID_NAME) {
 		throw std::runtime_error(std::string("Invalid Unirec name:") + maxdb.getIpField());
 		return;
 	}
+	maxdb.getIpAddress() << std::cout << '\n';
 
-	maxdb.setIpAddress(unirecRecord.getFieldAsType<IpAddress>(unirecId));
-	std::string cityName;
+	auto unirecRecord = output.getUnirecRecord();
+
 	try {
-		cityName = maxdb.getCityName();
+		maxdb.getUnirecRecordFieldIds();
 	} catch (const std::exception& ex) {
-		cityName = "";
+		throw std::runtime_error(std::string("Error while getting fields IDs: ") + ex.what());
+		return;
+	}
+	try {
+		maxdb.getDataFromUnirecRecord();
+	} catch (const std::exception& ex) {
+		std::cout << "Error while getting Geolite Data: " << ex.what() << '\n';
+		return;
+	}
+	try {
+		maxdb.setDataToUnirecRecord(unirecRecord);
+	} catch (const std::exception& ex) {
+		throw std::runtime_error(
+			std::string("Error while loading data to Unirec record: ") + ex.what());
+		return;
 	}
 
+	maxdb.printUnirecRecord(unirecRecord);
+
 	output.send(unirecRecord);
+	std::cout << "to the black hole it goes" << '\n';
 }
 
 static void handleTemplateChange(UnirecInputInterface& input, UnirecOutputInterface& output)

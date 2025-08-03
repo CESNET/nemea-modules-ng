@@ -65,11 +65,6 @@ static void processNextRecord(
 		return;
 	}
 
-	auto unirecId = static_cast<ur_field_id_t>(ur_get_id_by_name(maxdb.getIpField()));
-	if (unirecId == UR_E_INVALID_NAME) {
-		throw std::runtime_error(std::string("Invalid Unirec name:") + maxdb.getIpField());
-		return;
-	}
 	maxdb.getIpAddress() << std::cout << '\n';
 
 	auto unirecRecord = output.getUnirecRecord();

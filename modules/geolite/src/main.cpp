@@ -24,22 +24,39 @@
 	", string DST_CITY_NAME, string DST_COUNTRY_NAME, double DST_LATITUDE, double DST_LONGITUDE, " \
 	"string DST_POSTAL_CODE"
 
+static bool g_debug_enabled = false; // you can turn this on/off at runtime
+
+static void debugPrint(const std::string& msg)
+{
+	if (g_debug_enabled) {
+		std::cerr << "[DEBUG] " << msg << '\n';
+	}
+}
 using namespace Nemea;
 
 static void getIp(std::optional<UnirecRecordView>& inputUnirecView, Geolite::Geolite& maxdb)
 {
-	auto ipId = static_cast<ur_field_id_t>(ur_get_id_by_name(maxdb.getIpField()));
-	if (ipId == UR_E_INVALID_NAME) {
-		throw std::runtime_error(
-			std::string("Name/s for Unirec IP fields not found in Unirec communication"));
+	IpAddress ipSrc;
+	IpAddress ipDst;
+
+	debugPrint("Getting IP address from Unirec record");
+	if (maxdb.getDirection() == Geolite::Direction::BOTH) {
+		maxdb.saveIpAddress(maxdb.getIpFieldSrc(), inputUnirecView, ipSrc);
+		maxdb.saveIpAddress(maxdb.getIpFieldDst(), inputUnirecView, ipDst);
+		maxdb.setIpAddressSrc(ipSrc);
+		maxdb.setIpAddressDst(ipDst);
+	} else if (maxdb.getDirection() == Geolite::Direction::SOURCE) {
+		maxdb.saveIpAddress(maxdb.getIpFieldSrc(), inputUnirecView, ipSrc);
+		maxdb.setIpAddressSrc(ipSrc);
+	} else if (maxdb.getDirection() == Geolite::Direction::DESTINATION) {
+		maxdb.saveIpAddress(maxdb.getIpFieldDst(), inputUnirecView, ipDst);
+		maxdb.setIpAddressDst(ipDst);
 	}
-	IpAddress fieldIp;
-	try {
-		fieldIp = inputUnirecView->getFieldAsType<IpAddress>(ipId);
-	} catch (const std::exception& ex) {
-		throw;
-	}
-	maxdb.setIpAddress(fieldIp);
+
+	debugPrint("src IP address:");
+	debugPrint(maxdb.getIpString(maxdb.getIpAddressSrc()));
+	debugPrint("dst IP address:");
+	debugPrint(maxdb.getIpString(maxdb.getIpAddressDst()));
 }
 
 static void processNextRecord(
@@ -48,7 +65,7 @@ static void processNextRecord(
 	Geolite::Geolite& maxdb)
 {
 	// ask for new record
-	std::cout << "about to receive something ...." << '\n';
+	debugPrint("Waiting for new Unirec record...");
 	std::optional<UnirecRecordView> inputUnirecView = input.receive();
 
 	// check if not empty
@@ -56,6 +73,7 @@ static void processNextRecord(
 		throw std::runtime_error(std::string("Unable to create record"));
 		return;
 	}
+	debugPrint("Record received successfully");
 
 	// get ip for record
 	try {
@@ -65,9 +83,9 @@ static void processNextRecord(
 		return;
 	}
 
-	maxdb.getIpAddress() << std::cout << '\n';
-
 	auto unirecRecord = output.getUnirecRecord();
+
+	debugPrint("Unirec record created");
 
 	try {
 		maxdb.getUnirecRecordFieldIds();
@@ -75,12 +93,18 @@ static void processNextRecord(
 		throw std::runtime_error(std::string("Error while getting fields IDs: ") + ex.what());
 		return;
 	}
+
+	debugPrint("Ip fields retreived successfully");
+
 	try {
-		maxdb.getDataFromUnirecRecord();
+		maxdb.getDataForUnirecRecord();
 	} catch (const std::exception& ex) {
 		std::cout << "Error while getting Geolite Data: " << ex.what() << '\n';
 		return;
 	}
+
+	debugPrint("Data from DB retreived successfully");
+
 	try {
 		maxdb.setDataToUnirecRecord(unirecRecord);
 	} catch (const std::exception& ex) {
@@ -92,7 +116,7 @@ static void processNextRecord(
 	maxdb.printUnirecRecord(unirecRecord);
 
 	output.send(unirecRecord);
-	std::cout << "to the black hole it goes" << '\n';
+	debugPrint("Into the black hole it goes...");
 }
 
 static void handleTemplateChange(UnirecInputInterface& input, UnirecOutputInterface& output)
@@ -130,15 +154,14 @@ int main(int argc, char** argv)
 {
 	// TODO: add logger support
 
-	bool direction;
-	std::string field;
+	std::string communicationDirection;
+	std::string source;
+	std::string destination;
 	std::string path;
 
 	argparse::ArgumentParser program("Geolite");
 
 	Unirec unirec({1, 1, "geolite", "Geolite module"});
-
-	// TODO: make it load both ip directions
 
 	// TODO: Change the default path to database
 
@@ -153,20 +176,25 @@ int main(int argc, char** argv)
 	}
 
 	try {
-		program.add_argument("-d", "--direction")
-			.help("If specified both IP directions used for geolocation")
-			.default_value(DEFAULT_DIRECTION)
-			.implicit_value(!DEFAULT_DIRECTION);
-		program.add_argument("-f", "--field")
-			.help("Name of Unirec field with IP address")
+		program.add_argument("-c", "--communicationDirection")
+			.help(
+				"Specifiy what direction of communication should be processed. , both -> both "
+				"directions (defualt), src -> source, dst -> destination ")
+			.default_value(std::string("both"));
+		program.add_argument("-s", "--source")
+			.help("Name of Unirec field with source IP address")
 			.default_value(std::string("SRC_IP"));
+		program.add_argument("-d", "--destination")
+			.help("Name of Unirec field with destination IP address")
+			.default_value(std::string("DST_IP"));
 		program.add_argument("-p", "--path")
 			.help("Specifiy the path to database files")
 			.default_value(std::string("/home/nixos/GeoLite2-City_20250718/GeoLite2-City.mmdb"));
 		program.parse_args(argc, argv);
 
-		direction = program.get<bool>("--direction");
-		field = program.get<std::string>("--field");
+		communicationDirection = program.get<std::string>("--communicationDirection");
+		source = program.get<std::string>("--source");
+		destination = program.get<std::string>("--destination");
 		path = program.get<std::string>("--path");
 
 	} catch (const std::exception& ex) {
@@ -174,19 +202,39 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
-	const char* pPath = path.c_str();
-	const char* pField = field.c_str();
+	debugPrint("parsing arguments");
+	debugPrint(communicationDirection);
+	debugPrint(source);
+	debugPrint(destination);
+	debugPrint(path);
 
 	Geolite::Geolite maxdb;
 
+	if (communicationDirection == "both") {
+		maxdb.setDirection(Geolite::Direction::BOTH);
+		maxdb.setIpFieldSrc(source.c_str());
+		maxdb.setIpFieldDst(destination.c_str());
+
+	} else if (communicationDirection == "src") {
+		maxdb.setDirection(Geolite::Direction::SOURCE);
+		maxdb.setIpFieldSrc(source.c_str());
+
+	} else if (communicationDirection == "dst") {
+		maxdb.setDirection(Geolite::Direction::DESTINATION);
+		maxdb.setIpFieldDst(destination.c_str());
+
+	} else {
+		std::cerr << "Invalid communication direction specified: " << communicationDirection
+				  << "| Use: both, src, dst" << '\n';
+		return EXIT_FAILURE;
+	}
+
 	try {
-		maxdb.init(pPath);
+		maxdb.init(path.c_str());
 	} catch (const std::exception& ex) {
 		std::cerr << "Geolite init error: " << ex.what() << '\n';
 		return EXIT_FAILURE;
 	}
-
-	maxdb.setIpField(pField);
 
 	UnirecInputInterface input = unirec.buildInputInterface();
 	UnirecOutputInterface output = unirec.buildOutputInterface();
@@ -197,8 +245,6 @@ int main(int argc, char** argv)
 		std::cerr << "Unirec error: " << ex.what() << '\n';
 		return EXIT_FAILURE;
 	}
-
-	(void) direction;
 
 	maxdb.exit();
 

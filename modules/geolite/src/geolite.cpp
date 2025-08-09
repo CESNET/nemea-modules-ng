@@ -1,3 +1,10 @@
+/**
+ * @file geolite.cpp
+ * @author Tomáš Vrána <xvranat00@vutbr.cz>
+ * @brief Geolite class implementation
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 #include "geolite.hpp"
 
 #include <cstdlib>
@@ -21,39 +28,35 @@ const char* NoData::what() const noexcept
 
 void Geolite::init(const char* path)
 {
-	m_status = MMDB_open(path, MMDB_MODE_MMAP, m_mmdb);
-	if (m_status != MMDB_SUCCESS) {
+	if (MMDB_open(path, MMDB_MODE_MMAP, m_mmdb) != MMDB_SUCCESS) {
 		throw DatabaseExeption();
 	}
 }
+
 bool Geolite::checkEntryData() const
 {
 	return m_err == MMDB_SUCCESS && m_entryData.has_data;
 }
+
 bool Geolite::getDataForIp(Nemea::IpAddress ipAddr)
 {
-	m_result = MMDB_lookup_string(m_mmdb, getIpString(ipAddr), &m_gaiError, &m_mmdbError);
+	int gaiError;
+	int mmdbError;
+	m_result = MMDB_lookup_string(m_mmdb, getIpString(ipAddr), &gaiError, &mmdbError);
 
-	return m_gaiError == 0 && m_mmdbError == MMDB_SUCCESS && m_result.found_entry;
-}
-
-void Geolite::setIpAddressSrc(Nemea::IpAddress ipAddr)
-{
-	m_ipAddrSrc = ipAddr.ip;
-}
-void Geolite::setIpAddressDst(Nemea::IpAddress ipAddr)
-{
-	m_ipAddrDst = ipAddr.ip;
+	return gaiError == 0 && mmdbError == MMDB_SUCCESS && m_result.found_entry;
 }
 
 Nemea::IpAddress Geolite::getIpAddressSrc()
 {
 	return m_ipAddrSrc;
 }
+
 Nemea::IpAddress Geolite::getIpAddressDst()
 {
 	return m_ipAddrDst;
 }
+
 char* Geolite::getIpString(Nemea::IpAddress ipAddr) const
 {
 	if (ipAddr.isIpv4()) {
@@ -82,26 +85,22 @@ void Geolite::setIpFieldSrc(const char* ipField)
 {
 	m_ipFieldSrc = (char*) ipField;
 }
+
 void Geolite::setIpFieldDst(const char* ipField)
 {
 	m_ipFieldDst = (char*) ipField;
 }
-char* Geolite::getIpFieldSrc()
-{
-	return m_ipFieldSrc;
-}
-char* Geolite::getIpFieldDst()
-{
-	return m_ipFieldDst;
-}
+
 void Geolite::setDirection(Direction direction)
 {
 	m_direction = direction;
 }
+
 Direction Geolite::getDirection()
 {
 	return m_direction;
 }
+
 std::string Geolite::getCityName()
 {
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "city", "names", "en", NULL);
@@ -112,6 +111,7 @@ std::string Geolite::getCityName()
 	}
 	return {m_entryData.utf8_string, m_entryData.data_size};
 }
+
 std::string Geolite::getCountryName()
 {
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "country", "names", "en", NULL);
@@ -122,6 +122,7 @@ std::string Geolite::getCountryName()
 	}
 	return {m_entryData.utf8_string, m_entryData.data_size};
 }
+
 std::string Geolite::getPostalCode()
 {
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "postal", "code", NULL);
@@ -133,6 +134,7 @@ std::string Geolite::getPostalCode()
 
 	return {m_entryData.utf8_string, m_entryData.data_size};
 }
+
 double Geolite::getLatitude()
 {
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "location", "latitude", NULL);
@@ -144,6 +146,7 @@ double Geolite::getLatitude()
 
 	return m_entryData.double_value;
 }
+
 double Geolite::getLongitude()
 {
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "location", "longitude", NULL);
@@ -155,12 +158,13 @@ double Geolite::getLongitude()
 
 	return m_entryData.double_value;
 }
+
 void Geolite::exit()
 {
 	MMDB_close(m_mmdb);
 }
 
-ur_field_id_t Geolite::getIpFromUnirecField(const char* name)
+ur_field_id_t Geolite::getUnirecFieldID(const char* name)
 {
 	auto idField = static_cast<ur_field_id_t>(ur_get_id_by_name(name));
 	if (idField == UR_E_INVALID_NAME) {
@@ -169,23 +173,24 @@ ur_field_id_t Geolite::getIpFromUnirecField(const char* name)
 	}
 	return idField;
 }
-void Geolite::getUnirecRecordFieldIds()
+
+void Geolite::getUnirecRecordFieldIDs()
 {
-	m_ids.srcCityId = getIpFromUnirecField("SRC_CITY_NAME");
-	m_ids.srcCountryId = getIpFromUnirecField("SRC_COUNTRY_NAME");
-	m_ids.srcLatitudeId = getIpFromUnirecField("SRC_LATITUDE");
-	m_ids.srcLongitudeId = getIpFromUnirecField("SRC_LONGITUDE");
-	m_ids.srcPostalCodeId = getIpFromUnirecField("SRC_POSTAL_CODE");
-	m_ids.dstCityId = getIpFromUnirecField("DST_CITY_NAME");
-	m_ids.dstCountryId = getIpFromUnirecField("DST_COUNTRY_NAME");
-	m_ids.dstLatitudeId = getIpFromUnirecField("DST_LATITUDE");
-	m_ids.dstLongitudeId = getIpFromUnirecField("DST_LONGITUDE");
-	m_ids.dstPostalCodeId = getIpFromUnirecField("DST_POSTAL_CODE");
+	m_ids.srcCityId = getUnirecFieldID("SRC_CITY_NAME");
+	m_ids.srcCountryId = getUnirecFieldID("SRC_COUNTRY_NAME");
+	m_ids.srcLatitudeId = getUnirecFieldID("SRC_LATITUDE");
+	m_ids.srcLongitudeId = getUnirecFieldID("SRC_LONGITUDE");
+	m_ids.srcPostalCodeId = getUnirecFieldID("SRC_POSTAL_CODE");
+	m_ids.dstCityId = getUnirecFieldID("DST_CITY_NAME");
+	m_ids.dstCountryId = getUnirecFieldID("DST_COUNTRY_NAME");
+	m_ids.dstLatitudeId = getUnirecFieldID("DST_LATITUDE");
+	m_ids.dstLongitudeId = getUnirecFieldID("DST_LONGITUDE");
+	m_ids.dstPostalCodeId = getUnirecFieldID("DST_POSTAL_CODE");
 }
+
 void Geolite::getDataForUnirecRecord()
 {
 	if (m_direction == Direction::BOTH || m_direction == Direction::SOURCE) {
-		// TODO: check return value
 		if (!getDataForIp(m_ipAddrSrc)) {
 			throw std::runtime_error(
 				std::string("Unable to get data for src IP: ") + getIpString(m_ipAddrSrc));
@@ -198,7 +203,6 @@ void Geolite::getDataForUnirecRecord()
 		m_data.srcPostalCode = getPostalCode();
 	}
 	if (m_direction == Direction::BOTH || m_direction == Direction::DESTINATION) {
-		// TODO: check return value
 		if (!getDataForIp(m_ipAddrDst)) {
 			throw std::runtime_error(
 				std::string("Unable to get data for dst IP: ") + getIpString(m_ipAddrDst));
@@ -239,8 +243,10 @@ void Geolite::readFieldDouble(Nemea::UnirecRecord& unirecRecord, const char* nam
 	auto data = unirecRecord.getFieldAsType<double>(idField);
 	std::cout << "Field: " << name << " Data: " << data << '\n';
 }
+
 void Geolite::readFieldString(Nemea::UnirecRecord& unirecRecord, const char* name) const
 {
+	// FIX: BUG getFieldAsType with std::string won't compile
 	auto idField = static_cast<ur_field_id_t>(ur_get_id_by_name(name));
 	if (idField == UR_E_INVALID_NAME) {
 		std::cout << std::string("Unable to access Geolite Unirec fields");
@@ -248,14 +254,15 @@ void Geolite::readFieldString(Nemea::UnirecRecord& unirecRecord, const char* nam
 	const auto* data = unirecRecord.getFieldAsType<const char*>(idField);
 	std::cout << "Field: " << name << " Data: " << data << '\n';
 }
+
 void Geolite::printUnirecRecord(Nemea::UnirecRecord& unirecRecord) const
 {
 	if (m_direction == Direction::BOTH || m_direction == Direction::SOURCE) {
 		std::cout << "------------------------" << '\n';
 		readFieldString(unirecRecord, "SRC_CITY_NAME");
 		// readFieldString(unirecRecord, "SRC_COUNTRY_NAME");
-		readFieldDouble(unirecRecord, "SRC_LATITUDE");
-		readFieldDouble(unirecRecord, "SRC_LONGITUDE");
+		// readFieldDouble(unirecRecord, "SRC_LATITUDE");
+		// readFieldDouble(unirecRecord, "SRC_LONGITUDE");
 		// readFieldString(unirecRecord, "SRC_POSTAL_CODE");
 		std::cout << "SRC_IP: " << getIpString(m_ipAddrSrc) << '\n';
 		std::cout << "------------------------" << '\n';
@@ -264,8 +271,8 @@ void Geolite::printUnirecRecord(Nemea::UnirecRecord& unirecRecord) const
 		std::cout << "------------------------" << '\n';
 		readFieldString(unirecRecord, "DST_CITY_NAME");
 		// readFieldString(unirecRecord, "SRC_COUNTRY_NAME");
-		readFieldDouble(unirecRecord, "DST_LATITUDE");
-		readFieldDouble(unirecRecord, "DST_LONGITUDE");
+		// readFieldDouble(unirecRecord, "DST_LATITUDE");
+		// readFieldDouble(unirecRecord, "DST_LONGITUDE");
 		// readFieldString(unirecRecord, "SRC_POSTAL_CODE");
 		std::cout << "DST_IP: " << getIpString(m_ipAddrDst) << '\n';
 		std::cout << "------------------------" << '\n';
@@ -288,5 +295,49 @@ void Geolite::saveIpAddress(
 		throw;
 	}
 }
+
+void Geolite::getIp(std::optional<Nemea::UnirecRecordView>& inputUnirecView)
+{
+	Nemea::IpAddress ipSrc;
+	Nemea::IpAddress ipDst;
+	if (getDirection() == Direction::BOTH) {
+		saveIpAddress(m_ipFieldSrc, inputUnirecView, ipSrc);
+		saveIpAddress(m_ipFieldDst, inputUnirecView, ipDst);
+		m_ipAddrSrc = ipSrc;
+		m_ipAddrDst = ipDst;
+	} else if (getDirection() == Direction::SOURCE) {
+		saveIpAddress(m_ipFieldSrc, inputUnirecView, ipSrc);
+		m_ipAddrSrc = ipSrc;
+	} else if (getDirection() == Direction::DESTINATION) {
+		saveIpAddress(m_ipFieldDst, inputUnirecView, ipDst);
+		m_ipAddrDst = ipDst;
+	}
+}
+
+void Geolite::setDirectionValues(
+	const std::string& direction,
+	const std::string& src,
+	const std::string& dst)
+{
+	if (direction == "both") {
+		setDirection(Direction::BOTH);
+		setIpFieldSrc(src.c_str());
+		setIpFieldDst(dst.c_str());
+
+	} else if (direction == "src") {
+		setDirection(Direction::SOURCE);
+		setIpFieldSrc(src.c_str());
+
+	} else if (direction == "dst") {
+		setDirection(Direction::DESTINATION);
+		setIpFieldDst(dst.c_str());
+
+	} else {
+		throw std::runtime_error(
+			std::string("Invalid communication direction specified: ") + direction
+			+ std::string("| Use: both, src, dst"));
+	}
+}
+
 } // namespace Geolite
 //

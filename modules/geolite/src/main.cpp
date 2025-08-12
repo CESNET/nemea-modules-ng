@@ -132,7 +132,10 @@ static void processNextRecord(
  * @param input input interface for Unirec communication.
  * @param output output interface for Unirec communication.
  */
-static void handleTemplateChange(UnirecInputInterface& input, UnirecOutputInterface& output)
+static void handleTemplateChange(
+	UnirecInputInterface& input,
+	UnirecOutputInterface& output,
+	Geolite::Direction direction)
 {
 	// assign new template to input interface (template that was received from trap)
 	input.changeTemplate();
@@ -147,8 +150,13 @@ static void handleTemplateChange(UnirecInputInterface& input, UnirecOutputInterf
 	// convert template to string and append new fileds for geolocation
 	std::string stringTemp = static_cast<std::string>(ur_template_string(templateDef));
 	// TODO: add temmplate based on maxdb direction flag
-	stringTemp += SRC_MAXDB_FIELDS;
-	stringTemp += DST_MAXDB_FIELDS;
+
+	if (direction == Geolite::Direction::BOTH || direction == Geolite::Direction::SOURCE) {
+		stringTemp += SRC_MAXDB_FIELDS;
+	}
+	if (direction == Geolite::Direction::BOTH || direction == Geolite::Direction::DESTINATION) {
+		stringTemp += DST_MAXDB_FIELDS;
+	}
 
 	// change template of output interface to new template with geolocation fields
 	output.changeTemplate(stringTemp);
@@ -174,7 +182,7 @@ static void processUnirecRecords(
 		try {
 			processNextRecord(input, output, maxdb);
 		} catch (FormatChangeException& ex) {
-			handleTemplateChange(input, output);
+			handleTemplateChange(input, output, maxdb.getDirection());
 		} catch (const EoFException& ex) {
 			break;
 		} catch (const std::exception& ex) {

@@ -143,13 +143,11 @@ static void handleTemplateChange(
 	// get template from input interface and check for error
 	auto* templateDef = input.getTemplate();
 	if (templateDef == nullptr) {
-		// TODO: catch this error
 		throw std::runtime_error(std::string("Unable to get template from trap input"));
 	}
 
 	// convert template to string and append new fileds for geolocation
 	std::string stringTemp = static_cast<std::string>(ur_template_string(templateDef));
-	// TODO: add temmplate based on maxdb direction flag
 
 	if (direction == Geolite::Direction::BOTH || direction == Geolite::Direction::SOURCE) {
 		stringTemp += SRC_MAXDB_FIELDS;
@@ -182,7 +180,12 @@ static void processUnirecRecords(
 		try {
 			processNextRecord(input, output, maxdb);
 		} catch (FormatChangeException& ex) {
-			handleTemplateChange(input, output, maxdb.getDirection());
+			try {
+				handleTemplateChange(input, output, maxdb.getDirection());
+			} catch (const std::exception& ex) {
+				std::cerr << "Error while handling template change: " << ex.what() << '\n';
+				break;
+			}
 		} catch (const EoFException& ex) {
 			break;
 		} catch (const std::exception& ex) {

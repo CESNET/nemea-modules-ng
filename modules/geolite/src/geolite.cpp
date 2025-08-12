@@ -172,16 +172,20 @@ ur_field_id_t Geolite::getUnirecFieldID(const char* name)
 
 void Geolite::getUnirecRecordFieldIDs()
 {
-	m_ids.srcCityId = getUnirecFieldID("SRC_CITY_NAME");
-	m_ids.srcCountryId = getUnirecFieldID("SRC_COUNTRY_NAME");
-	m_ids.srcLatitudeId = getUnirecFieldID("SRC_LATITUDE");
-	m_ids.srcLongitudeId = getUnirecFieldID("SRC_LONGITUDE");
-	m_ids.srcPostalCodeId = getUnirecFieldID("SRC_POSTAL_CODE");
-	m_ids.dstCityId = getUnirecFieldID("DST_CITY_NAME");
-	m_ids.dstCountryId = getUnirecFieldID("DST_COUNTRY_NAME");
-	m_ids.dstLatitudeId = getUnirecFieldID("DST_LATITUDE");
-	m_ids.dstLongitudeId = getUnirecFieldID("DST_LONGITUDE");
-	m_ids.dstPostalCodeId = getUnirecFieldID("DST_POSTAL_CODE");
+	if (m_direction == Direction::BOTH || m_direction == Direction::SOURCE) {
+		m_ids.srcCityId = getUnirecFieldID("SRC_CITY_NAME");
+		m_ids.srcCountryId = getUnirecFieldID("SRC_COUNTRY_NAME");
+		m_ids.srcLatitudeId = getUnirecFieldID("SRC_LATITUDE");
+		m_ids.srcLongitudeId = getUnirecFieldID("SRC_LONGITUDE");
+		m_ids.srcPostalCodeId = getUnirecFieldID("SRC_POSTAL_CODE");
+	}
+	if (m_direction == Direction::BOTH || m_direction == Direction::DESTINATION) {
+		m_ids.dstCityId = getUnirecFieldID("DST_CITY_NAME");
+		m_ids.dstCountryId = getUnirecFieldID("DST_COUNTRY_NAME");
+		m_ids.dstLatitudeId = getUnirecFieldID("DST_LATITUDE");
+		m_ids.dstLongitudeId = getUnirecFieldID("DST_LONGITUDE");
+		m_ids.dstPostalCodeId = getUnirecFieldID("DST_POSTAL_CODE");
+	}
 }
 
 void Geolite::getDataForUnirecRecord()

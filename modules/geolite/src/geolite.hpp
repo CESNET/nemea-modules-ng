@@ -14,6 +14,9 @@
 
 namespace Geolite {
 
+#define EMPTY_STRING std::string("")
+#define EMPTY_DOUBLE std::numeric_limits<double>::quiet_NaN()
+
 // Custom exception for database opening errors
 class DatabaseExeption : public std::exception {
 public:

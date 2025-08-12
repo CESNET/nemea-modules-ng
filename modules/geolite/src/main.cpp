@@ -9,6 +9,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 
@@ -99,7 +100,6 @@ static void processNextRecord(
 		maxdb.getDataForUnirecRecord();
 	} catch (const std::exception& ex) {
 		std::cout << "Error while getting Geolite Data: " << ex.what() << '\n';
-		return;
 	}
 
 	debugPrint("Data from DB retreived successfully");

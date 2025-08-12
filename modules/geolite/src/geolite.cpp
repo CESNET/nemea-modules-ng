@@ -107,7 +107,7 @@ std::string Geolite::getCityName()
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "city", "names", "en", NULL);
 
 	if (!checkEntryData()) {
-		return "-";
+		return EMPTY_STRING;
 	}
 	return {m_entryData.utf8_string, m_entryData.data_size};
 }
@@ -117,7 +117,7 @@ std::string Geolite::getCountryName()
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "country", "names", "en", NULL);
 
 	if (!checkEntryData()) {
-		return "-";
+		return EMPTY_STRING;
 	}
 	return {m_entryData.utf8_string, m_entryData.data_size};
 }
@@ -127,7 +127,7 @@ std::string Geolite::getPostalCode()
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "postal", "code", NULL);
 
 	if (!checkEntryData()) {
-		return "-";
+		return EMPTY_STRING;
 	}
 
 	return {m_entryData.utf8_string, m_entryData.data_size};
@@ -138,7 +138,7 @@ double Geolite::getLatitude()
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "location", "latitude", NULL);
 
 	if (!checkEntryData()) {
-		return std::numeric_limits<double>::quiet_NaN();
+		return EMPTY_DOUBLE;
 	}
 
 	return m_entryData.double_value;
@@ -149,7 +149,7 @@ double Geolite::getLongitude()
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "location", "longitude", NULL);
 
 	if (!checkEntryData()) {
-		return std::numeric_limits<double>::quiet_NaN();
+		return EMPTY_DOUBLE;
 	}
 
 	return m_entryData.double_value;
@@ -192,11 +192,11 @@ void Geolite::getDataForUnirecRecord()
 {
 	if (m_direction == Direction::BOTH || m_direction == Direction::SOURCE) {
 		if (!getDataForIp(m_ipAddrSrc)) {
-			m_data.srcCityName = "-";
-			m_data.srcCountryName = "-";
-			m_data.srcLatitude = std::numeric_limits<double>::quiet_NaN();
-			m_data.srcLongitude = std::numeric_limits<double>::quiet_NaN();
-			m_data.srcPostalCode = "-";
+			m_data.srcCityName = EMPTY_STRING;
+			m_data.srcCountryName = EMPTY_STRING;
+			m_data.srcLatitude = EMPTY_DOUBLE;
+			m_data.srcLongitude = EMPTY_DOUBLE;
+			m_data.srcPostalCode = EMPTY_STRING;
 			throw std::runtime_error(
 				std::string("Unable to get data for src IP: ") + getIpString(m_ipAddrSrc));
 			return;
@@ -209,11 +209,11 @@ void Geolite::getDataForUnirecRecord()
 	}
 	if (m_direction == Direction::BOTH || m_direction == Direction::DESTINATION) {
 		if (!getDataForIp(m_ipAddrDst)) {
-			m_data.dstCityName = "-";
-			m_data.dstCountryName = "-";
-			m_data.dstLatitude = std::numeric_limits<double>::quiet_NaN();
-			m_data.dstLongitude = std::numeric_limits<double>::quiet_NaN();
-			m_data.dstPostalCode = "-";
+			m_data.dstCityName = EMPTY_STRING;
+			m_data.dstCountryName = EMPTY_STRING;
+			m_data.dstLatitude = EMPTY_DOUBLE;
+			m_data.dstLongitude = EMPTY_DOUBLE;
+			m_data.dstPostalCode = EMPTY_STRING;
 			throw std::runtime_error(
 				std::string("Unable to get data for dst IP: ") + getIpString(m_ipAddrDst));
 			return;

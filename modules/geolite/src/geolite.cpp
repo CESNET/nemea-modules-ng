@@ -9,6 +9,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <optional>
 #include <unirec++/ipAddress.hpp>
 #include <unirec++/unirecRecord.hpp>
@@ -106,8 +107,7 @@ std::string Geolite::getCityName()
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "city", "names", "en", NULL);
 
 	if (!checkEntryData()) {
-		throw NoData();
-		return "";
+		return "-";
 	}
 	return {m_entryData.utf8_string, m_entryData.data_size};
 }
@@ -117,8 +117,7 @@ std::string Geolite::getCountryName()
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "country", "names", "en", NULL);
 
 	if (!checkEntryData()) {
-		throw NoData();
-		return "";
+		return "-";
 	}
 	return {m_entryData.utf8_string, m_entryData.data_size};
 }
@@ -128,8 +127,7 @@ std::string Geolite::getPostalCode()
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "postal", "code", NULL);
 
 	if (!checkEntryData()) {
-		throw NoData();
-		return "";
+		return "-";
 	}
 
 	return {m_entryData.utf8_string, m_entryData.data_size};
@@ -140,8 +138,7 @@ double Geolite::getLatitude()
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "location", "latitude", NULL);
 
 	if (!checkEntryData()) {
-		throw NoData();
-		return 0.0;
+		return std::numeric_limits<double>::quiet_NaN();
 	}
 
 	return m_entryData.double_value;
@@ -152,8 +149,7 @@ double Geolite::getLongitude()
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "location", "longitude", NULL);
 
 	if (!checkEntryData()) {
-		throw NoData();
-		return 0.0;
+		return std::numeric_limits<double>::quiet_NaN();
 	}
 
 	return m_entryData.double_value;

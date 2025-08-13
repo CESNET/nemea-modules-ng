@@ -45,7 +45,7 @@ module takes the following parameters:
 
   * Specify the name of field with destination IP, which will be used for geolocation and lookup in the database (case sensitive). Default is `DST_IP`.
 
-* `-c` `--communicationDirection` field
+* `-f` `--flow-direction` field
 
   * Specify if the geolocation should be done for source, destination or both IP addresses. Possible
     values are `src`, `dst` or `both`. Default is `both`.

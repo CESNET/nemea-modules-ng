@@ -261,7 +261,7 @@ void Geolite::readFieldString(Nemea::UnirecRecord& unirecRecord, const char* nam
 	if (idField == UR_E_INVALID_NAME) {
 		std::cout << std::string("Unable to access Geolite Unirec fields");
 	}
-	const auto* data = unirecRecord.getFieldAsType<const char*>(idField);
+	const char* data = unirecRecord.getFieldAsType<const char*>(idField);
 	std::cout << "Field: " << name << " Data: " << data << '\n';
 }
 

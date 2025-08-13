@@ -17,7 +17,6 @@
 #include <argparse/argparse.hpp>
 #include <maxminddb.h>
 #include <netdb.h>
-#include <unirec++/bidirectionalInterface.hpp>
 #include <unirec++/inputInterface.hpp>
 #include <unirec++/ipAddress.hpp>
 #include <unirec++/outputInterface.hpp>
@@ -36,7 +35,7 @@
 	"string DST_POSTAL_CODE"
 
 // Run-time debug prints
-static bool g_debug_enabled = true;
+static bool g_debug_enabled = false;
 
 static void debugPrint(const std::string& msg)
 {
@@ -198,7 +197,7 @@ int main(int argc, char** argv)
 {
 	// TODO: add logger support
 
-	std::string communicationDirection;
+	std::string flow;
 	std::string source;
 	std::string destination;
 	std::string path;
@@ -220,9 +219,9 @@ int main(int argc, char** argv)
 	// TODO: Change the default path to database
 
 	try {
-		program.add_argument("-c", "--communicationDirection")
+		program.add_argument("-f", "--flow-direction")
 			.help(
-				"Specifiy what direction of communication should be processed. , both -> both "
+				"Specifiy what flow direction (IPs) should be processed. , both -> both "
 				"directions (defualt), src -> source, dst -> destination ")
 			.default_value(std::string("both"));
 		program.add_argument("-s", "--source")
@@ -236,7 +235,7 @@ int main(int argc, char** argv)
 			.default_value(std::string("/home/nixos/GeoLite2-City_20250718/GeoLite2-City.mmdb"));
 		program.parse_args(argc, argv);
 
-		communicationDirection = program.get<std::string>("--communicationDirection");
+		flow = program.get<std::string>("--flow-direction");
 		source = program.get<std::string>("--source");
 		destination = program.get<std::string>("--destination");
 		path = program.get<std::string>("--path");
@@ -247,7 +246,7 @@ int main(int argc, char** argv)
 	}
 
 	debugPrint("parsing arguments");
-	debugPrint(communicationDirection);
+	debugPrint(flow);
 	debugPrint(source);
 	debugPrint(destination);
 	debugPrint(path);
@@ -255,7 +254,7 @@ int main(int argc, char** argv)
 	Geolite::Geolite maxdb;
 
 	try {
-		maxdb.setDirectionValues(communicationDirection, source, destination);
+		maxdb.setDirectionValues(flow, source, destination);
 	} catch (const std::exception& ex) {
 		std::cerr << ex.what() << '\n';
 		return EXIT_FAILURE;

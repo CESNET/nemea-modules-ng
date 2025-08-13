@@ -11,26 +11,17 @@
 #include <iostream>
 #include <limits>
 #include <optional>
+#include <stdexcept>
 #include <unirec++/ipAddress.hpp>
 #include <unirec++/unirecRecord.hpp>
 #include <unirec++/unirecRecordView.hpp>
 
 namespace Geolite {
 
-const char* DatabaseExeption::what() const noexcept
-{
-	return "Faild to open database";
-}
-
-const char* NoData::what() const noexcept
-{
-	return "No data found";
-}
-
 void Geolite::init(const char* path)
 {
 	if (MMDB_open(path, MMDB_MODE_MMAP, m_mmdb) != MMDB_SUCCESS) {
-		throw DatabaseExeption();
+		throw std::runtime_error("Failed to open MaxMind database: " + std::string(path));
 	}
 }
 

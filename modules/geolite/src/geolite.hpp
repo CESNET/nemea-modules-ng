@@ -17,18 +17,6 @@ namespace Geolite {
 #define EMPTY_STRING std::string("")
 #define EMPTY_DOUBLE std::numeric_limits<double>::quiet_NaN()
 
-// Custom exception for database opening errors
-class DatabaseExeption : public std::exception {
-public:
-	const char* what() const noexcept override;
-};
-
-// Custom exception for database opening errors
-class NoData : public std::exception {
-public:
-	const char* what() const noexcept override;
-};
-
 enum Direction : uint8_t {
 	SOURCE,
 	DESTINATION,
@@ -151,9 +139,8 @@ private:
 	/**
 	 * @brief Methods to retrieve specific geolocation data.
 	 *
-	 * These methods throw NoDataException if the requested data is not found for the IP.
-	 *
-	 * @return Return geolocation data retreved from database.
+	 * @return Return geolocation data retreved from database of default empty value if error or
+	 * data not found. (EMPTY_STRING, EMPTY_DOUBLE)
 	 */
 	std::string getCityName();
 	std::string getCountryName();

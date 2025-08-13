@@ -54,7 +54,6 @@ struct GeoliteData {
  */
 class Geolite {
 public:
-	// TODO: Split MaxMind stuff to sepparate class
 	/**
 	 * @brief Initializes the MaxMind database. Throws DatabaseException on failure.
 	 * @param path Path to the MaxMind database file.
@@ -69,16 +68,19 @@ public:
 	/**
 	 * @brief Save Unirec geolocation field IDs to structure.
 	 */
+	// TODO: this
 	void getUnirecRecordFieldIDs();
 
 	/**
 	 * @brief Read data from MaxMind data and saves them to structure.
 	 */
+	// TODO: this
 	void getDataForUnirecRecord();
 
 	/**
 	 * @brief Populates Unirec geolocation fields with data from MaxMind DB
 	 */
+	// TODO: this
 	void setDataToUnirecRecord(Nemea::UnirecRecord& unirecRecord) const;
 
 	/**
@@ -113,6 +115,7 @@ public:
 	 *
 	 * @param inputUnirecView - Unirec record received from trap interface
 	 */
+	// TODO: this
 	void getIp(std::optional<Nemea::UnirecRecordView>& inputUnirecView);
 
 private:
@@ -179,6 +182,16 @@ private:
 
 	// Set direction of communication
 	void setDirection(Direction direction);
+
+	template <typename T>
+	void
+	saveDataToUnirecField(Nemea::UnirecRecord& unirecRecord, const T& data, ur_field_id_t idField)
+		const
+	{
+		if (idField != UR_E_INVALID_NAME) {
+			unirecRecord.setFieldFromType(data, idField);
+		}
+	}
 
 	// TESTING
 	void readFieldDouble(Nemea::UnirecRecord& unirecRecord, const char* name) const;

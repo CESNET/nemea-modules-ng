@@ -155,7 +155,6 @@ ur_field_id_t Geolite::getUnirecFieldID(const char* name)
 {
 	auto idField = static_cast<ur_field_id_t>(ur_get_id_by_name(name));
 	if (idField == UR_E_INVALID_NAME) {
-		throw std::runtime_error(std::string("Unable to access Geolite Unirec fields"));
 		return UR_E_INVALID_NAME;
 	}
 	return idField;
@@ -163,20 +162,16 @@ ur_field_id_t Geolite::getUnirecFieldID(const char* name)
 
 void Geolite::getUnirecRecordFieldIDs()
 {
-	if (m_direction == Direction::BOTH || m_direction == Direction::SOURCE) {
-		m_ids.srcCityId = getUnirecFieldID("SRC_CITY_NAME");
-		m_ids.srcCountryId = getUnirecFieldID("SRC_COUNTRY_NAME");
-		m_ids.srcLatitudeId = getUnirecFieldID("SRC_LATITUDE");
-		m_ids.srcLongitudeId = getUnirecFieldID("SRC_LONGITUDE");
-		m_ids.srcPostalCodeId = getUnirecFieldID("SRC_POSTAL_CODE");
-	}
-	if (m_direction == Direction::BOTH || m_direction == Direction::DESTINATION) {
-		m_ids.dstCityId = getUnirecFieldID("DST_CITY_NAME");
-		m_ids.dstCountryId = getUnirecFieldID("DST_COUNTRY_NAME");
-		m_ids.dstLatitudeId = getUnirecFieldID("DST_LATITUDE");
-		m_ids.dstLongitudeId = getUnirecFieldID("DST_LONGITUDE");
-		m_ids.dstPostalCodeId = getUnirecFieldID("DST_POSTAL_CODE");
-	}
+	m_ids.srcCityId = getUnirecFieldID("SRC_CITY_NAME");
+	m_ids.srcCountryId = getUnirecFieldID("SRC_COUNTRY_NAME");
+	m_ids.srcLatitudeId = getUnirecFieldID("SRC_LATITUDE");
+	m_ids.srcLongitudeId = getUnirecFieldID("SRC_LONGITUDE");
+	m_ids.srcPostalCodeId = getUnirecFieldID("SRC_POSTAL_CODE");
+	m_ids.dstCityId = getUnirecFieldID("DST_CITY_NAME");
+	m_ids.dstCountryId = getUnirecFieldID("DST_COUNTRY_NAME");
+	m_ids.dstLatitudeId = getUnirecFieldID("DST_LATITUDE");
+	m_ids.dstLongitudeId = getUnirecFieldID("DST_LONGITUDE");
+	m_ids.dstPostalCodeId = getUnirecFieldID("DST_POSTAL_CODE");
 }
 
 void Geolite::getDataForUnirecRecord()
@@ -219,20 +214,16 @@ void Geolite::getDataForUnirecRecord()
 
 void Geolite::setDataToUnirecRecord(Nemea::UnirecRecord& unirecRecord) const
 {
-	if (m_direction == Direction::BOTH || m_direction == Direction::SOURCE) {
-		unirecRecord.setFieldFromType(m_data.srcCityName, m_ids.srcCityId);
-		unirecRecord.setFieldFromType(m_data.srcCountryName, m_ids.srcCountryId);
-		unirecRecord.setFieldFromType(m_data.srcLatitude, m_ids.srcLatitudeId);
-		unirecRecord.setFieldFromType(m_data.srcLongitude, m_ids.srcLongitudeId);
-		unirecRecord.setFieldFromType(m_data.srcPostalCode, m_ids.srcPostalCodeId);
-	}
-	if (m_direction == Direction::BOTH || m_direction == Direction::DESTINATION) {
-		unirecRecord.setFieldFromType(m_data.dstCityName, m_ids.dstCityId);
-		unirecRecord.setFieldFromType(m_data.dstCountryName, m_ids.dstCountryId);
-		unirecRecord.setFieldFromType(m_data.dstLatitude, m_ids.dstLatitudeId);
-		unirecRecord.setFieldFromType(m_data.dstLongitude, m_ids.dstLongitudeId);
-		unirecRecord.setFieldFromType(m_data.dstPostalCode, m_ids.dstPostalCodeId);
-	}
+	saveDataToUnirecField(unirecRecord, m_data.srcCityName, m_ids.srcCityId);
+	saveDataToUnirecField(unirecRecord, m_data.srcCountryName, m_ids.srcCountryId);
+	saveDataToUnirecField(unirecRecord, m_data.srcLatitude, m_ids.srcLatitudeId);
+	saveDataToUnirecField(unirecRecord, m_data.srcLongitude, m_ids.srcLongitudeId);
+	saveDataToUnirecField(unirecRecord, m_data.srcPostalCode, m_ids.srcPostalCodeId);
+	saveDataToUnirecField(unirecRecord, m_data.dstCityName, m_ids.dstCityId);
+	saveDataToUnirecField(unirecRecord, m_data.dstCountryName, m_ids.dstCountryId);
+	saveDataToUnirecField(unirecRecord, m_data.dstLatitude, m_ids.dstLatitudeId);
+	saveDataToUnirecField(unirecRecord, m_data.dstLongitude, m_ids.dstLongitudeId);
+	saveDataToUnirecField(unirecRecord, m_data.dstPostalCode, m_ids.dstPostalCodeId);
 }
 
 void Geolite::readFieldDouble(Nemea::UnirecRecord& unirecRecord, const char* name) const

@@ -33,6 +33,18 @@ and `-v` (see [Execute a
 module](https://github.com/CESNET/Nemea#try-out-nemea-modules)) this
 module takes the following parameters:
 
+* `-f` `--fields` field1,field2,field3,...
+
+  * List of fields from plugins that will be added to the output records. (default is all fields)
+
+    * Geolite module fields are: `city_name`, `country_name`, `latitude`, `longitude`, `postal_code`.
+
+  * Do NOT insert spaces between fields, use comma ',' as a separator.
+
+  * Name of the field is case INSENSITIVE, fields are ALWAYS exported in UPPER CASE and with prefix
+    `SRC_` or `DST_` depending on the traffic direction. E.g. `city_name` will be exported as Unirec
+    field/s `SRC_CITY_NAME` or/and `DST_CITY_NAME`.
+
 * `-p` `--path` path
 
   * Specify path to the database file.
@@ -45,7 +57,7 @@ module takes the following parameters:
 
   * Specify the name of field with destination IP, which will be used for geolocation and lookup in the database (case sensitive). Default is `DST_IP`.
 
-* `-f` `--flow-direction` field
+* `-t` `--traffic-direction` field
 
   * Specify if the geolocation should be done for source, destination or both IP addresses. Possible
     values are `src`, `dst` or `both`. Default is `both`.

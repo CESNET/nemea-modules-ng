@@ -9,11 +9,12 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 
-#include "geolite.hpp"
+#include "commandLineParams.hpp"
+#include "fieldProcessor.hpp"
+#include "templateCreator.hpp"
 #include <argparse/argparse.hpp>
 #include <maxminddb.h>
 #include <netdb.h>
@@ -26,17 +27,6 @@
 #include <unirec/unirec.h>
 
 // Template for new Unirec fields that contain geolocation information
-#define SRC_MAXDB_FIELDS                                                                           \
-	", string SRC_CITY_NAME, string SRC_COUNTRY_NAME, double SRC_LATITUDE, double SRC_LONGITUDE, " \
-	"string SRC_POSTAL_CODE"
-
-#define DST_MAXDB_FIELDS                                                                           \
-	", string DST_CITY_NAME, string DST_COUNTRY_NAME, double DST_LATITUDE, double DST_LONGITUDE, " \
-	"string DST_POSTAL_CODE"
-
-#define FIELDS_STRING "CITY_NAME,COUNTRY_NAME,POSTAL_CODE"
-#define FIELDS_DOUBLE "LATITUDE,LONGITUDE"
-#define ALL_FIELDS FIELDS_STRING "," FIELDS_DOUBLE
 
 // Run-time debug prints
 static bool g_debug_enabled = false;
@@ -48,79 +38,8 @@ static void debugPrint(const std::string& msg)
 	}
 }
 
-struct CommandLineParameters {
-	std::string traffic;
-	std::string source;
-	std::string destination;
-	std::string path;
-	std::string fields;
-	std::vector<std::string> validFields;
-};
-
 using namespace Nemea;
-
-static void addFieldToTemplate(
-	std::string& templateStr,
-	const std::string& field,
-	Geolite::Direction direction,
-	const std::string& type)
-{
-	if (direction == Geolite::Direction::BOTH || direction == Geolite::Direction::SOURCE) {
-		templateStr += " ," + type + " SRC_" + field;
-	}
-	if (direction == Geolite::Direction::BOTH || direction == Geolite::Direction::DESTINATION) {
-		templateStr += " ," + type + " DST_" + field;
-	}
-}
-
-static std::string
-generateTemplate(std::vector<std::string>& validFields, Geolite::Direction direction)
-{
-	std::string templateStr;
-	std::string fieldsString = FIELDS_STRING;
-	std::string fieldsDouble = FIELDS_DOUBLE;
-	for (const auto& field : validFields) {
-		if (fieldsString.find(field) != std::string::npos) {
-			addFieldToTemplate(templateStr, field, direction, "string");
-		}
-		if (fieldsDouble.find(field) != std::string::npos) {
-			addFieldToTemplate(templateStr, field, direction, "double");
-		}
-	}
-	return templateStr;
-}
-
-static std::vector<std::string> processFields(std::string fields)
-{
-	// Convert to lowercase for consistency
-	std::transform(fields.begin(), fields.end(), fields.begin(), [](unsigned char chr) {
-		return std::toupper(chr);
-	});
-
-	std::string allFields = ALL_FIELDS;
-	std::vector<std::string> validFields;
-
-	// Split the fields by comma
-	size_t pos = 0;
-	fields += ","; // Add a trailing comma to handle the last field
-	while ((pos = fields.find(',')) != std::string::npos) {
-		// Extract the field
-		std::string field = fields.substr(0, pos);
-		fields.erase(0, pos + 1);
-
-		// Check if the field is valid
-		if (allFields.find(field) == std::string::npos) {
-			throw std::runtime_error(std::string("Invalid field: ") + field);
-			return {};
-		}
-
-		// Avoid duplicates
-		if (std::find(validFields.begin(), validFields.end(), field) == validFields.end()) {
-			validFields.push_back(field);
-		}
-	}
-	return validFields;
-}
+using namespace NFieldProcessor;
 
 /**
  * @brief Process the next Unirec record.
@@ -135,7 +54,7 @@ static std::vector<std::string> processFields(std::string fields)
 static void processNextRecord(
 	UnirecInputInterface& input,
 	UnirecOutputInterface& output,
-	Geolite::Geolite& maxdb)
+	FieldProcessor& fieldProcessor)
 {
 	// ask for new record
 	debugPrint("Waiting for new Unirec record...");
@@ -150,7 +69,7 @@ static void processNextRecord(
 
 	// get ip for record
 	try {
-		maxdb.getIp(inputUnirecView);
+		fieldProcessor.getIp(inputUnirecView);
 	} catch (const std::exception& ex) {
 		throw std::runtime_error(std::string("Error while getting IP address: ") + ex.what());
 		return;
@@ -162,7 +81,7 @@ static void processNextRecord(
 
 	// get fields IDs of Geolite fields from Unirec record
 	try {
-		maxdb.getUnirecRecordFieldIDs();
+		fieldProcessor.getUnirecRecordFieldIDs();
 	} catch (const std::exception& ex) {
 		throw std::runtime_error(std::string("Error while getting fields IDs: ") + ex.what());
 		return;
@@ -172,7 +91,7 @@ static void processNextRecord(
 
 	// get data from Geolite database
 	try {
-		maxdb.getDataForUnirecRecord();
+		fieldProcessor.getDataForUnirecRecord();
 	} catch (const std::exception& ex) {
 		std::cout << "Error while getting Geolite Data: " << ex.what() << '\n';
 	}
@@ -181,7 +100,7 @@ static void processNextRecord(
 
 	// populate Unirec record Geolite fields with data from DB
 	try {
-		maxdb.setDataToUnirecRecord(unirecRecord);
+		fieldProcessor.setDataToUnirecRecord(unirecRecord);
 	} catch (const std::exception& ex) {
 		throw std::runtime_error(
 			std::string("Error while loading data to Unirec record: ") + ex.what());
@@ -190,7 +109,7 @@ static void processNextRecord(
 
 	// DEBUG
 	if (g_debug_enabled) {
-		maxdb.printUnirecRecord(unirecRecord);
+		fieldProcessor.printUnirecRecord(unirecRecord);
 	}
 
 	// send Unirec record through trap interface
@@ -245,13 +164,13 @@ static void handleTemplateChange(
 static void processUnirecRecords(
 	UnirecInputInterface& input,
 	UnirecOutputInterface& output,
-	Geolite::Geolite& maxdb,
+	FieldProcessor& fieldProcessor,
 	const std::string& templateStr)
 
 {
 	while (true) {
 		try {
-			processNextRecord(input, output, maxdb);
+			processNextRecord(input, output, fieldProcessor);
 		} catch (FormatChangeException& ex) {
 			try {
 				handleTemplateChange(input, output, templateStr);
@@ -272,6 +191,7 @@ int main(int argc, char** argv)
 	// TODO: add logger support
 
 	CommandLineParameters params;
+	std::string templateStr;
 
 	argparse::ArgumentParser program("Geolite");
 
@@ -295,7 +215,7 @@ int main(int argc, char** argv)
 			.help(
 				"List of new Unirec fields that will be added to the flows (see help for "
 				"details)")
-			.default_value(std::string(ALL_FIELDS));
+			.default_value(std::string(TemplateCreator::ALL_FIELDS));
 		program.add_argument("-t", "--traffic-direction")
 			.help(
 				"Specifiy what traffic(flow) direction (IPs) should be processed. , both -> "
@@ -318,7 +238,16 @@ int main(int argc, char** argv)
 		program.parse_args(argc, argv);
 
 		g_debug_enabled = program.get<bool>("--debug");
-		params.traffic = program.get<std::string>("--traffic-direction");
+
+		auto traffic = program.get<std::string>("--traffic-direction");
+		if (traffic == "both") {
+			params.traffic = Direction::BOTH;
+		} else if (traffic == "src") {
+			params.traffic = Direction::SOURCE;
+		} else if (traffic == "dst") {
+			params.traffic = Direction::DESTINATION;
+		}
+
 		params.source = program.get<std::string>("--source");
 		params.destination = program.get<std::string>("--destination");
 		params.path = program.get<std::string>("--path");
@@ -330,45 +259,33 @@ int main(int argc, char** argv)
 	}
 
 	debugPrint("parsing arguments");
-	debugPrint(params.traffic);
 	debugPrint(params.source);
 	debugPrint(params.destination);
 	debugPrint(params.path);
 	debugPrint(params.fields);
 
 	try {
-		params.validFields = processFields(params.fields);
-	} catch (const std::exception& ex) {
-		std::cerr << "Error while processing fields: " << ex.what()
-				  << "Required format field,field,field" << '\n';
-		return EXIT_FAILURE;
-	}
-
-	// print fields for debug
-	debugPrint("Processed fields:");
-	for (const auto& field : params.validFields) {
-		debugPrint(field);
-	}
-
-	// Create Unirec template
-
-	Geolite::Geolite maxdb;
-
-	try {
-		maxdb.setDirectionValues(params.traffic, params.source, params.destination);
+		templateStr = TemplateCreator::init(params);
 	} catch (const std::exception& ex) {
 		std::cerr << ex.what() << '\n';
 		return EXIT_FAILURE;
 	}
 
-	std::string templateStr = generateTemplate(params.validFields, maxdb.getDirection());
-
 	debugPrint("Generated Unirec template: " + templateStr);
 
+	FieldProcessor fieldProcessor;
+
 	try {
-		maxdb.init(params.path.c_str());
+		fieldProcessor.setParameters(params);
 	} catch (const std::exception& ex) {
-		std::cerr << "Geolite init error: " << ex.what() << '\n';
+		std::cerr << ex.what() << '\n';
+		return EXIT_FAILURE;
+	}
+
+	try {
+		fieldProcessor.init();
+	} catch (const std::exception& ex) {
+		std::cerr << "Init error: " << ex.what() << '\n';
 		return EXIT_FAILURE;
 	}
 
@@ -376,13 +293,13 @@ int main(int argc, char** argv)
 	UnirecOutputInterface output = unirec.buildOutputInterface();
 
 	try {
-		processUnirecRecords(input, output, maxdb, templateStr);
+		processUnirecRecords(input, output, fieldProcessor, templateStr);
 	} catch (const std::exception& ex) {
 		std::cerr << "Unirec error: " << ex.what() << '\n';
 		return EXIT_FAILURE;
 	}
 
-	maxdb.exit();
+	fieldProcessor.exit();
 
 	return 0;
 }

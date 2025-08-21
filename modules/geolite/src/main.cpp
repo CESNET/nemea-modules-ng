@@ -220,10 +220,10 @@ int main(int argc, char** argv)
 		program.add_argument("-d", "--destination")
 			.help("Name of Unirec field with destination IP address")
 			.default_value(std::string("DST_IP"));
-		program.add_argument("--pathCityDB")
+		program.add_argument("--pathGeolite")
 			.help("Specifiy the path to maxmind City DB files")
 			.default_value(std::string("/home/nixos/GeoLite2-City_20250718/GeoLite2-City.mmdb"));
-		program.add_argument("--pathASNDB")
+		program.add_argument("--pathASN")
 			.help("Specifiy the path to	maxmind ASN DB files")
 			.default_value(std::string("/home/nixos/GeoLite2-ASN_20250820/GeoLite2-ASN.mmdb"));
 		program.add_argument("-x", "--debug")
@@ -247,8 +247,8 @@ int main(int argc, char** argv)
 
 		params.source = program.get<std::string>("--source");
 		params.destination = program.get<std::string>("--destination");
-		params.pathCityDB = program.get<std::string>("--pathCityDB");
-		params.pathASNDB = program.get<std::string>("--pathASNDB");
+		params.pathCityDB = program.get<std::string>("--pathGeolite");
+		params.pathASNDB = program.get<std::string>("--pathASN");
 		params.fields = program.get<std::string>("--fields");
 
 	} catch (const std::exception& ex) {

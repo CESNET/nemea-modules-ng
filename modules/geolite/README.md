@@ -11,20 +11,26 @@ are determined by run time parameters.
 
 ## Output data
 
-Flows are sent on the output interface, also in Unirec format, they
-contain geolocation data with following additional fields:
+Flows are sent on the output interface, also in Unirec format. Additional fields are available
 
-* string `CITY_NAME`
-* string `COUNTRY_NAME`
-* double `LATITUDE`
-* double `LONGITUDE`
-* string `POSTAL_CODE`
+* Geolite module:
+    * string `CITY_NAME`
+    * string `COUNTRY_NAME`
+    * double `LATITUDE`
+    * double `LONGITUDE`
+    * string `POSTAL_CODE`
+    * string `CONTINENT_NAME`
+    * string `ISO_CODE`
+    * uint16 `ACCURACY`
+* ASN module:
+    * string `ASO`
+    * uint32 `ASN`
 
 Each field come in two variants, one for source IP address with prefix `SRC_` and one for
-destination IP address with prefix `DST_`. For example, the field for source IP address city name is
+destination IP address with prefix `DST_`. For example, the field for source IP address `city_name` is
 `SRC_CITY_NAME` and for destination IP address it is `DST_CITY_NAME`.
 
-SRC and DSR fields are added based on `-c` parameter value.
+SRC and DSR fields are added based on `-t` parameter value.
 
 ## Module parameters
 
@@ -37,7 +43,10 @@ module takes the following parameters:
 
   * List of fields from plugins that will be added to the output records. (default is all fields)
 
-    * Geolite module fields are: `city_name`, `country_name`, `latitude`, `longitude`, `postal_code`.
+    * Geolite module fields are: `city_name`, `country_name`, `latitude`, `longitude`, `postal_code`
+      `continent_name`, `iso_code`, `accuracy`.
+
+    * ASN module fields are: `asn`, `aso`.
 
   * Do NOT insert spaces between fields, use comma ',' as a separator.
 
@@ -45,9 +54,13 @@ module takes the following parameters:
     `SRC_` or `DST_` depending on the traffic direction. E.g. `city_name` will be exported as Unirec
     field/s `SRC_CITY_NAME` or/and `DST_CITY_NAME`.
 
-* `-p` `--path` path
+*  `--pathGeolite` path
 
-  * Specify path to the database file.
+  * Specify path to the MaxMind GeoLite City file (.mmdb).
+
+*  `--pathASN` path
+
+  * Specify path to the MaxMind GeoLite ASN file (.mmdb).
 
 * `-s` `--source` field
 
@@ -65,11 +78,11 @@ module takes the following parameters:
 ## Example
 The following command :
 
-`./geolite -i f:/etc/nemea/data/data.dan.trapcap,f:test.trapcap -p '/usr/share/GeoIP/GeoLite2-Country.mmdb'`
+`./geolite -i f:/etc/nemea/data/data.dan.trapcap,f:test.trapcap -pathGeolite '/usr/share/GeoIP/GeoLite2-City.mmdb'`
 
 will be interpreted as follows:
 
 * `-i f:/etc/nemea/data/data.dan.trapcap,f:test.trapcap`
   sets the input and output interfaces to a file.
 
-* `-d '/usr/share/GeoIP/GeoLite2-Country.mmdb'` sets the path to the database file.
+* `-pathGeolite '/usr/share/GeoIP/GeoLite2-City.mmdb'` sets the path to the database file.

@@ -1,6 +1,8 @@
 add_executable(geolite
 	main.cpp
 	geolite.cpp
+	templateCreator.cpp
+	fieldProcessor.cpp
 )
 
 target_link_libraries(geolite PRIVATE

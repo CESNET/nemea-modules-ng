@@ -29,14 +29,6 @@
 // Template for new Unirec fields that contain geolocation information
 
 // Run-time debug prints
-static bool g_debug_enabled = false;
-
-static void debugPrint(const std::string& msg)
-{
-	if (g_debug_enabled) {
-		std::cerr << "[DEBUG] " << msg << '\n';
-	}
-}
 
 using namespace Nemea;
 using namespace NFieldProcessor;
@@ -57,7 +49,7 @@ static void processNextRecord(
 	FieldProcessor& fieldProcessor)
 {
 	// ask for new record
-	debugPrint("Waiting for new Unirec record...");
+	debugPrint("Waiting for new Unirec record...", 2);
 	std::optional<UnirecRecordView> inputUnirecView = input.receive();
 
 	// check if not empty
@@ -65,7 +57,7 @@ static void processNextRecord(
 		throw std::runtime_error(std::string("Unable to create record"));
 		return;
 	}
-	debugPrint("Record received successfully");
+	debugPrint("Record received successfully", 2);
 
 	// get ip for record
 	try {
@@ -77,7 +69,7 @@ static void processNextRecord(
 
 	auto unirecRecord = output.getUnirecRecord();
 
-	debugPrint("Unirec record created");
+	debugPrint("Unirec record created", 2);
 
 	// get fields IDs of Geolite fields from Unirec record
 	try {
@@ -87,16 +79,16 @@ static void processNextRecord(
 		return;
 	}
 
-	debugPrint("Ip fields retreived successfully");
+	debugPrint("Ip fields retreived successfully", 2);
 
 	// get data from Geolite database
 	try {
 		fieldProcessor.getDataForUnirecRecord();
 	} catch (const std::exception& ex) {
-		std::cout << "Error while getting Geolite Data: " << ex.what() << '\n';
+		debugPrint("Error while getting data from Geolite DB" + std::string(ex.what()), 2);
 	}
 
-	debugPrint("Data from DB retreived successfully");
+	debugPrint("Data from DB retreived successfully", 2);
 
 	// populate Unirec record Geolite fields with data from DB
 	try {
@@ -108,13 +100,13 @@ static void processNextRecord(
 	}
 
 	// DEBUG
-	if (g_debug_enabled) {
-		fieldProcessor.printUnirecRecord(unirecRecord);
-	}
+	// if (g_debug_enabled) {
+	// 	fieldProcessor.printUnirecRecord(unirecRecord);
+	// }
 
 	// send Unirec record through trap interface
 	output.send(unirecRecord);
-	debugPrint("Into the black hole it goes...");
+	debugPrint("Into the black hole it goes...", 2);
 }
 
 /**
@@ -228,16 +220,21 @@ int main(int argc, char** argv)
 		program.add_argument("-d", "--destination")
 			.help("Name of Unirec field with destination IP address")
 			.default_value(std::string("DST_IP"));
-		program.add_argument("-p", "--path")
-			.help("Specifiy the path to database files")
+		program.add_argument("--pathCityDB")
+			.help("Specifiy the path to maxmind City DB files")
 			.default_value(std::string("/home/nixos/GeoLite2-City_20250718/GeoLite2-City.mmdb"));
+		program.add_argument("--pathASNDB")
+			.help("Specifiy the path to	maxmind ASN DB files")
+			.default_value(std::string("/home/nixos/GeoLite2-ASN_20250820/GeoLite2-ASN.mmdb"));
 		program.add_argument("-x", "--debug")
 			.help("Enable debug output")
+			.action([&](const auto&) { g_debug_level++; })
+			.append()
 			.default_value(false)
-			.implicit_value(true);
-		program.parse_args(argc, argv);
+			.implicit_value(true)
+			.nargs(0);
 
-		g_debug_enabled = program.get<bool>("--debug");
+		program.parse_args(argc, argv);
 
 		auto traffic = program.get<std::string>("--traffic-direction");
 		if (traffic == "both") {
@@ -250,7 +247,8 @@ int main(int argc, char** argv)
 
 		params.source = program.get<std::string>("--source");
 		params.destination = program.get<std::string>("--destination");
-		params.path = program.get<std::string>("--path");
+		params.pathCityDB = program.get<std::string>("--pathCityDB");
+		params.pathASNDB = program.get<std::string>("--pathASNDB");
 		params.fields = program.get<std::string>("--fields");
 
 	} catch (const std::exception& ex) {
@@ -261,7 +259,8 @@ int main(int argc, char** argv)
 	debugPrint("parsing arguments");
 	debugPrint(params.source);
 	debugPrint(params.destination);
-	debugPrint(params.path);
+	debugPrint(params.pathCityDB);
+	debugPrint(params.pathASNDB);
 	debugPrint(params.fields);
 
 	try {

@@ -8,12 +8,15 @@
 
 #pragma once
 
+#include "commandLineParams.hpp"
 #include <maxminddb.h>
 #include <unirec++/ipAddress.hpp>
 #include <unirec++/unirecRecord.hpp>
 #include <unirec/unirec.h>
 
 namespace Geolite {
+
+using namespace NFieldProcessor;
 
 /**
  * @brief Geolite class add Unirec geolocation fields
@@ -24,7 +27,7 @@ public:
 	 * @brief Initializes the MaxMind database. Throws DatabaseException on failure.
 	 * @param path Path to the MaxMind database file.
 	 */
-	void init(const char* path);
+	void init(const CommandLineParameters& params);
 
 	/**
 	 * @brief Closes the MaxMind database.
@@ -37,18 +40,17 @@ public:
 	 * @return Return geolocation data retreved from database of default empty value if error or
 	 * data not found. (EMPTY_STRING, EMPTY_DOUBLE)
 	 */
-	std::string getCityName();
-	std::string getCountryName();
-	std::string getPostalCode();
-	double getLatitude();
-	double getLongitude();
+
+	bool getGeoData(Data& data, const char* ipAddr);
+	bool getASNData(Data& data, const char* ipAddr);
 
 	// Performs the geolocation lookup for the currently set IP address.
 	// Returns true if an entry is found, false otherwise (e.g., no entry for IP, lookup error).
-	bool getDataForIp(const char* ipAddr);
+	bool getDataForIp(const char* ipAddr, MMDB_s* mmdb);
 
 private:
-	MMDB_s* m_mmdb = new MMDB_s; // MaxMind database object
+	MMDB_s* m_mmdbGeo = new MMDB_s; // MaxMind database object
+	MMDB_s* m_mmdbASN = new MMDB_s; // MaxMind database object
 	MMDB_entry_data_s m_entryData; // Data read from MaxMind DB
 	MMDB_lookup_result_s m_result; // Status of reading data from MaxMind DB
 	int m_err; // helper var for checking MaxMind DB errors

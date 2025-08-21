@@ -1,8 +1,9 @@
 #include "templateCreator.hpp"
-#include "fieldProcessor.hpp"
 #include <algorithm>
+#include <stdexcept>
 #include <string>
 #include <vector>
+
 namespace NFieldProcessor {
 
 void TemplateCreator::addFieldToTemplate(
@@ -25,39 +26,81 @@ TemplateCreator::generateTemplate(std::vector<std::string>& validFields, Directi
 	// TODO: Add check what classes need to be initialized
 	std::string templateStr;
 	for (const auto& field : validFields) {
-		if (FIELDS_STRING.find(field) != std::string::npos) {
+		if (GEOLITE_FIELDS_STRING.find(field) != std::string::npos) {
 			addFieldToTemplate(templateStr, field, direction, "string");
+			s_activeModules.geolite = true;
 		}
-		if (FIELDS_DOUBLE.find(field) != std::string::npos) {
+		if (GEOLITE_FIELDS_DOUBLE.find(field) != std::string::npos) {
 			addFieldToTemplate(templateStr, field, direction, "double");
+			s_activeModules.geolite = true;
+		}
+		if (GEOLITE_FIELDS_UINT16.find(field) != std::string::npos) {
+			addFieldToTemplate(templateStr, field, direction, "uint16");
+			s_activeModules.geolite = true;
+		}
+		if (ASN_FIELDS_STRING.find(field) != std::string::npos) {
+			addFieldToTemplate(templateStr, field, direction, "string");
+			s_activeModules.asn = true;
+		}
+		if (ASN_FIELDS_UINT16.find(field) != std::string::npos) {
+			addFieldToTemplate(templateStr, field, direction, "uint16");
+			s_activeModules.asn = true;
 		}
 	}
 	return templateStr;
 }
+std::vector<std::string> TemplateCreator::splitToVector(const std::string& str)
+{
+	std::vector<std::string> fieldsVector;
+	size_t pos = 0;
+	std::string strCopy = str;
+
+	if (str.back() != ',') {
+		strCopy += ','; // Add a trailing comma to ensure the last field is processed
+	}
+
+	while ((pos = strCopy.find(',')) != std::string::npos) {
+		// Extract the field
+		std::string field = strCopy.substr(0, pos);
+		strCopy.erase(0, pos + 1);
+		fieldsVector.push_back(field);
+	}
+	return fieldsVector;
+}
 
 std::vector<std::string> TemplateCreator::processFields(std::string fields)
 {
+	// Check if fields are empty
+	if (fields.empty()) {
+		throw std::runtime_error(std::string("No fields provided. "));
+		return {};
+	}
+
 	// Convert to uppercase for consistency
 	std::transform(fields.begin(), fields.end(), fields.begin(), [](unsigned char chr) {
 		return std::toupper(chr);
 	});
 
+	std::vector<std::string> allFieldsVector = TemplateCreator::splitToVector(ALL_FIELDS);
+
+	std::vector<std::string> selectedFieldsVector = TemplateCreator::splitToVector(fields);
+
 	std::vector<std::string> validFields;
 
-	// Split the fields by comma
-	size_t pos = 0;
-	while ((pos = fields.find(',')) != std::string::npos) {
-		// Extract the field
-		std::string field = fields.substr(0, pos);
-		fields.erase(0, pos + 1);
+	for (const auto& field : selectedFieldsVector) {
+		// Check if the field is empty
+		if (field.empty()) {
+			throw std::runtime_error(std::string("Empty field provided. "));
+			return {};
+		}
 
 		// Check if the field is valid
-		if (std::find(ALL_FIELDS.begin(), ALL_FIELDS.end(), field) == ALL_FIELDS.end()) {
+		if (allFieldsVector.end()
+			== std::find(allFieldsVector.begin(), allFieldsVector.end(), field)) {
 			throw std::runtime_error(std::string("Invalid field: ") + field);
 			return {};
 		}
 
-		// Avoid duplicates
 		if (std::find(validFields.begin(), validFields.end(), field) == validFields.end()) {
 			validFields.push_back(field);
 		}
@@ -69,8 +112,9 @@ std::string TemplateCreator::init(CommandLineParameters& params)
 	try {
 		params.validFields = TemplateCreator::processFields(params.fields);
 	} catch (const std::exception& ex) {
-		throw std::string("Error while processing fields: ") + ex.what()
-			+ "Required format field,field,field" + '\n';
+		throw std::runtime_error(
+			std::string("Error while processing fields: ") + ex.what()
+			+ " Required format field,field,field");
 		return "";
 	}
 

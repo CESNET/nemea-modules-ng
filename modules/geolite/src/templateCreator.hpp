@@ -1,12 +1,8 @@
 
 #pragma once
 
-#include "fieldProcessor.hpp"
+#include "commandLineParams.hpp"
 #include <string>
-
-// #define FIELDS_STRING "CITY_NAME,COUNTRY_NAME,POSTAL_CODE"
-// #define FIELDS_DOUBLE "LATITUDE,LONGITUDE"
-// #define ALL_FIELDS FIELDS_STRING "," FIELDS_DOUBLE
 
 namespace NFieldProcessor {
 
@@ -24,22 +20,29 @@ public:
 
 	static std::string init(CommandLineParameters& params);
 
+	static std::vector<std::string> splitToVector(const std::string& str);
+
+	inline static ActiveModules s_activeModules;
+
 	// ####################################################
 
 	// CONSTANTS (DEFINE NEW FIELDS HERE) (END WITH COMMA)
 
 	// ####################################################
 
-	// GEOLITE FIELDS
-	inline static const std::string GEOLITE_FIELDS_STRING = "CITY_NAME,COUNTRY_NAME,POSTAL_CODE,";
+	//  GEOLITE FIELDS
+	inline static const std::string GEOLITE_FIELDS_STRING
+		= "CITY_NAME,COUNTRY_NAME,POSTAL_CODE,CONTINENT_NAME,ISO_CODE,";
 	inline static const std::string GEOLITE_FIELDS_DOUBLE = "LATITUDE,LONGITUDE,";
+	inline static const std::string GEOLITE_FIELDS_UINT16 = "ACCURACY,";
 
-	inline static const std::string GEOLITE_FIELDS = GEOLITE_FIELDS_STRING + GEOLITE_FIELDS_DOUBLE;
+	// ASN FIELDS
+	inline static const std::string ASN_FIELDS_STRING = "ASO,";
+	inline static const std::string ASN_FIELDS_UINT16 = "ASN,";
 
 	// ALL FIELDS
-	inline static const std::string FIELDS_STRING = GEOLITE_FIELDS_STRING;
-	inline static const std::string FIELDS_DOUBLE = GEOLITE_FIELDS_DOUBLE;
-	inline static const std::string ALL_FIELDS = FIELDS_STRING + FIELDS_DOUBLE;
+	inline static const std::string ALL_FIELDS = GEOLITE_FIELDS_STRING + GEOLITE_FIELDS_DOUBLE
+		+ GEOLITE_FIELDS_UINT16 + ASN_FIELDS_STRING + ASN_FIELDS_UINT16;
 };
 
 } // namespace NFieldProcessor

@@ -4,34 +4,9 @@
 #include <optional>
 #include <unirec++/unirec.hpp>
 #include <unirec++/unirecRecord.hpp>
+#include <unirec/unirec.h>
 
 namespace NFieldProcessor {
-
-struct UnirecIDFields {
-	ur_field_id_t srcCityID;
-	ur_field_id_t srcCountryID;
-	ur_field_id_t srcLatitudeID;
-	ur_field_id_t srcLongitudeID;
-	ur_field_id_t srcPostalCodeID;
-	ur_field_id_t dstCityID;
-	ur_field_id_t dstCountryID;
-	ur_field_id_t dstLatitudeID;
-	ur_field_id_t dstLongitudeID;
-	ur_field_id_t dstPostalCodeID;
-};
-
-struct Data {
-	std::string srcCityName;
-	std::string srcCountryName;
-	double srcLatitude;
-	double srcLongitude;
-	std::string srcPostalCode;
-	std::string dstCityName;
-	std::string dstCountryName;
-	double dstLatitude;
-	double dstLongitude;
-	std::string dstPostalCode;
-};
 
 class FieldProcessor {
 public:
@@ -72,8 +47,6 @@ public:
 	 * @brief Returns set communication direction (bidirectional by default)
 	 *
 	 */
-	Direction getDirection();
-
 	// FOR TESTING ################################
 
 	/**
@@ -84,8 +57,11 @@ public:
 	void printUnirecRecord(Nemea::UnirecRecord& unirecRecord) const;
 
 private:
-	UnirecIDFields m_ids; // Unirec field IDs
-	Data m_data; // Data to be saved to Unirec record
+	UnirecIDFields m_ids_src; // Unirec field IDs
+	Data m_data_src; // Data to be saved to Unirec record
+
+	UnirecIDFields m_ids_dst; // Unirec field IDs
+	Data m_data_dst; // Data to be saved to Unirec record
 
 	Geolite::Geolite m_geolite;
 	CommandLineParameters m_params;
@@ -122,5 +98,7 @@ private:
 	// TESTING
 	void readFieldDouble(Nemea::UnirecRecord& unirecRecord, const char* name) const;
 	void readFieldString(Nemea::UnirecRecord& unirecRecord, const char* name) const;
+	void readFieldBool(Nemea::UnirecRecord& unirecRecord, const char* name) const;
+	void readFieldInt(Nemea::UnirecRecord& unirecRecord, const char* name) const;
 };
 } // namespace NFieldProcessor

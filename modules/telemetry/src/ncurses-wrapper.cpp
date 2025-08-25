@@ -29,7 +29,7 @@ void Ncurces::print(const std::string_view& string)
 	const std::lock_guard<std::mutex> lock(m_mutex);
 
 	clear();
-	printw("%s\n", string.data());
+	printw("%.*s\n", static_cast<int>(string.size()), string.data());
 	refresh();
 }
 

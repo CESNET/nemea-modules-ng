@@ -28,9 +28,9 @@
 
 using namespace Nemea;
 
-std::atomic<bool> g_stopFlag(false);
+static std::atomic<bool> g_stopFlag(false);
 
-void signalHandler(int signum)
+static void signalHandler(int signum)
 {
 	Nm::loggerGet("signalHandler")->info("Interrupt signal {} received", signum);
 	g_stopFlag.store(true);
@@ -44,7 +44,7 @@ void signalHandler(int signum)
  *
  * @param biInterface Bidirectional interface for Unirec communication.
  */
-void handleFormatChange(UnirecBidirectionalInterface& biInterface)
+static void handleFormatChange(UnirecBidirectionalInterface& biInterface)
 {
 	biInterface.changeTemplate();
 }
@@ -54,7 +54,7 @@ void handleFormatChange(UnirecBidirectionalInterface& biInterface)
  *
  * @param biInterface Bidirectional interface for Unirec communication.
  */
-void processNextRecord(UnirecBidirectionalInterface& biInterface)
+static void processNextRecord(UnirecBidirectionalInterface& biInterface)
 {
 	std::optional<UnirecRecordView> unirecRecord = biInterface.receive();
 	if (!unirecRecord) {
@@ -72,7 +72,7 @@ void processNextRecord(UnirecBidirectionalInterface& biInterface)
  *
  * @param biInterface Bidirectional interface for Unirec communication.
  */
-void processUnirecRecords(UnirecBidirectionalInterface& biInterface)
+static void processUnirecRecords(UnirecBidirectionalInterface& biInterface)
 {
 	while (!g_stopFlag.load()) {
 		try {
@@ -87,7 +87,7 @@ void processUnirecRecords(UnirecBidirectionalInterface& biInterface)
 	}
 }
 
-std::pair<std::string, std::string> splitPluginParams(const std::string& pluginParams)
+static std::pair<std::string, std::string> splitPluginParams(const std::string& pluginParams)
 {
 	const std::size_t position = pluginParams.find_first_of(':');
 	if (position == std::string::npos) {
@@ -99,7 +99,7 @@ std::pair<std::string, std::string> splitPluginParams(const std::string& pluginP
 		std::string(pluginParams, position + 1));
 }
 
-void showOutputPluginUsage()
+static void showOutputPluginUsage()
 {
 	auto& outputPluginFactory = Nm::PluginFactory<
 		TelemetryStats::OutputPlugin,

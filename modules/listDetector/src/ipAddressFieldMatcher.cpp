@@ -77,13 +77,13 @@ uint16_t IpAddressFieldMatcher::getNotLastNodeNextNode(NodePos pos) const noexce
 	const auto& [octetIndex, startIndex] = pos;
 
 	if (octetIndex == 0) {
-		return (uint16_t)m_octets[octetIndex].size();
+		return (uint16_t) m_octets[octetIndex].size();
 	}
 	auto index = startIndex + 1U;
 	for (; index < m_octets[octetIndex - 1UL].size() && m_octets[octetIndex - 1UL][index].isLast;
 		 index++) {}
 	if (index == m_octets[octetIndex - 1UL].size()) {
-		return (uint16_t)m_octets[octetIndex].size();
+		return (uint16_t) m_octets[octetIndex].size();
 	}
 	return m_octets[octetIndex - 1UL][index].index.nextNode;
 }

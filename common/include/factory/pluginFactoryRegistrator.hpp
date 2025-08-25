@@ -40,10 +40,10 @@ struct PluginFactoryRegistrator {
 	 */
 	explicit PluginFactoryRegistrator(
 		const PluginManifest& manifest,
-		Generator generator = g_lambdaPluginGenerator<Base, Derived>)
+		const Generator& generator = g_lambdaPluginGenerator<Base, Derived>)
 	{
 		static_assert(
-			std::is_base_of<Base, Derived>::value,
+			std::is_base_of_v<Base, Derived>,
 			"Derived template type must be derived from Base");
 
 		bool inserted;

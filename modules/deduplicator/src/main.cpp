@@ -32,7 +32,7 @@ using namespace Nemea;
  * @param biInterface Bidirectional interface for Unirec communication.
  * @param deduplicator Deduplicator instance.
  */
-void handleFormatChange(
+static void handleFormatChange(
 	UnirecBidirectionalInterface& biInterface,
 	Deduplicator::Deduplicator& deduplicator)
 {
@@ -49,7 +49,7 @@ void handleFormatChange(
  * @param biInterface Bidirectional interface for Unirec communication.
  * @param deduplicator Deduplicator instance to process flows.
  */
-void processNextRecord(
+static void processNextRecord(
 	UnirecBidirectionalInterface& biInterface,
 	Deduplicator::Deduplicator& deduplicator)
 {
@@ -73,7 +73,7 @@ void processNextRecord(
  * @param biInterface Bidirectional interface for Unirec communication.
  * @param deduplicator Deduplicator instance to process flows.
  */
-void processUnirecRecords(
+static void processUnirecRecords(
 	UnirecBidirectionalInterface& biInterface,
 	Deduplicator::Deduplicator& deduplicator)
 {

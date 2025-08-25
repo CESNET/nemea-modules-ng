@@ -49,7 +49,7 @@ IpAddressPrefix::IpAddressPrefix(Nemea::IpAddress ipAddress, size_t prefix)
 		}
 
 		if (prefixBits != 0U) {
-			m_mask.ip.bytes[prefixBytes] = (uint8_t)(UINT8_MAX << (CHAR_BIT - prefixBits));
+			m_mask.ip.bytes[prefixBytes] = (uint8_t) (UINT8_MAX << (CHAR_BIT - prefixBits));
 		}
 	}
 

@@ -19,10 +19,10 @@ namespace ListDetector {
 struct OctetNode {
 public:
 	/**
-	* @brief Operator for comparing two OctetNodes.
-	* @param other The OctetNode to compare with.
-	* @return True if the two OctetNodes have same value and mask, but current node is terminating.
-	*/
+	 * @brief Operator for comparing two OctetNodes.
+	 * @param other The OctetNode to compare with.
+	 * @return True if the two OctetNodes have same value and mask, but current node is terminating.
+	 */
 	bool operator==(const OctetNode& other) const noexcept
 	{
 		return value == other.value && mask == other.mask && !isLast;

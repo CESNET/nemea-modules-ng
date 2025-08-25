@@ -28,9 +28,9 @@
 
 using namespace Nemea;
 
-std::atomic<bool> g_stopFlag(false);
+static std::atomic<bool> g_stopFlag(false);
 
-void signalHandler(int signum)
+static void signalHandler(int signum)
 {
 	Nm::loggerGet("signalHandler")->info("Interrupt signal {} received", signum);
 	g_stopFlag.store(true);

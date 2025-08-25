@@ -95,6 +95,8 @@ private:
 		}
 	}
 
+	void getDataForOneDirection(Data& data, Nemea::IpAddress ipAddr);
+
 	// TESTING
 	void readFieldDouble(Nemea::UnirecRecord& unirecRecord, const char* name) const;
 	void readFieldString(Nemea::UnirecRecord& unirecRecord, const char* name) const;

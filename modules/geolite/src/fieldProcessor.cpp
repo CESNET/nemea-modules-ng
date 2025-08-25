@@ -3,6 +3,7 @@
 #include "emptyFields.hpp"
 #include "templateCreator.hpp"
 #include <iostream>
+#include <unirec++/ipAddress.hpp>
 
 namespace NFieldProcessor {
 
@@ -59,6 +60,7 @@ ur_field_id_t FieldProcessor::getUnirecFieldID(const char* name)
 
 void FieldProcessor::getUnirecRecordFieldIDs()
 {
+	// GEOLITE
 	m_ids_src.cityID = getUnirecFieldID("SRC_CITY_NAME");
 	m_ids_src.countryID = getUnirecFieldID("SRC_COUNTRY_NAME");
 	m_ids_src.latitudeID = getUnirecFieldID("SRC_LATITUDE");
@@ -67,8 +69,6 @@ void FieldProcessor::getUnirecRecordFieldIDs()
 	m_ids_src.continentID = getUnirecFieldID("SRC_CONTINENT_NAME");
 	m_ids_src.isoCodeID = getUnirecFieldID("SRC_ISO_CODE");
 	m_ids_src.accuracyID = getUnirecFieldID("SRC_ACCURACY");
-	m_ids_src.asnID = getUnirecFieldID("SRC_ASN");
-	m_ids_src.asnOrgID = getUnirecFieldID("SRC_ASO");
 
 	m_ids_dst.cityID = getUnirecFieldID("DST_CITY_NAME");
 	m_ids_dst.countryID = getUnirecFieldID("DST_COUNTRY_NAME");
@@ -78,43 +78,31 @@ void FieldProcessor::getUnirecRecordFieldIDs()
 	m_ids_dst.continentID = getUnirecFieldID("DST_CONTINENT_NAME");
 	m_ids_dst.isoCodeID = getUnirecFieldID("DST_ISO_CODE");
 	m_ids_dst.accuracyID = getUnirecFieldID("DST_ACCURACY");
+
+	// ASN
+	m_ids_src.asnID = getUnirecFieldID("SRC_ASN");
+	m_ids_src.asnOrgID = getUnirecFieldID("SRC_ASO");
+
 	m_ids_dst.asnID = getUnirecFieldID("DST_ASN");
 	m_ids_dst.asnOrgID = getUnirecFieldID("DST_ASO");
+}
+void FieldProcessor::getDataForOneDirection(Data& data, Nemea::IpAddress ipAddr)
+{
+	if (TemplateCreator::s_activeModules.geolite) {
+		m_geolite.getGeoData(data, getIpString(ipAddr));
+	}
+	if (TemplateCreator::s_activeModules.asn) {
+		m_geolite.getASNData(data, getIpString(ipAddr));
+	}
 }
 
 void FieldProcessor::getDataForUnirecRecord()
 {
 	if (m_params.traffic == Direction::BOTH || m_params.traffic == Direction::SOURCE) {
-		if (TemplateCreator::s_activeModules.geolite) {
-			if (!m_geolite.getGeoData(m_data_src, getIpString(m_ipAddrSrc))) {
-				throw std::runtime_error(
-					std::string("Unable to get data for src IP: ") + getIpString(m_ipAddrSrc));
-				return;
-			}
-		}
-		if (TemplateCreator::s_activeModules.asn) {
-			if (!m_geolite.getASNData(m_data_src, getIpString(m_ipAddrSrc))) {
-				throw std::runtime_error(
-					std::string("Unable to get data for src IP: ") + getIpString(m_ipAddrSrc));
-				return;
-			}
-		}
+		getDataForOneDirection(m_data_src, m_ipAddrSrc);
 	}
 	if (m_params.traffic == Direction::BOTH || m_params.traffic == Direction::DESTINATION) {
-		if (TemplateCreator::s_activeModules.geolite) {
-			if (!m_geolite.getGeoData(m_data_dst, getIpString(m_ipAddrDst))) {
-				throw std::runtime_error(
-					std::string("Unable to get data for dst IP: ") + getIpString(m_ipAddrDst));
-				return;
-			}
-		}
-		if (TemplateCreator::s_activeModules.asn) {
-			if (!m_geolite.getASNData(m_data_dst, getIpString(m_ipAddrDst))) {
-				throw std::runtime_error(
-					std::string("Unable to get data for dst IP: ") + getIpString(m_ipAddrDst));
-				return;
-			}
-		}
+		getDataForOneDirection(m_data_dst, m_ipAddrDst);
 	}
 }
 

@@ -24,16 +24,27 @@ enum Direction : uint8_t {
 struct ActiveModules {
 	bool geolite = false;
 	bool asn = false;
+	bool sni = false;
 };
 
 struct CommandLineParameters {
+	// General
 	Direction traffic;
 	std::string source;
 	std::string destination;
-	std::string pathASNDB;
-	std::string pathCityDB;
 	std::string fields;
 	std::vector<std::string> validFields;
+
+	// ASN
+	std::string pathASNDB;
+
+	// GEOLITE
+	std::string pathCityDB;
+
+	// SNI
+	std::string pathSNIIP;
+	std::string pathSNITLS;
+	std::string fieldTLS;
 };
 
 struct UnirecIDFields {
@@ -50,6 +61,9 @@ struct UnirecIDFields {
 	// ASN
 	ur_field_id_t asnID;
 	ur_field_id_t asnOrgID;
+
+	// SNI
+	ur_field_id_t sniflags;
 };
 
 struct Data {
@@ -66,6 +80,16 @@ struct Data {
 	// ASN
 	uint16_t asn;
 	std::string asnOrg;
+
+	// SNI
+	std::string sniFlags;
+};
+
+struct IpRule {
+	uint8_t ip[16];
+	uint8_t ipMask[16];
+	std::string flags;
+	bool isIPv4;
 };
 
 } // namespace NFieldProcessor

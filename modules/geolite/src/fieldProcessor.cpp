@@ -1,6 +1,15 @@
+/**
+ * @file fieldProcessor.cpp
+ * @author Tomáš Vrána <xvranat00@vutbr.cz>
+ * @brief fieldProcessor class impolementation
+ *
+ * This class is responsible for processing Unirec records and adding new fields with data to them
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #include "fieldProcessor.hpp"
 #include "commandLineParams.hpp"
-#include "emptyFields.hpp"
 #include "templateCreator.hpp"
 #include <iostream>
 #include <unirec++/ipAddress.hpp>
@@ -9,17 +18,30 @@ namespace NFieldProcessor {
 
 void FieldProcessor::init()
 {
-	// TODO: Only init necessary classes;
-	try {
-		m_geolite.init(m_params);
-	} catch (const std::exception& ex) {
-		throw std::runtime_error(std::string("Error while initializing Geolite: ") + ex.what());
+	if (TemplateCreator::s_activeModules.geolite || TemplateCreator::s_activeModules.asn) {
+		try {
+			m_geolite.init(m_params);
+		} catch (const std::exception& ex) {
+			throw std::runtime_error(std::string("Error while initializing Geolite: ") + ex.what());
+		}
+	}
+	if (TemplateCreator::s_activeModules.sni) {
+		try {
+			m_sni.init(m_params);
+		} catch (const std::exception& ex) {
+			throw std::runtime_error(std::string("Error while initializing SNI: ") + ex.what());
+		}
 	}
 }
 
 void FieldProcessor::exit()
 {
-	m_geolite.exit();
+	if (TemplateCreator::s_activeModules.geolite || TemplateCreator::s_activeModules.asn) {
+		m_geolite.exit();
+	}
+	if (TemplateCreator::s_activeModules.sni) {
+		m_sni.exit();
+	}
 }
 void FieldProcessor::setParameters(const CommandLineParameters& params)
 {
@@ -60,7 +82,9 @@ ur_field_id_t FieldProcessor::getUnirecFieldID(const char* name)
 
 void FieldProcessor::getUnirecRecordFieldIDs()
 {
-	// GEOLITE
+	// TODO: optimize - get IDs only once
+
+	//  GEOLITE
 	m_ids_src.cityID = getUnirecFieldID("SRC_CITY_NAME");
 	m_ids_src.countryID = getUnirecFieldID("SRC_COUNTRY_NAME");
 	m_ids_src.latitudeID = getUnirecFieldID("SRC_LATITUDE");
@@ -85,6 +109,10 @@ void FieldProcessor::getUnirecRecordFieldIDs()
 
 	m_ids_dst.asnID = getUnirecFieldID("DST_ASN");
 	m_ids_dst.asnOrgID = getUnirecFieldID("DST_ASO");
+
+	// SNI
+	m_ids_src.sniflags = getUnirecFieldID("SRC_SNIFLAGS");
+	m_ids_dst.sniflags = getUnirecFieldID("DST_SNIFLAGS");
 }
 void FieldProcessor::getDataForOneDirection(Data& data, Nemea::IpAddress ipAddr)
 {
@@ -93,6 +121,9 @@ void FieldProcessor::getDataForOneDirection(Data& data, Nemea::IpAddress ipAddr)
 	}
 	if (TemplateCreator::s_activeModules.asn) {
 		m_geolite.getASNData(data, getIpString(ipAddr));
+	}
+	if (TemplateCreator::s_activeModules.sni) {
+		m_sni.checkForMatch(data, getIpString(ipAddr), ipAddr.isIpv4());
 	}
 }
 
@@ -133,6 +164,10 @@ void FieldProcessor::setDataToUnirecRecord(Nemea::UnirecRecord& unirecRecord) co
 
 	saveDataToUnirecField(unirecRecord, m_data_dst.asn, m_ids_dst.asnID);
 	saveDataToUnirecField(unirecRecord, m_data_dst.asnOrg, m_ids_dst.asnOrgID);
+
+	// SNI
+	saveDataToUnirecField(unirecRecord, m_data_src.sniFlags, m_ids_src.sniflags);
+	saveDataToUnirecField(unirecRecord, m_data_dst.sniFlags, m_ids_dst.sniflags);
 }
 
 void FieldProcessor::readFieldDouble(Nemea::UnirecRecord& unirecRecord, const char* name) const

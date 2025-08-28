@@ -1,6 +1,15 @@
+/**
+ * @file fieldProcessor.hpp
+ * @author Tomáš Vrána <xvranat00@vutbr.cz>
+ * @brief fieldProcessor class
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #pragma once
 #include "commandLineParams.hpp"
 #include "geolite.hpp"
+#include "sni.hpp"
 #include <optional>
 #include <unirec++/unirec.hpp>
 #include <unirec++/unirecRecord.hpp>
@@ -64,6 +73,7 @@ private:
 	Data m_data_dst; // Data to be saved to Unirec record
 
 	Geolite::Geolite m_geolite;
+	NSNI::SNI m_sni;
 	CommandLineParameters m_params;
 
 	Nemea::IpAddress m_ipAddrSrc; // Source IP address from Unirec record

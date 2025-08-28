@@ -40,9 +40,12 @@ public:
 	inline static const std::string ASN_FIELDS_STRING = "ASO,";
 	inline static const std::string ASN_FIELDS_UINT16 = "ASN,";
 
+	// SNI FIELDS
+	inline static const std::string SNI_FIELDS_STRING = "FLAGS,";
+
 	// ALL FIELDS
 	inline static const std::string ALL_FIELDS = GEOLITE_FIELDS_STRING + GEOLITE_FIELDS_DOUBLE
-		+ GEOLITE_FIELDS_UINT16 + ASN_FIELDS_STRING + ASN_FIELDS_UINT16;
+		+ GEOLITE_FIELDS_UINT16 + ASN_FIELDS_STRING + ASN_FIELDS_UINT16 + SNI_FIELDS_STRING;
 };
 
 } // namespace NFieldProcessor

@@ -23,7 +23,6 @@ void TemplateCreator::addFieldToTemplate(
 std::string
 TemplateCreator::generateTemplate(std::vector<std::string>& validFields, Direction direction)
 {
-	// TODO: Add check what classes need to be initialized
 	std::string templateStr;
 	for (const auto& field : validFields) {
 		if (GEOLITE_FIELDS_STRING.find(field) != std::string::npos) {
@@ -45,6 +44,10 @@ TemplateCreator::generateTemplate(std::vector<std::string>& validFields, Directi
 		if (ASN_FIELDS_UINT16.find(field) != std::string::npos) {
 			addFieldToTemplate(templateStr, field, direction, "uint16");
 			s_activeModules.asn = true;
+		}
+		if (SNI_FIELDS_STRING.find(field) != std::string::npos) {
+			addFieldToTemplate(templateStr, field, direction, "string");
+			s_activeModules.sni = true;
 		}
 	}
 	return templateStr;

@@ -226,6 +226,15 @@ int main(int argc, char** argv)
 		program.add_argument("--pathASN")
 			.help("Specifiy the path to	maxmind ASN DB files")
 			.default_value(std::string("/home/nixos/GeoLite2-ASN_20250820/GeoLite2-ASN.mmdb"));
+		program.add_argument("--pathSNIIP")
+			.help("Specifiy the path to	CSV file with SNI IPs")
+			.default_value(std::string("/home/nixos/work/nemea-modules-ng/sniIP.csv"));
+		program.add_argument("--pathSNITLS")
+			.help("Specifiy the path to	CSV file with SNI TLS domains")
+			.default_value(std::string("/home/nixos/work/nemea-modules-ng/sniTLS.csv"));
+		program.add_argument("--tlsField")
+			.help("Name of Unirec field with TLS SNI domain")
+			.default_value(std::string("TLS_SNI"));
 		program.add_argument("-x", "--debug")
 			.help("Enable debug output")
 			.action([&](const auto&) { g_debug_level++; })
@@ -249,6 +258,9 @@ int main(int argc, char** argv)
 		params.destination = program.get<std::string>("--destination");
 		params.pathCityDB = program.get<std::string>("--pathGeolite");
 		params.pathASNDB = program.get<std::string>("--pathASN");
+		params.pathSNIIP = program.get<std::string>("--pathSNIIP");
+		params.pathSNITLS = program.get<std::string>("--pathSNITLS");
+		params.fieldTLS = program.get<std::string>("--tlsField");
 		params.fields = program.get<std::string>("--fields");
 
 	} catch (const std::exception& ex) {
@@ -261,6 +273,8 @@ int main(int argc, char** argv)
 	debugPrint(params.destination);
 	debugPrint(params.pathCityDB);
 	debugPrint(params.pathASNDB);
+	debugPrint(params.pathSNIIP);
+	debugPrint(params.pathSNITLS);
 	debugPrint(params.fields);
 
 	try {

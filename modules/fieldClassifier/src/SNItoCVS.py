@@ -2,12 +2,12 @@
 
 # Convert SNI file to CSV
 # Usage: python3 SNItoCVS.py <path_to_sni_file>
-# Output: sniIP.csv, sniTLS.csv
+# Output: listIP.csv, listSNI.csv
 
-# sniIP.csv columns: IP, IPInHex, Mask, MaskInHex, Type, Flags
-#   Type: ipv4 or ipv6
+# listIP.csv columns: IP, hexadecimal_IP, Mask, hexadecimal_mask, IP_type, flags
+#   IP_type: ipv4 or ipv6
 
-# sniTLS.csv columns: Domain, Company, Flags
+# listSNI.csv columns: SNI, Company, Flags
 
 # Flags are separated by ;
 
@@ -24,6 +24,7 @@ import csv
 import ipaddress
 
 
+# check if string is hexadecimal
 def is_hexadecimal_1(s):
     try:
         int(s, 16)
@@ -32,6 +33,7 @@ def is_hexadecimal_1(s):
         return False
 
 
+# check if string is IP address
 def is_ip(s):
     try:
         ipaddress.ip_address(s)
@@ -49,8 +51,8 @@ def removeComents(data):
     return data
 
 
+# remove the first element from list
 def removeElement(data):
-    # remove first element from list
     if len(data) > 0:
         data = data[1:]
     return data
@@ -102,7 +104,7 @@ for line in sni_lines:
     ipInHex = 0x0
     maskInHex = 0x0
 
-    # save first element - IP or Domain
+    # save first element - IP or SNI
     if len(line) > 0:
         first = line[0]
     else:
@@ -115,8 +117,9 @@ for line in sni_lines:
     if first == "" or first == "0x0" or first == "NULL":
         continue
 
+    # check if IP
     if is_hexadecimal_1(first) or is_ip(first):
-        # IP
+        # save IP
         line = removeElement(line)
         isIP = True
 
@@ -130,6 +133,7 @@ for line in sni_lines:
             second = line[0]
             second = removeComents(second)
             second = second.strip()
+            # save mask in hex
             if typeIP == "ipv4":
                 net = ipaddress.IPv4Network(first + "/" + second, strict=False)
                 maskInHex = hex(int(net.netmask))
@@ -140,7 +144,7 @@ for line in sni_lines:
                 maskInHex = hex(int(net.netmask))
                 ipInHex = hex(int(ipaddress.IPv6Address(first)))
 
-            # remove leading 0x for ipv4
+            # remove leading 0x
             ipInHex = ipInHex[2:]
             maskInHex = maskInHex[2:]
 

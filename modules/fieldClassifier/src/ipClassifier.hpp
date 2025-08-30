@@ -6,13 +6,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #pragma once
-#include "commandLineParams.hpp"
+#include "common.hpp"
 #include <fstream>
 
-namespace NSNI {
+namespace NIPClassifier {
 using namespace NFieldProcessor;
 
-class SNI {
+class IPClassifier {
 public:
 	void init(const CommandLineParameters& params);
 	void exit();
@@ -21,9 +21,8 @@ public:
 private:
 	uint32_t ipToInt(const std::string& ipAddr);
 	bool checkForRule(const uint8_t ipAddr[16], unsigned condition, const IpRule& rule);
-	std::ifstream m_fileIP;
-	std::ifstream m_fileTLS;
+	std::ifstream m_filePtr;
 	std::vector<IpRule> m_ipRules;
 };
 
-} // namespace NSNI
+} // namespace NIPClassifier

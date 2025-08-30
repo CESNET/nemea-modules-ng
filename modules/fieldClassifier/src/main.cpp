@@ -12,7 +12,7 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "commandLineParams.hpp"
+#include "common.hpp"
 #include "fieldProcessor.hpp"
 #include "templateCreator.hpp"
 #include <argparse/argparse.hpp>
@@ -65,6 +65,14 @@ static void processNextRecord(
 	} catch (const std::exception& ex) {
 		throw std::runtime_error(std::string("Error while getting IP address: ") + ex.what());
 		return;
+	}
+
+	if (TemplateCreator::s_activeModules.tlssni) {
+		try {
+			fieldProcessor.getSNI(inputUnirecView);
+		} catch (const std::exception& ex) {
+			debugPrint(std::string("Error while getting TLS SNI: ") + ex.what());
+		}
 	}
 
 	auto unirecRecord = output.getUnirecRecord();
@@ -203,6 +211,8 @@ int main(int argc, char** argv)
 
 	try {
 		// TODO: fix help prints (add each for each plugin)
+		//
+		// GENERAL
 		program.add_argument("-f", "--fields")
 			.help(
 				"List of new Unirec fields that will be added to the flows (see help for "
@@ -220,21 +230,31 @@ int main(int argc, char** argv)
 		program.add_argument("-d", "--destination")
 			.help("Name of Unirec field with destination IP address")
 			.default_value(std::string("DST_IP"));
+
+		// GEOLITE
 		program.add_argument("--pathGeolite")
 			.help("Specifiy the path to maxmind City DB files")
 			.default_value(std::string("/home/nixos/GeoLite2-City_20250718/GeoLite2-City.mmdb"));
+
+		// ASN
 		program.add_argument("--pathASN")
 			.help("Specifiy the path to	maxmind ASN DB files")
 			.default_value(std::string("/home/nixos/GeoLite2-ASN_20250820/GeoLite2-ASN.mmdb"));
-		program.add_argument("--pathSNIIP")
+
+		// SNI
+		program.add_argument("--pathIP")
 			.help("Specifiy the path to	CSV file with SNI IPs")
 			.default_value(std::string("/home/nixos/work/nemea-modules-ng/sniIP.csv"));
-		program.add_argument("--pathSNITLS")
+
+		// TLSSNI
+		program.add_argument("--pathSNI")
 			.help("Specifiy the path to	CSV file with SNI TLS domains")
 			.default_value(std::string("/home/nixos/work/nemea-modules-ng/sniTLS.csv"));
-		program.add_argument("--tlsField")
+		program.add_argument("-l", "--sniField")
 			.help("Name of Unirec field with TLS SNI domain")
 			.default_value(std::string("TLS_SNI"));
+
+		// DEBUG
 		program.add_argument("-x", "--debug")
 			.help("Enable debug output")
 			.action([&](const auto&) { g_debug_level++; })
@@ -258,9 +278,9 @@ int main(int argc, char** argv)
 		params.destination = program.get<std::string>("--destination");
 		params.pathCityDB = program.get<std::string>("--pathGeolite");
 		params.pathASNDB = program.get<std::string>("--pathASN");
-		params.pathSNIIP = program.get<std::string>("--pathSNIIP");
-		params.pathSNITLS = program.get<std::string>("--pathSNITLS");
-		params.fieldTLS = program.get<std::string>("--tlsField");
+		params.pathIP = program.get<std::string>("--pathIP");
+		params.pathSNI = program.get<std::string>("--pathSNI");
+		params.fieldSNI = program.get<std::string>("--sniField");
 		params.fields = program.get<std::string>("--fields");
 
 	} catch (const std::exception& ex) {
@@ -273,8 +293,9 @@ int main(int argc, char** argv)
 	debugPrint(params.destination);
 	debugPrint(params.pathCityDB);
 	debugPrint(params.pathASNDB);
-	debugPrint(params.pathSNIIP);
-	debugPrint(params.pathSNITLS);
+	debugPrint(params.pathIP);
+	debugPrint(params.pathSNI);
+	debugPrint(params.fieldSNI);
 	debugPrint(params.fields);
 
 	try {

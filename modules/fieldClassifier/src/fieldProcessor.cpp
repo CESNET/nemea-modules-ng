@@ -9,7 +9,7 @@
  */
 
 #include "fieldProcessor.hpp"
-#include "commandLineParams.hpp"
+#include "common.hpp"
 #include "templateCreator.hpp"
 #include <iostream>
 #include <unirec++/ipAddress.hpp>
@@ -27,9 +27,16 @@ void FieldProcessor::init()
 	}
 	if (TemplateCreator::s_activeModules.sni) {
 		try {
-			m_sni.init(m_params);
+			m_ipClassifier.init(m_params);
 		} catch (const std::exception& ex) {
 			throw std::runtime_error(std::string("Error while initializing SNI: ") + ex.what());
+		}
+	}
+	if (TemplateCreator::s_activeModules.tlssni) {
+		try {
+			m_sniClassifier.init(m_params);
+		} catch (const std::exception& ex) {
+			throw std::runtime_error(std::string("Error while initializing TLS SNI: ") + ex.what());
 		}
 	}
 }
@@ -40,7 +47,10 @@ void FieldProcessor::exit()
 		m_geolite.exit();
 	}
 	if (TemplateCreator::s_activeModules.sni) {
-		m_sni.exit();
+		m_ipClassifier.exit();
+	}
+	if (TemplateCreator::s_activeModules.tlssni) {
+		m_sniClassifier.exit();
 	}
 }
 void FieldProcessor::setParameters(const CommandLineParameters& params)
@@ -110,9 +120,15 @@ void FieldProcessor::getUnirecRecordFieldIDs()
 	m_ids_dst.asnID = getUnirecFieldID("DST_ASN");
 	m_ids_dst.asnOrgID = getUnirecFieldID("DST_ASO");
 
-	// SNI
-	m_ids_src.sniflags = getUnirecFieldID("SRC_SNIFLAGS");
-	m_ids_dst.sniflags = getUnirecFieldID("DST_SNIFLAGS");
+	// IP_Classifier
+	m_ids_src.ipFlagsID = getUnirecFieldID("SRC_IP_FLAGS");
+	m_ids_dst.ipFlagsID = getUnirecFieldID("DST_IP_FLAGS");
+
+	// SNI_Classifier
+	m_ids_src.companyID = getUnirecFieldID("SRC_COMPANY");
+	m_ids_src.sniFlagsID = getUnirecFieldID("SRC_SNI_FLAGS");
+	m_ids_dst.companyID = getUnirecFieldID("DST_COMPANY");
+	m_ids_dst.sniFlagsID = getUnirecFieldID("DST_SNI_FLAGS");
 }
 void FieldProcessor::getDataForOneDirection(Data& data, Nemea::IpAddress ipAddr)
 {
@@ -123,7 +139,10 @@ void FieldProcessor::getDataForOneDirection(Data& data, Nemea::IpAddress ipAddr)
 		m_geolite.getASNData(data, getIpString(ipAddr));
 	}
 	if (TemplateCreator::s_activeModules.sni) {
-		m_sni.checkForMatch(data, getIpString(ipAddr), ipAddr.isIpv4());
+		m_ipClassifier.checkForMatch(data, getIpString(ipAddr), ipAddr.isIpv4());
+	}
+	if (TemplateCreator::s_activeModules.tlssni) {
+		m_sniClassifier.checkForMatch(data, m_sniSrc);
 	}
 }
 
@@ -165,10 +184,96 @@ void FieldProcessor::setDataToUnirecRecord(Nemea::UnirecRecord& unirecRecord) co
 	saveDataToUnirecField(unirecRecord, m_data_dst.asn, m_ids_dst.asnID);
 	saveDataToUnirecField(unirecRecord, m_data_dst.asnOrg, m_ids_dst.asnOrgID);
 
-	// SNI
-	saveDataToUnirecField(unirecRecord, m_data_src.sniFlags, m_ids_src.sniflags);
-	saveDataToUnirecField(unirecRecord, m_data_dst.sniFlags, m_ids_dst.sniflags);
+	// IP_Classifier
+	saveDataToUnirecField(unirecRecord, m_data_src.ipFlags, m_ids_src.ipFlagsID);
+	saveDataToUnirecField(unirecRecord, m_data_dst.ipFlags, m_ids_dst.ipFlagsID);
+
+	// SNI_Classifier
+	saveDataToUnirecField(unirecRecord, m_data_src.company, m_ids_src.companyID);
+	saveDataToUnirecField(unirecRecord, m_data_src.sniFlags, m_ids_src.sniFlagsID);
+	saveDataToUnirecField(unirecRecord, m_data_dst.company, m_ids_dst.companyID);
+	saveDataToUnirecField(unirecRecord, m_data_dst.sniFlags, m_ids_dst.sniFlagsID);
 }
+
+// TODO : refactor - combine with getIp improve implementation
+
+void FieldProcessor::saveIpAddress(
+	const std::string& ipField,
+	std::optional<Nemea::UnirecRecordView>& inputUnirecView,
+	Nemea::IpAddress& ipAddr)
+{
+	auto ipId = static_cast<ur_field_id_t>(ur_get_id_by_name(ipField.c_str()));
+	if (ipId == UR_E_INVALID_NAME) {
+		throw std::runtime_error(
+			std::string("Name/s for Unirec IP fields not found in Unirec communication"));
+	}
+	try {
+		ipAddr = inputUnirecView->getFieldAsType<Nemea::IpAddress>(ipId);
+	} catch (const std::exception& ex) {
+		throw;
+	}
+}
+void FieldProcessor::saveSNI(
+	const std::string& sniField,
+	std::optional<Nemea::UnirecRecordView>& inputUnirecView,
+	std::string& sni)
+{
+	auto ipId = static_cast<ur_field_id_t>(ur_get_id_by_name(sniField.c_str()));
+	if (ipId == UR_E_INVALID_NAME) {
+		throw std::runtime_error(
+			std::string("Name/s for Unirec SNI fields not found in Unirec communication"));
+		sni = "";
+		debugPrint("SNI field not found in Unirec record");
+		return;
+	}
+	try {
+		sni = inputUnirecView->getFieldAsType<std::string>(ipId);
+	} catch (const std::exception& ex) {
+		sni = "";
+		debugPrint("Unable to get SNI field from Unirec record");
+		throw;
+	}
+}
+
+void FieldProcessor::getIp(std::optional<Nemea::UnirecRecordView>& inputUnirecView)
+{
+	Nemea::IpAddress ipSrc;
+	Nemea::IpAddress ipDst;
+	if (m_params.traffic == Direction::BOTH) {
+		saveIpAddress(m_params.source, inputUnirecView, ipSrc);
+		saveIpAddress(m_params.destination, inputUnirecView, ipDst);
+		m_ipAddrSrc = ipSrc;
+		m_ipAddrDst = ipDst;
+	} else if (m_params.traffic == Direction::SOURCE) {
+		saveIpAddress(m_params.source, inputUnirecView, ipSrc);
+		m_ipAddrSrc = ipSrc;
+	} else if (m_params.traffic == Direction::DESTINATION) {
+		saveIpAddress(m_params.destination, inputUnirecView, ipDst);
+		m_ipAddrDst = ipDst;
+	}
+}
+
+void FieldProcessor::getSNI(std::optional<Nemea::UnirecRecordView>& inputUnirecView)
+{
+	// TODO: see if TLSSNI for both direction of only one
+	std::string sniSrc;
+	std::string sniDst;
+
+	if (m_params.traffic == Direction::BOTH) {
+		saveSNI(m_params.fieldSNI, inputUnirecView, sniSrc);
+		saveSNI(m_params.fieldSNI, inputUnirecView, sniDst);
+		m_sniSrc = sniSrc;
+		m_sniDst = sniDst;
+	} else if (m_params.traffic == Direction::SOURCE) {
+		saveSNI(m_params.fieldSNI, inputUnirecView, sniSrc);
+		m_sniSrc = sniSrc;
+	} else if (m_params.traffic == Direction::DESTINATION) {
+		saveSNI(m_params.fieldSNI, inputUnirecView, sniDst);
+		m_sniDst = sniDst;
+	}
+}
+
+// TESTING ##############################
 
 void FieldProcessor::readFieldDouble(Nemea::UnirecRecord& unirecRecord, const char* name) const
 {
@@ -229,38 +334,4 @@ void FieldProcessor::printUnirecRecord(Nemea::UnirecRecord& unirecRecord) const
 	}
 }
 
-void FieldProcessor::saveIpAddress(
-	const std::string& ipField,
-	std::optional<Nemea::UnirecRecordView>& inputUnirecView,
-	Nemea::IpAddress& ipAddr)
-{
-	auto ipId = static_cast<ur_field_id_t>(ur_get_id_by_name(ipField.c_str()));
-	if (ipId == UR_E_INVALID_NAME) {
-		throw std::runtime_error(
-			std::string("Name/s for Unirec IP fields not found in Unirec communication"));
-	}
-	try {
-		ipAddr = inputUnirecView->getFieldAsType<Nemea::IpAddress>(ipId);
-	} catch (const std::exception& ex) {
-		throw;
-	}
-}
-
-void FieldProcessor::getIp(std::optional<Nemea::UnirecRecordView>& inputUnirecView)
-{
-	Nemea::IpAddress ipSrc;
-	Nemea::IpAddress ipDst;
-	if (m_params.traffic == Direction::BOTH) {
-		saveIpAddress(m_params.source, inputUnirecView, ipSrc);
-		saveIpAddress(m_params.destination, inputUnirecView, ipDst);
-		m_ipAddrSrc = ipSrc;
-		m_ipAddrDst = ipDst;
-	} else if (m_params.traffic == Direction::SOURCE) {
-		saveIpAddress(m_params.source, inputUnirecView, ipSrc);
-		m_ipAddrSrc = ipSrc;
-	} else if (m_params.traffic == Direction::DESTINATION) {
-		saveIpAddress(m_params.destination, inputUnirecView, ipDst);
-		m_ipAddrDst = ipDst;
-	}
-}
 } // namespace NFieldProcessor

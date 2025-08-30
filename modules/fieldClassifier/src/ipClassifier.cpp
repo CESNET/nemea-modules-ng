@@ -6,40 +6,37 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "sni.hpp"
+#include "ipClassifier.hpp"
 
-#include "commandLineParams.hpp"
+#include "common.hpp"
 #include "emptyFields.hpp"
 #include <cstdint>
 #include <sstream>
 #include <string>
 #include <unirec++/ipAddress.hpp>
 
-namespace NSNI {
+namespace NIPClassifier {
 
 using namespace NFieldProcessor;
 
-void SNI::init(const CommandLineParameters& params)
+void IPClassifier::init(const CommandLineParameters& params)
 {
-	m_fileIP.open(params.pathSNIIP);
-	if (!m_fileIP.is_open()) {
-		throw std::runtime_error(
-			std::string("Error while opening SNI IP file: ") + params.pathSNIIP);
+	m_filePtr.open(params.pathIP);
+	if (!m_filePtr.is_open()) {
+		throw std::runtime_error(std::string("Error while opening SNI IP file: ") + params.pathIP);
 	}
-	// TODO: move to its own module
-	// m_fileTLS.open(params.pathSNITLS);
-	// if (!m_fileTLS.is_open()) {
-	// 	throw std::runtime_error(
-	// 		std::string("Error while opening SNI TLS file: ") + params.pathSNITLS);
-	// }
+
+	debugPrint("SNI module initialized", 1);
 
 	std::string line;
 
 	// remove cvs header
-	std::getline(m_fileIP, line);
+	std::getline(m_filePtr, line);
 
-	while (std::getline(m_fileIP, line)) {
-		// TODO: check for empty lines
+	while (std::getline(m_filePtr, line)) {
+		if (line.empty()) {
+			continue;
+		}
 		std::istringstream iss(line);
 		IpRule rule;
 		std::string ipAddrStr;
@@ -73,7 +70,7 @@ void SNI::init(const CommandLineParameters& params)
 		m_ipRules.push_back(rule);
 	}
 }
-bool SNI::checkForRule(const uint8_t ipAddr[16], unsigned condition, const IpRule& rule)
+bool IPClassifier::checkForRule(const uint8_t ipAddr[16], unsigned condition, const IpRule& rule)
 {
 	for (unsigned i = 0; i < condition; i++) {
 		if ((ipAddr[i] & rule.ipMask[i]) != (rule.ip[i])) {
@@ -82,7 +79,7 @@ bool SNI::checkForRule(const uint8_t ipAddr[16], unsigned condition, const IpRul
 	}
 	return true;
 }
-void SNI::checkForMatch(Data& data, const char* ipAddr, bool isIPv4)
+void IPClassifier::checkForMatch(Data& data, const char* ipAddr, bool isIPv4)
 {
 	debugPrint("Checking for IP: " + std::string(ipAddr), 1);
 	unsigned condition = isIPv4 ? 4 : 16;
@@ -106,10 +103,10 @@ void SNI::checkForMatch(Data& data, const char* ipAddr, bool isIPv4)
 	data.sniFlags = EMPTY_STRING;
 }
 
-void SNI::exit()
+void IPClassifier::exit()
 {
-	m_fileIP.close();
+	m_filePtr.close();
 	debugPrint("SNI module closed", 1);
 }
 
-} // namespace NSNI
+} // namespace NIPClassifier

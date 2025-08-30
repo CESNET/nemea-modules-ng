@@ -4,6 +4,8 @@
 #include <limits>
 #include <string>
 
+// Empty values for Unirec fields if data is not available
+
 const std::string EMPTY_STRING = std::string("");
 const double EMPTY_DOUBLE = std::numeric_limits<double>::quiet_NaN();
 const bool EMPTY_BOOL = false;

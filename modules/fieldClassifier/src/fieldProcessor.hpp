@@ -7,9 +7,10 @@
  */
 
 #pragma once
-#include "commandLineParams.hpp"
+#include "common.hpp"
 #include "geolite.hpp"
-#include "sni.hpp"
+#include "ipClassifier.hpp"
+#include "sniClassifier.hpp"
 #include <optional>
 #include <unirec++/unirec.hpp>
 #include <unirec++/unirecRecord.hpp>
@@ -19,7 +20,14 @@ namespace NFieldProcessor {
 
 class FieldProcessor {
 public:
+	/**
+	 * @brief initializes the FieldProcessor object and all active modules
+	 */
 	void init();
+
+	/**
+	 * @brief Cleans up and frees resources used by active modules
+	 */
 	void exit();
 
 	/**
@@ -28,12 +36,12 @@ public:
 	void getUnirecRecordFieldIDs();
 
 	/**
-	 * @brief Read data from MaxMind data and saves them to structure.
+	 * @brief Get data from active modules and prepare them for Unirec.
 	 */
 	void getDataForUnirecRecord();
 
 	/**
-	 * @brief Populates Unirec geolocation fields with data from MaxMind DB
+	 * @brief Populates Unirec geolocation fields with data from Data structure
 	 */
 	void setDataToUnirecRecord(Nemea::UnirecRecord& unirecRecord) const;
 
@@ -45,21 +53,23 @@ public:
 	void getIp(std::optional<Nemea::UnirecRecordView>& inputUnirecView);
 
 	/**
-	 * @brief saves commandline parameters to Geolite object
+	 * @brief Gets SNI domain from Unirec record and save it.
+	 *
+	 * @param inputUnirecView - Unirec record received from trap interface
+	 */
+	void getSNI(std::optional<Nemea::UnirecRecordView>& inputUnirecView);
+
+	/**
+	 * @brief saves commandline parameters
 	 *
 	 * @param params CommandLineParameters object containing command line parameters
 	 */
 	void setParameters(const NFieldProcessor::CommandLineParameters& params);
-	// Set direction of communication
 
-	/**
-	 * @brief Returns set communication direction (bidirectional by default)
-	 *
-	 */
 	// FOR TESTING ################################
 
 	/**
-	 * @brief Prints content of geolocation fields on std output
+	 * @brief Prints content of Unirec record to standard output.
 	 *
 	 * @param unirecRecord record to use for printing
 	 */
@@ -67,33 +77,51 @@ public:
 
 private:
 	UnirecIDFields m_ids_src; // Unirec field IDs
+	UnirecIDFields m_ids_dst;
+
 	Data m_data_src; // Data to be saved to Unirec record
+	Data m_data_dst;
 
-	UnirecIDFields m_ids_dst; // Unirec field IDs
-	Data m_data_dst; // Data to be saved to Unirec record
+	NGeolite::Geolite m_geolite; // GEOLITE and ASN MODULE
+	NIPClassifier::IPClassifier m_ipClassifier; // IP_Classifier MODULE
+	NSNIClassifier::SNIClassifier m_sniClassifier; // SNI_Classifier MODULE
 
-	Geolite::Geolite m_geolite;
-	NSNI::SNI m_sni;
 	CommandLineParameters m_params;
 
 	Nemea::IpAddress m_ipAddrSrc; // Source IP address from Unirec record
 	Nemea::IpAddress m_ipAddrDst; // Destination IP address from Unirec record
 
+	std::string m_sniSrc; // SNI domain value from Unirec record
+	std::string m_sniDst;
+
+	/**
+	 * @brief Method to retreve IP address from Unirec record and save it to IpAddress object.
+	 *
+	 * @param ipField - name of the field in Unirec record
+	 * @param inputUnirecView - Unirec record received from trap interface
+	 * @param ipAddr - IpAddress object to save IP address to
+	 */
 	void saveIpAddress(
 		const std::string& ipField,
 		std::optional<Nemea::UnirecRecordView>& inputUnirecView,
 		Nemea::IpAddress& ipAddr);
 
 	/**
-	 * @brief Methods to retreve IP address from Geolite object
-	 *
-	 * @return IpAddress object containing the IP address.
+	 * @brief Method to retreve SNI domain from Unirec record and save it to string.
+	 * @param sniField - name of the field in Unirec record
+	 * @param inputUnirecView - Unirec record received from trap interface
+	 * @param sni - string to save SNI domain to
 	 */
+	void saveTLSSNI(
+		const std::string& sniField,
+		std::optional<Nemea::UnirecRecordView>& inputUnirecView,
+		std::string& sni);
 
 	// Helper function for returninig ip as string
 	char* getIpString(Nemea::IpAddress) const;
 
-	ur_field_id_t getUnirecFieldID(const char* name); //
+	// Helper function for returninig Unirec field ID by name
+	ur_field_id_t getUnirecFieldID(const char* name);
 
 	template <typename T>
 	void

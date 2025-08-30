@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "commandLineParams.hpp"
+#include "common.hpp"
 #include <maxminddb.h>
 #include <unirec++/ipAddress.hpp>
 #include <unirec++/unirecRecord.hpp>
 #include <unirec/unirec.h>
 
-namespace Geolite {
+namespace NGeolite {
 
 using namespace NFieldProcessor;
 
@@ -57,4 +57,4 @@ private:
 
 	bool checkEntryData() const; // helper function for checking MaxMind DB errors
 };
-} // namespace Geolite
+} // namespace NGeolite

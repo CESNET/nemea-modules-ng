@@ -18,7 +18,7 @@
 #include <unirec++/unirecRecordView.hpp>
 
 using namespace NFieldProcessor;
-namespace Geolite {
+namespace NGeolite {
 
 void Geolite::init(const CommandLineParameters& params)
 {
@@ -141,4 +141,4 @@ void Geolite::exit()
 	debugPrint("MaxMind databases closed successfully.");
 }
 
-} // namespace Geolite
+} // namespace NGeolite

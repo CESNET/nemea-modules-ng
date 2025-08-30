@@ -1,3 +1,11 @@
+/**
+ * @file templateCreator.cpp
+ * @author Tomáš Vrána <xvranat00@vutbr.cz>
+ * @brief TemplateCreator class implementation
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #include "templateCreator.hpp"
 #include <algorithm>
 #include <stdexcept>
@@ -48,6 +56,10 @@ TemplateCreator::generateTemplate(std::vector<std::string>& validFields, Directi
 		if (SNI_FIELDS_STRING.find(field) != std::string::npos) {
 			addFieldToTemplate(templateStr, field, direction, "string");
 			s_activeModules.sni = true;
+		}
+		if (TLS_SNI_FIELDS_STRING.find(field) != std::string::npos) {
+			addFieldToTemplate(templateStr, field, direction, "string");
+			s_activeModules.tlssni = true;
 		}
 	}
 	return templateStr;
@@ -104,6 +116,7 @@ std::vector<std::string> TemplateCreator::processFields(std::string fields)
 			return {};
 		}
 
+		// Ignore duplicates
 		if (std::find(validFields.begin(), validFields.end(), field) == validFields.end()) {
 			validFields.push_back(field);
 		}
@@ -112,6 +125,7 @@ std::vector<std::string> TemplateCreator::processFields(std::string fields)
 }
 std::string TemplateCreator::init(CommandLineParameters& params)
 {
+	// check if fields are valid
 	try {
 		params.validFields = TemplateCreator::processFields(params.fields);
 	} catch (const std::exception& ex) {

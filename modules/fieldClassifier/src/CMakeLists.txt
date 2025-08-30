@@ -3,7 +3,8 @@ add_executable(geolite
 	geolite.cpp
 	templateCreator.cpp
 	fieldProcessor.cpp
-	sni.cpp
+	ipClassifier.cpp
+	sniClassifier.cpp
 )
 
 target_link_libraries(geolite PRIVATE

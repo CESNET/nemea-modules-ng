@@ -20,9 +20,9 @@ public:
 
 private:
 	uint32_t ipToInt(const std::string& ipAddr);
-	bool checkForRule(const uint8_t ipAddr[16], unsigned condition, const IpRule& rule);
+	bool checkForRule(const uint8_t ipAddr[16], unsigned condition, const IPRule& rule);
 	std::ifstream m_filePtr;
-	std::vector<IpRule> m_ipRules;
+	std::vector<IPRule> m_ipRules;
 };
 
 } // namespace NIPClassifier

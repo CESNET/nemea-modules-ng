@@ -31,11 +31,6 @@ public:
 	void exit();
 
 	/**
-	 * @brief Save Unirec geolocation field IDs to structure.
-	 */
-	void getUnirecRecordFieldIDs();
-
-	/**
 	 * @brief Get data from active modules and prepare them for Unirec.
 	 */
 	void getDataForUnirecRecord();
@@ -76,9 +71,6 @@ public:
 	void printUnirecRecord(Nemea::UnirecRecord& unirecRecord) const;
 
 private:
-	UnirecIDFields m_ids_src; // Unirec field IDs
-	UnirecIDFields m_ids_dst;
-
 	Data m_data_src; // Data to be saved to Unirec record
 	Data m_data_dst;
 
@@ -91,37 +83,33 @@ private:
 	Nemea::IpAddress m_ipAddrSrc; // Source IP address from Unirec record
 	Nemea::IpAddress m_ipAddrDst; // Destination IP address from Unirec record
 
-	std::string m_sniSrc; // SNI domain value from Unirec record
-	std::string m_sniDst;
+	std::string m_sni; // SNI domain value from Unirec record
 
 	/**
 	 * @brief Method to retreve IP address from Unirec record and save it to IpAddress object.
 	 *
-	 * @param ipField - name of the field in Unirec record
+	 * @param ipID - id of the field in Unirec record
 	 * @param inputUnirecView - Unirec record received from trap interface
 	 * @param ipAddr - IpAddress object to save IP address to
 	 */
 	void saveIpAddress(
-		const std::string& ipField,
+		const ur_field_id_t& ipID,
 		std::optional<Nemea::UnirecRecordView>& inputUnirecView,
 		Nemea::IpAddress& ipAddr);
 
 	/**
 	 * @brief Method to retreve SNI domain from Unirec record and save it to string.
-	 * @param sniField - name of the field in Unirec record
+	 * @param sniID - id of the field in Unirec record
 	 * @param inputUnirecView - Unirec record received from trap interface
 	 * @param sni - string to save SNI domain to
 	 */
 	void saveSNI(
-		const std::string& sniField,
+		const ur_field_id_t& sniID,
 		std::optional<Nemea::UnirecRecordView>& inputUnirecView,
 		std::string& sni);
 
 	// Helper function for returninig ip as string
-	char* getIpString(Nemea::IpAddress) const;
-
-	// Helper function for returninig Unirec field ID by name
-	ur_field_id_t getUnirecFieldID(const char* name);
+	std::string getIpString(Nemea::IpAddress) const;
 
 	template <typename T>
 	void

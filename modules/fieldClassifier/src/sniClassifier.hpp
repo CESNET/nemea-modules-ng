@@ -37,7 +37,7 @@ public:
 
 private:
 	std::ifstream m_filePtr; // File stream for reading the CSV file
-	std::vector<TSLRule> m_tlsRules; // Vector to store the loaded SNI rules
+	std::vector<SNIRule> m_tlsRules; // Vector to store the loaded SNI rules
 };
 
 } // namespace NSNIClassifier

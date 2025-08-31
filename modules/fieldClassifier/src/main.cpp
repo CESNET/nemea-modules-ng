@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "LRUCache.hpp"
 #include "common.hpp"
 #include "fieldProcessor.hpp"
 #include "logger/logger.hpp"
@@ -33,6 +34,7 @@
 
 using namespace Nemea;
 using namespace NFieldProcessor;
+using namespace NLRUCache;
 
 /**
  * @brief Process the next Unirec record.
@@ -68,7 +70,11 @@ static void processNextRecord(
 		return;
 	}
 
-	if (TemplateCreator::s_activeModules.tlssni) {
+	// TODO: add lru cache here
+
+	debugPrint("Ip fields retreived successfully", 2);
+
+	if (TemplateCreator::s_activeModules.sniClas) {
 		try {
 			fieldProcessor.getSNI(inputUnirecView);
 		} catch (const std::exception& ex) {
@@ -76,26 +82,14 @@ static void processNextRecord(
 		}
 	}
 
-	auto unirecRecord = output.getUnirecRecord();
-
-	debugPrint("Unirec record created", 2);
-
-	// get fields IDs of Geolite fields from Unirec record
-	try {
-		fieldProcessor.getUnirecRecordFieldIDs();
-	} catch (const std::exception& ex) {
-		throw std::runtime_error(std::string("Error while getting fields IDs: ") + ex.what());
-		return;
-	}
-
-	debugPrint("Ip fields retreived successfully", 2);
-
 	// get data from Geolite database
 	try {
 		fieldProcessor.getDataForUnirecRecord();
 	} catch (const std::exception& ex) {
 		debugPrint("Error while getting data for Unirec record:" + std::string(ex.what()), 2);
 	}
+
+	auto unirecRecord = output.getUnirecRecord();
 
 	// populate Unirec record Geolite fields with data from DB
 	try {
@@ -105,11 +99,6 @@ static void processNextRecord(
 			std::string("Error while loading data to Unirec record: ") + ex.what());
 		return;
 	}
-
-	// DEBUG
-	// if (g_debug_enabled) {
-	// 	fieldProcessor.printUnirecRecord(unirecRecord);
-	// }
 
 	// send Unirec record through trap interface
 	output.send(unirecRecord);
@@ -147,6 +136,10 @@ static void handleTemplateChange(
 
 	// change template of output interface to new template with geolocation fields
 	output.changeTemplate(stringTemp);
+
+	// save new Unirec field IDs to structure
+	TemplateCreator::getGeneralUnirecIDs();
+	TemplateCreator::getModuleUnirecIDs();
 }
 
 /**
@@ -233,6 +226,9 @@ int main(int argc, char** argv)
 		program.add_argument("-d", "--destination")
 			.help("Name of Unirec field with destination IP address")
 			.default_value(std::string("DST_IP"));
+		program.add_argument("-c", "--cacheCapacity")
+			.help("Number of entries in LRU cache")
+			.default_value(LRUCache::DEFAULT_SIZE);
 
 		// GEOLITE
 		program.add_argument("--pathGeolite")
@@ -285,6 +281,8 @@ int main(int argc, char** argv)
 		params.pathSNI = program.get<std::string>("--pathSNI");
 		params.fieldSNI = program.get<std::string>("--sniField");
 		params.fields = program.get<std::string>("--fields");
+		params.cacheCapacity = program.get<unsigned long>("--cacheCapacity");
+		LRUCache::LRUCache::s_capacity = params.cacheCapacity;
 
 	} catch (const std::exception& ex) {
 		logger->error(ex.what());
@@ -301,6 +299,7 @@ int main(int argc, char** argv)
 	debugPrint(params.pathSNI);
 	debugPrint(params.fieldSNI);
 	debugPrint(params.fields);
+	debugPrint(std::to_string(params.cacheCapacity));
 
 	try {
 		templateStr = TemplateCreator::init(params);

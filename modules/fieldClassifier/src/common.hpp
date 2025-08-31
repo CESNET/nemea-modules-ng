@@ -30,8 +30,8 @@ enum Direction : uint8_t {
 struct ActiveModules {
 	bool geolite = false;
 	bool asn = false;
-	bool sni = false;
-	bool tlssni = false;
+	bool ipClas = false;
+	bool sniClas = false;
 };
 
 /**
@@ -57,12 +57,14 @@ struct CommandLineParameters {
 	// SNI_Classifier
 	std::string pathSNI;
 	std::string fieldSNI;
+
+	unsigned long cacheCapacity;
 };
 
 /**
  * @brief Structure to keep Unirec field IDs for new fiels
  */
-struct UnirecIDFields {
+struct ModuleIDFields {
 	// GEOLITE
 	ur_field_id_t cityID;
 	ur_field_id_t countryID;
@@ -83,6 +85,12 @@ struct UnirecIDFields {
 	// SNI_Classifier
 	ur_field_id_t companyID;
 	ur_field_id_t sniFlagsID;
+};
+
+struct GeneralIDFields {
+	ur_field_id_t srcIPID;
+	ur_field_id_t dstIPID;
+	ur_field_id_t sniID;
 };
 
 /**
@@ -114,7 +122,7 @@ struct Data {
 /**
  * @brief Structure to keep IP rules from CSV file for IP_Classifier module
  */
-struct IpRule {
+struct IPRule {
 	uint8_t ip[16]; // byte array to store both IPv4 and IPv6 addresses
 	uint8_t ipMask[16]; // byte array to store both IPv4 and IPv6 masks
 	std::string flags; // flags associated with the IP range
@@ -124,8 +132,8 @@ struct IpRule {
 /**
  * @brief Structure to keep SNI rules from CSV file for SNI_Classifier module
  */
-struct TSLRule {
-	std::string tslsni; // SNI domain
+struct SNIRule {
+	std::string sni; // SNI domain
 	std::string company; // company associated with the domain (NULL if unknown)
 	std::string flags; // flags associated with the domain
 };

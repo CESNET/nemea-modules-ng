@@ -34,8 +34,8 @@ void SNIClassifier::init(const CommandLineParameters& params)
 		}
 
 		std::istringstream iss(line);
-		TSLRule rule;
-		getline(iss, rule.tslsni, ',');
+		SNIRule rule;
+		getline(iss, rule.sni, ',');
 		getline(iss, rule.company, ',');
 		getline(iss, rule.flags, ',');
 		m_tlsRules.push_back(rule);
@@ -52,7 +52,7 @@ void SNIClassifier::checkForMatch(Data& data, const std::string& sni)
 	}
 
 	for (const auto& rule : m_tlsRules) {
-		if (sni.find(rule.tslsni) != std::string::npos) {
+		if (sni.find(rule.sni) != std::string::npos) {
 			data.sniFlags = rule.flags;
 			data.company = rule.company;
 			debugPrint(

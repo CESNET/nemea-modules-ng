@@ -38,7 +38,7 @@ void IPClassifier::init(const CommandLineParameters& params)
 			continue;
 		}
 		std::istringstream iss(line);
-		IpRule rule;
+		IPRule rule;
 		std::string ipAddrStr;
 		std::string maskStr;
 		std::string typeStr;
@@ -70,7 +70,7 @@ void IPClassifier::init(const CommandLineParameters& params)
 		m_ipRules.push_back(rule);
 	}
 }
-bool IPClassifier::checkForRule(const uint8_t ipAddr[16], unsigned condition, const IpRule& rule)
+bool IPClassifier::checkForRule(const uint8_t ipAddr[16], unsigned condition, const IPRule& rule)
 {
 	for (unsigned i = 0; i < condition; i++) {
 		if ((ipAddr[i] & rule.ipMask[i]) != (rule.ip[i])) {

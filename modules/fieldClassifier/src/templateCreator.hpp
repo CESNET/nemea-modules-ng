@@ -37,15 +37,15 @@ public:
 	inline static const std::string ASN_FIELDS_UINT16 = "ASN,";
 
 	// SNI FIELDS
-	inline static const std::string SNI_FIELDS_STRING = "IP_FLAGS,";
+	inline static const std::string IPCLASS_FIELDS_STRING = "IP_FLAGS,";
 
 	// TLS SNI FIELDS
-	inline static const std::string TLS_SNI_FIELDS_STRING = "COMPANY,SNI_FLAGS,";
+	inline static const std::string SNICLASS_FIELDS_STRING = "COMPANY,SNI_FLAGS,";
 
 	// ALL FIELDS
 	inline static const std::string ALL_FIELDS = GEOLITE_FIELDS_STRING + GEOLITE_FIELDS_DOUBLE
-		+ GEOLITE_FIELDS_UINT16 + ASN_FIELDS_STRING + ASN_FIELDS_UINT16 + SNI_FIELDS_STRING
-		+ TLS_SNI_FIELDS_STRING;
+		+ GEOLITE_FIELDS_UINT16 + ASN_FIELDS_STRING + ASN_FIELDS_UINT16 + IPCLASS_FIELDS_STRING
+		+ SNICLASS_FIELDS_STRING;
 
 	// ####################################################
 
@@ -58,10 +58,22 @@ public:
 	 */
 	static std::string init(CommandLineParameters& params);
 
+	static ur_field_id_t getUnirecFieldID(const char* name);
+
+	/**
+	 * @brief Save Unirec geolocation field IDs to structure.
+	 */
+	static void getGeneralUnirecIDs();
+	static void getModuleUnirecIDs();
+
 	/**
 	 * @brief Structure to keep track of active modules.
 	 */
 	inline static ActiveModules s_activeModules;
+
+	inline static ModuleIDFields s_idsSrc;
+	inline static ModuleIDFields s_idsDst;
+	inline static GeneralIDFields s_idsGen;
 
 private:
 	/**
@@ -108,6 +120,10 @@ private:
 	 * @return A vector of strings obtained by splitting the input string at commas.
 	 */
 	static std::vector<std::string> splitToVector(const std::string& str);
+
+	inline static std::string s_ipFieldSrc;
+	inline static std::string s_ipFieldDst;
+	inline static std::string s_sniField;
 };
 
 } // namespace NFieldProcessor

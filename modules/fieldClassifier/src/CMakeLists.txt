@@ -1,4 +1,4 @@
-add_executable(geolite
+add_executable(field_classifier
 	main.cpp
 	geolite.cpp
 	templateCreator.cpp
@@ -7,7 +7,7 @@ add_executable(geolite
 	sniClassifier.cpp
 )
 
-target_link_libraries(geolite PRIVATE
+target_link_libraries(field_classifier PRIVATE
 	telemetry::telemetry
 	telemetry::appFs
 	common
@@ -19,4 +19,4 @@ target_link_libraries(geolite PRIVATE
 	maxminddb
 )
 
-install(TARGETS geolite DESTINATION ${INSTALL_DIR_BIN})
+install(TARGETS field_classifier DESTINATION ${INSTALL_DIR_BIN})

@@ -21,7 +21,7 @@ void SNIClassifier::init(const CommandLineParameters& params)
 		throw std::runtime_error(
 			std::string("Error while opening SNI TLS file: ") + params.pathSNI);
 	}
-	debugPrint("SNI module initialized", 1);
+	debugPrint("SNI Classifier module initialized", 1);
 
 	std::string line;
 
@@ -47,7 +47,7 @@ void SNIClassifier::checkForMatch(Data& data, const std::string& sni)
 	if (sni.empty()) {
 		data.sniFlags = EMPTY_STRING;
 		data.company = EMPTY_STRING;
-		debugPrint("SNI is empty", 1);
+		debugPrint("SNI is empty", 2);
 		return;
 	}
 
@@ -55,13 +55,16 @@ void SNIClassifier::checkForMatch(Data& data, const std::string& sni)
 		if (sni.find(rule.tslsni) != std::string::npos) {
 			data.sniFlags = rule.flags;
 			data.company = rule.company;
-			debugPrint("Match found for SNI: " + sni + " Company: " + data.company, 1);
+			debugPrint(
+				"Match found for SNI: " + sni + " Company: " + data.company
+					+ " Flags: " + data.sniFlags,
+				2);
 			return;
 		}
 	}
-	data.sniFlags = "unknown";
-	data.company = "unknown";
-	debugPrint("No match found for SNI: " + sni, 1);
+	data.sniFlags = EMPTY_STRING;
+	data.company = EMPTY_STRING;
+	debugPrint("No match found for SNI: " + sni, 2);
 }
 
 void SNIClassifier::exit()

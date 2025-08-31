@@ -14,6 +14,7 @@
 
 #include "common.hpp"
 #include "fieldProcessor.hpp"
+#include "logger/logger.hpp"
 #include "templateCreator.hpp"
 #include <argparse/argparse.hpp>
 #include <maxminddb.h>
@@ -93,10 +94,8 @@ static void processNextRecord(
 	try {
 		fieldProcessor.getDataForUnirecRecord();
 	} catch (const std::exception& ex) {
-		debugPrint("Error while getting data from Geolite DB" + std::string(ex.what()), 2);
+		debugPrint("Error while getting data for Unirec record:" + std::string(ex.what()), 2);
 	}
-
-	debugPrint("Data from DB retreived successfully", 2);
 
 	// populate Unirec record Geolite fields with data from DB
 	try {
@@ -195,6 +194,9 @@ int main(int argc, char** argv)
 
 	argparse::ArgumentParser program("Geolite");
 
+	Nm::loggerInit();
+	auto logger = Nm::loggerGet("main");
+
 	Unirec unirec({1, 1, "geolite", "Geolite module"});
 
 	try {
@@ -203,6 +205,7 @@ int main(int argc, char** argv)
 		std::cerr << program;
 		return EXIT_SUCCESS;
 	} catch (std::exception& ex) {
+		logger->error(ex.what());
 		std::cerr << ex.what() << '\n';
 		return EXIT_FAILURE;
 	}
@@ -211,7 +214,7 @@ int main(int argc, char** argv)
 
 	try {
 		// TODO: fix help prints (add each for each plugin)
-		//
+
 		// GENERAL
 		program.add_argument("-f", "--fields")
 			.help(
@@ -284,6 +287,7 @@ int main(int argc, char** argv)
 		params.fields = program.get<std::string>("--fields");
 
 	} catch (const std::exception& ex) {
+		logger->error(ex.what());
 		std::cerr << ex.what();
 		return EXIT_FAILURE;
 	}
@@ -301,6 +305,7 @@ int main(int argc, char** argv)
 	try {
 		templateStr = TemplateCreator::init(params);
 	} catch (const std::exception& ex) {
+		logger->error(ex.what());
 		std::cerr << ex.what() << '\n';
 		return EXIT_FAILURE;
 	}
@@ -312,6 +317,7 @@ int main(int argc, char** argv)
 	try {
 		fieldProcessor.setParameters(params);
 	} catch (const std::exception& ex) {
+		logger->error(ex.what());
 		std::cerr << ex.what() << '\n';
 		return EXIT_FAILURE;
 	}
@@ -319,6 +325,7 @@ int main(int argc, char** argv)
 	try {
 		fieldProcessor.init();
 	} catch (const std::exception& ex) {
+		logger->error(ex.what());
 		std::cerr << "Init error: " << ex.what() << '\n';
 		return EXIT_FAILURE;
 	}
@@ -329,6 +336,7 @@ int main(int argc, char** argv)
 	try {
 		processUnirecRecords(input, output, fieldProcessor, templateStr);
 	} catch (const std::exception& ex) {
+		logger->error(ex.what());
 		std::cerr << "Unirec error: " << ex.what() << '\n';
 		return EXIT_FAILURE;
 	}

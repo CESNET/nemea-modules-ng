@@ -26,7 +26,7 @@ void IPClassifier::init(const CommandLineParameters& params)
 		throw std::runtime_error(std::string("Error while opening SNI IP file: ") + params.pathIP);
 	}
 
-	debugPrint("SNI module initialized", 1);
+	debugPrint("IP classifier module initialized", 1);
 
 	std::string line;
 
@@ -81,7 +81,7 @@ bool IPClassifier::checkForRule(const uint8_t ipAddr[16], unsigned condition, co
 }
 void IPClassifier::checkForMatch(Data& data, const char* ipAddr, bool isIPv4)
 {
-	debugPrint("Checking for IP: " + std::string(ipAddr), 1);
+	debugPrint("Checking for IP: " + std::string(ipAddr), 2);
 	unsigned condition = isIPv4 ? 4 : 16;
 	uint8_t ipHex[16];
 	if (isIPv4) {
@@ -94,12 +94,12 @@ void IPClassifier::checkForMatch(Data& data, const char* ipAddr, bool isIPv4)
 			continue;
 		}
 		if (checkForRule(ipHex, condition, rule)) {
-			debugPrint("Match found for IP: " + std::string(ipAddr) + " FLAGS: " + rule.flags, 1);
+			debugPrint("Match found for IP: " + std::string(ipAddr) + " FLAGS: " + rule.flags, 2);
 			data.sniFlags = rule.flags;
 			return;
 		}
 	}
-	debugPrint("No match found for IP: " + std::string(ipAddr), 1);
+	debugPrint("No match found for IP: " + std::string(ipAddr), 2);
 	data.sniFlags = EMPTY_STRING;
 }
 

@@ -223,14 +223,14 @@ void FieldProcessor::saveSNI(
 		throw std::runtime_error(
 			std::string("Name/s for Unirec SNI fields not found in Unirec communication"));
 		sni = "";
-		debugPrint("SNI field not found in Unirec record");
+		debugPrint("SNI field not found in Unirec record", 2);
 		return;
 	}
 	try {
 		sni = inputUnirecView->getFieldAsType<std::string>(ipId);
 	} catch (const std::exception& ex) {
 		sni = "";
-		debugPrint("Unable to get SNI field from Unirec record");
+		debugPrint("Unable to get SNI field from Unirec record", 1);
 		throw;
 	}
 }

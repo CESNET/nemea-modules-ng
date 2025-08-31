@@ -112,7 +112,7 @@ private:
 	 * @param inputUnirecView - Unirec record received from trap interface
 	 * @param sni - string to save SNI domain to
 	 */
-	void saveTLSSNI(
+	void saveSNI(
 		const std::string& sniField,
 		std::optional<Nemea::UnirecRecordView>& inputUnirecView,
 		std::string& sni);

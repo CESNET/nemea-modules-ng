@@ -23,12 +23,17 @@ namespace NGeolite {
 void Geolite::init(const CommandLineParameters& params)
 {
 	if (TemplateCreator::s_activeModules.geolite
-		&& MMDB_open(params.pathCityDB.c_str(), MMDB_MODE_MMAP, m_mmdbGeo) != MMDB_SUCCESS) {
+		&& MMDB_open(params.pathCityDB.c_str(), MMDB_MODE_MMAP, m_mmdbGeo) == MMDB_SUCCESS) {
+		debugPrint("Geolite module initialized successfully");
+	} else {
 		throw std::runtime_error(
 			"Failed to open MaxMind database: " + std::string(params.pathCityDB));
 	}
+
 	if (TemplateCreator::s_activeModules.asn
-		&& MMDB_open(params.pathASNDB.c_str(), MMDB_MODE_MMAP, m_mmdbASN) != MMDB_SUCCESS) {
+		&& MMDB_open(params.pathASNDB.c_str(), MMDB_MODE_MMAP, m_mmdbASN) == MMDB_SUCCESS) {
+		debugPrint("ASN module initalized successfully");
+	} else {
 		throw std::runtime_error(
 			"Failed to open MaxMind database: " + std::string(params.pathASNDB));
 	}
@@ -62,7 +67,6 @@ bool Geolite::getASNData(Data& data, const char* ipAddr)
 								   : EMPTY_STRING;
 
 	debugPrint("ASN data retrieved successfully for IP: " + std::string(ipAddr), 2);
-	// print data for debug use debug print
 	debugPrint("ASN Data:" + std::to_string(data.asn), 2);
 	debugPrint("ASN Organization: " + data.asnOrg, 2);
 	debugPrint("----------------------------------------", 2);
@@ -126,19 +130,16 @@ void Geolite::exit()
 {
 	if (TemplateCreator::s_activeModules.geolite) {
 		MMDB_close(m_mmdbGeo);
+		delete m_mmdbGeo;
+		m_mmdbGeo = nullptr;
+		debugPrint("Geolite module closed successfully");
 	}
 	if (TemplateCreator::s_activeModules.asn) {
 		MMDB_close(m_mmdbASN);
+		delete m_mmdbASN;
+		m_mmdbASN = nullptr;
+		debugPrint("ASN module closed successfully");
 	}
-	delete m_mmdbGeo;
-	delete m_mmdbASN;
-	m_mmdbGeo = nullptr;
-	m_mmdbASN = nullptr;
-	m_err = 0;
-	m_entryData = MMDB_entry_data_s(); // Reset entry data
-	m_result = MMDB_lookup_result_s(); // Reset lookup result
-
-	debugPrint("MaxMind databases closed successfully.");
 }
 
 } // namespace NGeolite

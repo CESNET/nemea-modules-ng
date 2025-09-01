@@ -27,9 +27,9 @@
 
 using namespace Nemea;
 
-std::atomic<bool> g_stopFlag(false);
+static std::atomic<bool> g_stopFlag(false);
 
-void signalHandler(int signum)
+static void signalHandler(int signum)
 {
 	Nm::loggerGet("signalHandler")->info("Interrupt signal {} received", signum);
 	g_stopFlag.store(true);
@@ -43,7 +43,7 @@ void signalHandler(int signum)
  *
  * @param biInterface Bidirectional interface for Unirec communication.
  */
-void handleFormatChange(UnirecBidirectionalInterface& biInterface)
+static void handleFormatChange(UnirecBidirectionalInterface& biInterface)
 {
 	biInterface.changeTemplate();
 }
@@ -58,7 +58,7 @@ void handleFormatChange(UnirecBidirectionalInterface& biInterface)
  * @param sampler Sampler class for sampling.
  */
 
-void processNextRecord(UnirecBidirectionalInterface& biInterface, Sampler::Sampler& sampler)
+static void processNextRecord(UnirecBidirectionalInterface& biInterface, Sampler::Sampler& sampler)
 {
 	std::optional<UnirecRecordView> unirecRecord = biInterface.receive();
 	if (!unirecRecord) {
@@ -80,7 +80,8 @@ void processNextRecord(UnirecBidirectionalInterface& biInterface, Sampler::Sampl
  * @param biInterface Bidirectional interface for Unirec communication.
  * @param sampler Sampler class for sampling.
  */
-void processUnirecRecords(UnirecBidirectionalInterface& biInterface, Sampler::Sampler& sampler)
+static void
+processUnirecRecords(UnirecBidirectionalInterface& biInterface, Sampler::Sampler& sampler)
 {
 	while (!g_stopFlag.load()) {
 		try {
@@ -95,7 +96,7 @@ void processUnirecRecords(UnirecBidirectionalInterface& biInterface, Sampler::Sa
 	}
 }
 
-telemetry::Content getSamplerTelemetry(const Sampler::Sampler& sampler)
+static telemetry::Content getSamplerTelemetry(const Sampler::Sampler& sampler)
 {
 	auto stats = sampler.getStats();
 

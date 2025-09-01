@@ -1,14 +1,11 @@
+find_package(Boost REQUIRED)
+
 add_executable(listDetector
 	main.cpp
 	configParser.cpp
 	csvConfigParser.cpp
 	ipAddressPrefix.cpp
-	rule.cpp
-	ruleBuilder.cpp
 	listDetector.cpp
-	ipAddressFieldMatcher.cpp
-	fieldsMatcher.cpp
-	rulesMatcher.cpp
 )
 
 target_link_libraries(listDetector PRIVATE
@@ -21,6 +18,7 @@ target_link_libraries(listDetector PRIVATE
 	trap::trap
 	argparse
 	xxhash
+	Boost::boost
 )
 
 install(TARGETS listDetector DESTINATION ${INSTALL_DIR_BIN})

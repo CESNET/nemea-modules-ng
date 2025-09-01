@@ -13,21 +13,37 @@
 
 namespace ListDetector {
 
+struct IpAddressPrefix1 {
+	Nemea::IpAddress ipAddress;
+	std::size_t prefixLength;
+};
+
+/**
+ * @brief Maximum prefix length for IPv4 addresses.
+ */
+static const size_t IPV4_MAX_PREFIX = 32;
+
+/**
+ * @brief Maximum prefix length for IPv6 addresses.
+ */
+static const size_t IPV6_MAX_PREFIX = 128;
+
+static void validateIpAddressPrefix(const IpAddressPrefix1& prefix)
+{
+	if (ip_is4(&prefix.ipAddress.ip) && prefix.prefixLength > IPV4_MAX_PREFIX) {
+		throw std::invalid_argument("Invalid prefix length");
+	}
+
+	if (ip_is6(&prefix.ipAddress.ip) && prefix.prefixLength > IPV6_MAX_PREFIX) {
+		throw std::invalid_argument("Invalid prefix length");
+	}
+}
+
 /**
  * @brief Represents an IP address with a specified prefix.
  */
 class IpAddressPrefix {
 public:
-	/**
-	 * @brief Maximum prefix length for IPv4 addresses.
-	 */
-	static const size_t IPV4_MAX_PREFIX = 32;
-
-	/**
-	 * @brief Maximum prefix length for IPv6 addresses.
-	 */
-	static const size_t IPV6_MAX_PREFIX = 128;
-
 	/**
 	 * @brief Constructor for the IpAddressPrefix class.
 	 * @param ipAddress The IP address.
@@ -35,20 +51,8 @@ public:
 	 */
 	IpAddressPrefix(Nemea::IpAddress ipAddress, size_t prefix);
 
-	/**
-	 * @brief Checks if a given IP address belongs to the same prefix.
-	 * @param ipAddress The IP address to check.
-	 * @return True if the IP address belongs to the same prefix, false otherwise.
-	 */
-	bool isBelong(const Nemea::IpAddress& ipAddress) const noexcept;
-
-	/**
-	 * @brief Returns prefix as network IP and mask.
-	 * @return Pair of IP and mask as vectors of octets.
-	 */
-	std::pair<std::vector<std::byte>, std::vector<std::byte>> getIpAndMask() const noexcept;
-
-private:
+	// private:
+	int len;
 	Nemea::IpAddress m_address;
 	Nemea::IpAddress m_mask;
 };

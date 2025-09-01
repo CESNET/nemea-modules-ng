@@ -2,6 +2,7 @@ add_executable(clickhouse
 	main.cpp
 	config.cpp
 	datatype.cpp
+	inserter.cpp
 )
 
 target_link_libraries(clickhouse PRIVATE

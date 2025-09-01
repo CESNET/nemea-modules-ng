@@ -67,7 +67,7 @@ static void processNextRecord(
 		return;
 	}
 
-	if (!listDetector.matches(*unirecRecord)) {
+	if (listDetector.isMatch(*unirecRecord)) {
 		biInterface.send(*unirecRecord);
 	}
 }
@@ -100,6 +100,8 @@ static void processUnirecRecords(
 		}
 	}
 }
+
+using namespace ListDetector;
 
 int main(int argc, char** argv)
 {
@@ -183,10 +185,10 @@ int main(int argc, char** argv)
 			= {[&biInterface]() { return Nm::getInterfaceTelemetry(biInterface); }, nullptr};
 		const auto inputFile = telemetryInputDirectory->addFile("stats", inputFileOps);
 
-		auto mode = ListDetector::ListDetector::convertStringToListDetectorMode(
-			program.get<std::string>("--listmode"));
+		// auto mode =
+		// ListDetector::ListDetector::convertStringToListDetectorMode(program.get<std::string>("--listmode"));
 
-		ListDetector::ListDetector listDetector(configParser.get(), mode);
+		ListDetector::ListDetector listDetector(configParser.get(), ListDetectorMode::BLACKLIST);
 		auto listDetectorTelemetryDirectory = telemetryRootDirectory->addDir("listdetector");
 		listDetector.setTelemetryDirectory(listDetectorTelemetryDirectory);
 

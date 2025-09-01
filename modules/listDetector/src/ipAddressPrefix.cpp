@@ -35,6 +35,7 @@ IpAddressPrefix::IpAddressPrefix(Nemea::IpAddress ipAddress, size_t prefix)
 			const size_t shift = IPV4_MAX_PREFIX - prefix;
 			m_mask.ip = ip_from_int(std::numeric_limits<uint32_t>::max() << shift);
 		}
+		len = prefix;
 	} else {
 		validatePrefixLength(prefix, IPV6_MAX_PREFIX);
 
@@ -51,33 +52,10 @@ IpAddressPrefix::IpAddressPrefix(Nemea::IpAddress ipAddress, size_t prefix)
 		if (prefixBits != 0U) {
 			m_mask.ip.bytes[prefixBytes] = (uint8_t) (UINT8_MAX << (CHAR_BIT - prefixBits));
 		}
+		len = prefix;
 	}
 
 	m_address = ipAddress & m_mask;
-}
-
-bool IpAddressPrefix::isBelong(const Nemea::IpAddress& ipAddress) const noexcept
-{
-	return (ipAddress & m_mask) == m_address;
-}
-
-std::pair<std::vector<std::byte>, std::vector<std::byte>>
-IpAddressPrefix::getIpAndMask() const noexcept
-{
-	std::vector<std::byte> ipAddress;
-	std::vector<std::byte> mask;
-	if (m_address.isIpv4()) {
-		for (auto i = 0; i < 4; i++) {
-			ipAddress.push_back((std::byte) ip_get_v4_as_bytes(&m_address.ip)[i]);
-			mask.push_back((std::byte) ip_get_v4_as_bytes(&m_mask.ip)[i]);
-		}
-	} else {
-		for (auto i = 0; i < 16; i++) {
-			ipAddress.push_back((std::byte) m_address.ip.bytes[i]);
-			mask.push_back((std::byte) m_mask.ip.bytes[i]);
-		}
-	}
-	return std::make_pair(ipAddress, mask);
 }
 
 } // namespace ListDetector

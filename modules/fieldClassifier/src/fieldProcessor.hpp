@@ -32,27 +32,17 @@ public:
 
 	/**
 	 * @brief Get data from active modules and prepare them for Unirec.
+	 *
+	 * @param inputUnirecView - Unirec record received from trap interface
 	 */
-	void getDataForUnirecRecord();
+	void getDataForUnirecRecord(std::optional<Nemea::UnirecRecordView>& inputUnirecView);
 
 	/**
 	 * @brief Populates Unirec geolocation fields with data from Data structure
+	 *
+	 * @param unirecRecord - Unirec record to be populated with geolocation data
 	 */
 	void setDataToUnirecRecord(Nemea::UnirecRecord& unirecRecord) const;
-
-	/**
-	 * @brief Gets IP address from Unirec record and saves it to Geolite object.
-	 *
-	 * @param inputUnirecView - Unirec record received from trap interface
-	 */
-	void getIp(std::optional<Nemea::UnirecRecordView>& inputUnirecView);
-
-	/**
-	 * @brief Gets SNI domain from Unirec record and save it.
-	 *
-	 * @param inputUnirecView - Unirec record received from trap interface
-	 */
-	void getSNI(std::optional<Nemea::UnirecRecordView>& inputUnirecView);
 
 	/**
 	 * @brief saves commandline parameters
@@ -125,7 +115,8 @@ private:
 
 	// TESTING
 	void readFieldDouble(Nemea::UnirecRecord& unirecRecord, const char* name) const;
-	void readFieldString(Nemea::UnirecRecord& unirecRecord, const char* name) const;
+	void
+	readFieldString(Nemea::UnirecRecord& unirecRecord, const char* name, unsigned long size) const;
 	void readFieldBool(Nemea::UnirecRecord& unirecRecord, const char* name) const;
 	void readFieldInt(Nemea::UnirecRecord& unirecRecord, const char* name) const;
 };

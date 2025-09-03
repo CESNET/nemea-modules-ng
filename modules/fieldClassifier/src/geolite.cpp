@@ -66,11 +66,6 @@ bool Geolite::getASNData(Data& data, const char* ipAddr)
 	data.asnOrg = checkEntryData() ? std::string(m_entryData.utf8_string, m_entryData.data_size)
 								   : EMPTY_STRING;
 
-	debugPrint("ASN data retrieved successfully for IP: " + std::string(ipAddr), 2);
-	debugPrint("ASN Data:" + std::to_string(data.asn), 2);
-	debugPrint("ASN Organization: " + data.asnOrg, 2);
-	debugPrint("----------------------------------------", 2);
-
 	return res;
 }
 bool Geolite::getGeoData(Data& data, const char* ipAddr)
@@ -110,18 +105,6 @@ bool Geolite::getGeoData(Data& data, const char* ipAddr)
 
 	m_err = MMDB_get_value(&m_result.entry, &m_entryData, "location", "longitude", NULL);
 	data.longitude = checkEntryData() ? m_entryData.double_value : EMPTY_DOUBLE;
-
-	// print data for debug
-	debugPrint("Geo data retrieved successfully for IP: " + std::string(ipAddr), 2);
-	debugPrint("City: " + data.cityName, 2);
-	debugPrint("Country: " + data.countryName, 2);
-	debugPrint("Postal Code: " + data.postalCode, 2);
-	debugPrint("Latitude: " + std::to_string(data.latitude), 2);
-	debugPrint("Longitude: " + std::to_string(data.longitude), 2);
-	debugPrint("Continent: " + data.continentName, 2);
-	debugPrint("ISO Code: " + data.isoCode, 2);
-	debugPrint("Accuracy: " + std::to_string(data.accuracy), 2);
-	debugPrint("----------------------------------------", 2);
 
 	return res;
 }

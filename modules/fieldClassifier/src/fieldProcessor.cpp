@@ -12,8 +12,10 @@
 #include "LRUCache.hpp"
 #include "common.hpp"
 #include "templateCreator.hpp"
+#include <cstdint>
 #include <iostream>
 #include <unirec++/ipAddress.hpp>
+#include <unirec/unirec.h>
 
 namespace NFieldProcessor {
 
@@ -84,40 +86,79 @@ std::string FieldProcessor::getIpString(Nemea::IpAddress ipAddr) const
 
 void FieldProcessor::getDataForOneDirection(Data& data, Nemea::IpAddress ipAddr)
 {
+	std::string ipStr = getIpString(ipAddr);
+
 	if (TemplateCreator::s_activeModules.geolite) {
-		m_geolite.getGeoData(data, getIpString(ipAddr).c_str());
+		m_geolite.getGeoData(data, ipStr.c_str());
 	}
 	if (TemplateCreator::s_activeModules.asn) {
-		m_geolite.getASNData(data, getIpString(ipAddr).c_str());
+		m_geolite.getASNData(data, ipStr.c_str());
 	}
 	if (TemplateCreator::s_activeModules.ipClas) {
-		m_ipClassifier.checkForMatch(data, getIpString(ipAddr).c_str(), ipAddr.isIpv4());
+		m_ipClassifier.checkForMatch(data, ipStr.c_str(), ipAddr.isIpv4());
 	}
 	if (TemplateCreator::s_activeModules.sniClas) {
 		m_sniClassifier.checkForMatch(data, m_sni);
 	}
 }
 
-void FieldProcessor::getDataForUnirecRecord()
+void FieldProcessor::getDataForUnirecRecord(std::optional<Nemea::UnirecRecordView>& inputUnirecView)
 {
+	if (TemplateCreator::s_activeModules.sniClas) {
+		saveSNI(TemplateCreator::s_idsGen.sniID, inputUnirecView, m_sni);
+	}
+
 	if (m_params.traffic == Direction::BOTH || m_params.traffic == Direction::SOURCE) {
-		if (!NLRUCache::LRUCache::get(getIpString(m_ipAddrSrc), m_data_src)) {
-			getDataForOneDirection(m_data_src, m_ipAddrSrc);
-			NLRUCache::LRUCache::put(getIpString(m_ipAddrSrc), m_data_src);
-			debugPrint("Cache miss for IP: " + getIpString(m_ipAddrSrc), 2);
-		} else {
-			debugPrint("Cache hit for IP: " + getIpString(m_ipAddrSrc), 2);
+		// get ip from Unirec record
+		try {
+			saveIpAddress(TemplateCreator::s_idsGen.srcIPID, inputUnirecView, m_ipAddrSrc);
+		} catch (const std::exception& ex) {
+			throw std::runtime_error(
+				std::string("Error while getting source IP address: ") + ex.what());
+			return;
 		}
+
+		// save it as a string
+		std::string ipStr = getIpString(m_ipAddrSrc);
+
+		debugPrint("------------------------------------------------", 2);
+		debugPrint("Processing IP: " + ipStr, 2);
+
+		// check if this ip is in cache
+		if (!NLRUCache::LRUCache::get(ipStr, m_data_src)) {
+			// if not get data from plugins and save to cache
+			getDataForOneDirection(m_data_src, m_ipAddrSrc);
+			NLRUCache::LRUCache::put(ipStr, m_data_src);
+			debugPrint("Cache miss", 2);
+		} else {
+			debugPrint("Cache hit", 2);
+		}
+		debugPrint("------------------------------------------------", 2);
 	}
 	if (m_params.traffic == Direction::BOTH || m_params.traffic == Direction::DESTINATION) {
-		if (!NLRUCache::LRUCache::get(getIpString(m_ipAddrDst), m_data_dst)) {
-			getDataForOneDirection(m_data_dst, m_ipAddrDst);
-			NLRUCache::LRUCache::put(getIpString(m_ipAddrDst), m_data_dst);
-			debugPrint("Cache miss for IP: " + getIpString(m_ipAddrDst), 2);
-		} else {
-			debugPrint("Cache hit for IP: " + getIpString(m_ipAddrDst), 2);
+		try {
+			saveIpAddress(TemplateCreator::s_idsGen.dstIPID, inputUnirecView, m_ipAddrDst);
+		} catch (const std::exception& ex) {
+			throw std::runtime_error(
+				std::string("Error while getting destination IP address: ") + ex.what());
+			return;
 		}
+
+		std::string ipStr = getIpString(m_ipAddrDst);
+
+		debugPrint("------------------------------------------------", 2);
+		debugPrint("Processing IP: " + ipStr, 2);
+
+		if (!NLRUCache::LRUCache::get(ipStr, m_data_dst)) {
+			getDataForOneDirection(m_data_dst, m_ipAddrDst);
+			NLRUCache::LRUCache::put(ipStr, m_data_dst);
+			debugPrint("Cache miss", 2);
+		} else {
+			debugPrint("Cache hit", 2);
+		}
+		debugPrint("------------------------------------------------", 2);
 	}
+	debugPrint("TSL_SNI content:" + m_sni, 2);
 }
 
 void FieldProcessor::setDataToUnirecRecord(Nemea::UnirecRecord& unirecRecord) const
@@ -183,8 +224,6 @@ void FieldProcessor::setDataToUnirecRecord(Nemea::UnirecRecord& unirecRecord) co
 	saveDataToUnirecField(unirecRecord, m_data_dst.sniFlags, TemplateCreator::s_idsDst.sniFlagsID);
 }
 
-// TODO : refactor - combine with getIp improve implementation
-
 void FieldProcessor::saveIpAddress(
 	const ur_field_id_t& ipID,
 	std::optional<Nemea::UnirecRecordView>& inputUnirecView,
@@ -222,87 +261,82 @@ void FieldProcessor::saveSNI(
 	}
 }
 
-void FieldProcessor::getIp(std::optional<Nemea::UnirecRecordView>& inputUnirecView)
-{
-	Nemea::IpAddress ipSrc;
-	Nemea::IpAddress ipDst;
-	if (m_params.traffic == Direction::BOTH || m_params.traffic == Direction::SOURCE) {
-		saveIpAddress(TemplateCreator::s_idsGen.srcIPID, inputUnirecView, ipSrc);
-		m_ipAddrSrc = ipSrc;
-	}
-	if (m_params.traffic == Direction::BOTH || m_params.traffic == Direction::DESTINATION) {
-		saveIpAddress(TemplateCreator::s_idsGen.dstIPID, inputUnirecView, ipDst);
-		m_ipAddrDst = ipDst;
-	}
-}
-
-void FieldProcessor::getSNI(std::optional<Nemea::UnirecRecordView>& inputUnirecView)
-{
-	// TODO : check if sni string is needed
-	std::string sni;
-	saveSNI(TemplateCreator::s_idsGen.sniID, inputUnirecView, sni);
-	m_sni = sni;
-}
-
 // TESTING ##############################
 
 void FieldProcessor::readFieldDouble(Nemea::UnirecRecord& unirecRecord, const char* name) const
 {
 	auto idField = static_cast<ur_field_id_t>(ur_get_id_by_name(name));
 	if (idField == UR_E_INVALID_NAME) {
-		std::cout << std::string("Unable to access Geolite Unirec fields");
+		return;
 	}
 	auto data = unirecRecord.getFieldAsType<double>(idField);
-	std::cout << "Field: " << name << " Data: " << data << '\n';
+	std::cout << name << ": " << data << '\n';
 }
 
-void FieldProcessor::readFieldString(Nemea::UnirecRecord& unirecRecord, const char* name) const
+void FieldProcessor::readFieldString(
+	Nemea::UnirecRecord& unirecRecord,
+	const char* name,
+	unsigned long size) const
 {
 	auto idField = static_cast<ur_field_id_t>(ur_get_id_by_name(name));
 	if (idField == UR_E_INVALID_NAME) {
-		std::cout << std::string("Unable to access Geolite Unirec fields");
+		return;
 	}
-	const char* data = unirecRecord.getFieldAsType<const char*>(idField);
-	std::cout << "Field: " << name << " Data: " << data << '\n';
+	const auto* data = unirecRecord.getFieldAsType<const char*>(idField);
+
+	std::cout << name << ": " << std::string(data, size) << '\n';
 }
 void FieldProcessor::readFieldInt(Nemea::UnirecRecord& unirecRecord, const char* name) const
 {
 	auto idField = static_cast<ur_field_id_t>(ur_get_id_by_name(name));
 	if (idField == UR_E_INVALID_NAME) {
-		std::cout << std::string("Unable to access Geolite Unirec fields");
+		return;
 	}
 	auto data = unirecRecord.getFieldAsType<uint16_t>(idField);
-	std::cout << "Field: " << name << " Data: " << data << '\n';
+	std::cout << name << ": " << data << '\n';
 }
 
 void FieldProcessor::printUnirecRecord(Nemea::UnirecRecord& unirecRecord) const
 {
 	if (m_params.traffic == Direction::BOTH || m_params.traffic == Direction::SOURCE) {
-		std::cout << "------------------------" << '\n';
-		readFieldString(unirecRecord, "SRC_CITY_NAME");
-		readFieldString(unirecRecord, "SRC_COUNTRY_NAME");
+		std::cout << "##############################" << '\n';
+		std::cout << "Data for SRC_IP: " << getIpString(m_ipAddrSrc) << '\n';
+		std::cout << "SNI content:" << m_sni << '\n';
+		readFieldString(unirecRecord, "SRC_CITY_NAME", m_data_src.cityName.size());
+		readFieldString(unirecRecord, "SRC_COUNTRY_NAME", m_data_src.countryName.size());
 		readFieldDouble(unirecRecord, "SRC_LATITUDE");
 		readFieldDouble(unirecRecord, "SRC_LONGITUDE");
-		readFieldString(unirecRecord, "SRC_POSTAL_CODE");
-		readFieldString(unirecRecord, "SRC_CONTINENT_NAME");
-		readFieldString(unirecRecord, "SRC_ISO_CODE");
-		readFieldString(unirecRecord, "SRC_ASO");
+		readFieldString(unirecRecord, "SRC_POSTAL_CODE", m_data_src.postalCode.size());
+		readFieldString(unirecRecord, "SRC_CONTINENT_NAME", m_data_src.continentName.size());
+		readFieldString(unirecRecord, "SRC_ISO_CODE", m_data_src.isoCode.size());
+		readFieldString(unirecRecord, "SRC_ASO", m_data_src.asnOrg.size());
 		readFieldInt(unirecRecord, "SRC_ASN");
 		readFieldInt(unirecRecord, "SRC_ACCURACY");
-
-		std::cout << "SRC_IP: " << getIpString(m_ipAddrSrc) << '\n';
-		std::cout << "------------------------" << '\n';
+		readFieldString(unirecRecord, "SRC_IP_FLAGS", m_data_src.ipFlags.size());
+		readFieldString(unirecRecord, "SRC_COMPANY", m_data_src.company.size());
+		readFieldString(unirecRecord, "SRC_SNI_FLAGS", m_data_src.sniFlags.size());
+		std::cout << "##############################" << '\n';
 	}
 	if (m_params.traffic == Direction::BOTH || m_params.traffic == Direction::DESTINATION) {
-		std::cout << "------------------------" << '\n';
-		readFieldString(unirecRecord, "DST_CITY_NAME");
-		// readFieldString(unirecRecord, "SRC_COUNTRY_NAME");
-		// readFieldDouble(unirecRecord, "DST_LATITUDE");
-		// readFieldDouble(unirecRecord, "DST_LONGITUDE");
-		// readFieldString(unirecRecord, "SRC_POSTAL_CODE");
-		std::cout << "DST_IP: " << getIpString(m_ipAddrDst) << '\n';
-		std::cout << "------------------------" << '\n';
+		std::cout << "##############################" << '\n';
+		std::cout << "Data for DST_IP: " << getIpString(m_ipAddrDst) << '\n';
+		std::cout << "SNI content:" << m_sni << '\n';
+		readFieldString(unirecRecord, "DST_CITY_NAME", m_data_dst.cityName.size());
+		readFieldString(unirecRecord, "DST_COUNTRY_NAME", m_data_dst.countryName.size());
+		readFieldDouble(unirecRecord, "DST_LATITUDE");
+		readFieldDouble(unirecRecord, "DST_LONGITUDE");
+		readFieldString(unirecRecord, "DST_POSTAL_CODE", m_data_dst.postalCode.size());
+		readFieldString(unirecRecord, "DST_CONTINENT_NAME", m_data_dst.continentName.size());
+		readFieldString(unirecRecord, "DST_ISO_CODE", m_data_dst.isoCode.size());
+		readFieldString(unirecRecord, "DST_ASO", m_data_dst.asnOrg.size());
+		readFieldInt(unirecRecord, "DST_ASN");
+		readFieldInt(unirecRecord, "DST_ACCURACY");
+		readFieldString(unirecRecord, "DST_IP_FLAGS", m_data_dst.ipFlags.size());
+		readFieldString(unirecRecord, "DST_COMPANY", m_data_dst.company.size());
+		readFieldString(unirecRecord, "DST_SNI_FLAGS", m_data_dst.sniFlags.size());
+		std::cout << "##############################" << '\n';
 	}
 }
 
 } // namespace NFieldProcessor
+//

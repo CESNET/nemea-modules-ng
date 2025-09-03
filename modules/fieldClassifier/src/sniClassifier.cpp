@@ -47,7 +47,6 @@ void SNIClassifier::checkForMatch(Data& data, const std::string& sni)
 	if (sni.empty()) {
 		data.sniFlags = EMPTY_STRING;
 		data.company = EMPTY_STRING;
-		debugPrint("SNI is empty", 2);
 		return;
 	}
 
@@ -55,22 +54,19 @@ void SNIClassifier::checkForMatch(Data& data, const std::string& sni)
 		if (sni.find(rule.sni) != std::string::npos) {
 			data.sniFlags = rule.flags;
 			data.company = rule.company;
-			debugPrint(
-				"Match found for SNI: " + sni + " Company: " + data.company
-					+ " Flags: " + data.sniFlags,
-				2);
+			debugPrint("SNI_Classifier: Match found", 2);
 			return;
 		}
 	}
 	data.sniFlags = EMPTY_STRING;
 	data.company = EMPTY_STRING;
-	debugPrint("No match found for SNI: " + sni, 2);
+	debugPrint("SNI_Classifier: No match found", 2);
 }
 
 void SNIClassifier::exit()
 {
 	m_filePtr.close();
-	debugPrint("SNI module closed", 1);
+	debugPrint("SNI_Classifier module closed", 1);
 }
 
 } // namespace NSNIClassifier

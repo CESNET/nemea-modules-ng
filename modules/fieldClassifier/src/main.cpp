@@ -39,12 +39,11 @@ using namespace NLRUCache;
 /**
  * @brief Process the next Unirec record.
  *
- * This function receives the next Unirec record through the input interface, adds geolocation
- * fields and sends it back to output interface.
+ * This function receives the next Unirec record through the input interface and adds new fields.
  *
  * @param input input interface for Unirec communication.
  * @param output output interface for Unirec communication.
- * @param maxdb Geolite instance to process flows.
+ * @param fieldProcessor class thats facilitates the process of getting and saving data
  */
 static void processNextRecord(
 	UnirecInputInterface& input,
@@ -53,6 +52,7 @@ static void processNextRecord(
 {
 	// ask for new record
 	debugPrint("Waiting for new Unirec record...", 2);
+	debugPrint("------------------------------------------------", 2);
 	std::optional<UnirecRecordView> inputUnirecView = input.receive();
 
 	// check if not empty
@@ -60,38 +60,17 @@ static void processNextRecord(
 		throw std::runtime_error(std::string("Unable to create record"));
 		return;
 	}
-	debugPrint("Record received successfully", 2);
 
-	// get ip for record
+	// get data from modules
 	try {
-		fieldProcessor.getIp(inputUnirecView);
-	} catch (const std::exception& ex) {
-		throw std::runtime_error(std::string("Error while getting IP address: ") + ex.what());
-		return;
-	}
-
-	// TODO: add lru cache here
-
-	debugPrint("Ip fields retreived successfully", 2);
-
-	if (TemplateCreator::s_activeModules.sniClas) {
-		try {
-			fieldProcessor.getSNI(inputUnirecView);
-		} catch (const std::exception& ex) {
-			debugPrint(std::string("Error while getting TLS SNI: ") + ex.what());
-		}
-	}
-
-	// get data from Geolite database
-	try {
-		fieldProcessor.getDataForUnirecRecord();
+		fieldProcessor.getDataForUnirecRecord(inputUnirecView);
 	} catch (const std::exception& ex) {
 		debugPrint("Error while getting data for Unirec record:" + std::string(ex.what()), 2);
 	}
 
 	auto unirecRecord = output.getUnirecRecord();
 
-	// populate Unirec record Geolite fields with data from DB
+	// populate Unirec record with data from modules
 	try {
 		fieldProcessor.setDataToUnirecRecord(unirecRecord);
 	} catch (const std::exception& ex) {
@@ -100,19 +79,25 @@ static void processNextRecord(
 		return;
 	}
 
+	if (g_debug_level > 1) {
+		fieldProcessor.printUnirecRecord(unirecRecord);
+	}
+
 	// send Unirec record through trap interface
 	output.send(unirecRecord);
 	debugPrint("Into the black hole it goes...", 2);
+	debugPrint("------------------------------------------------", 2);
 }
 
 /**
  * @brief Handle template change of Unirec record between input and output interace
  *
  * This function is called when new Unirec template is received and it handles template
- * expansion of new fields with geolocation
+ * expansion of new fields
  *
  * @param input input interface for Unirec communication.
  * @param output output interface for Unirec communication.
+ * @param templateStr string with new Unirec fields that will be added to the template
  */
 static void handleTemplateChange(
 	UnirecInputInterface& input,
@@ -128,13 +113,13 @@ static void handleTemplateChange(
 		throw std::runtime_error(std::string("Unable to get template from trap input"));
 	}
 
-	// convert template to string and append new fileds for geolocation
+	// convert template to string and append new fileds
 	std::string stringTemp = static_cast<std::string>(ur_template_string(templateDef));
 
 	// add finished template
 	stringTemp += templateStr;
 
-	// change template of output interface to new template with geolocation fields
+	// change template of output interface to new template with module fields
 	output.changeTemplate(stringTemp);
 
 	// save new Unirec field IDs to structure
@@ -151,7 +136,8 @@ static void handleTemplateChange(
  *
  * @param input  input interface for Unirec communication.
  * @param output  output interface for Unirec communication.
- * @param maxdb Geolite instance to process flows.
+ * @param fieldProcessor class thats facilitates the process of getting and saving data
+ * @param templateStr string with new Unirec fields that will be added to the template
  */
 static void processUnirecRecords(
 	UnirecInputInterface& input,
@@ -180,8 +166,6 @@ static void processUnirecRecords(
 
 int main(int argc, char** argv)
 {
-	// TODO: add logger support
-
 	CommandLineParameters params;
 	std::string templateStr;
 
@@ -290,7 +274,7 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
-	debugPrint("parsing arguments");
+	debugPrint("Parsing command line parameters:");
 	debugPrint(params.source);
 	debugPrint(params.destination);
 	debugPrint(params.pathCityDB);

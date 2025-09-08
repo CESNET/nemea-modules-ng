@@ -8,10 +8,8 @@
 #include "geolite.hpp"
 
 #include "emptyFields.hpp"
-#include "fieldProcessor.hpp"
 #include "templateCreator.hpp"
 #include <cstdlib>
-#include <iostream>
 #include <stdexcept>
 #include <unirec++/ipAddress.hpp>
 #include <unirec++/unirecRecord.hpp>

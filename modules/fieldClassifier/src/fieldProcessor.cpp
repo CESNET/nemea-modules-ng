@@ -246,8 +246,6 @@ void FieldProcessor::saveSNI(
 	std::string& sni)
 {
 	if (sniID == UR_E_INVALID_NAME) {
-		throw std::runtime_error(
-			std::string("Name/s for Unirec SNI fields not found in Unirec communication"));
 		sni = "";
 		debugPrint("SNI field not found in Unirec record", 2);
 		return;
@@ -257,7 +255,6 @@ void FieldProcessor::saveSNI(
 	} catch (const std::exception& ex) {
 		sni = "";
 		debugPrint("Unable to get SNI field from Unirec record", 1);
-		throw;
 	}
 }
 

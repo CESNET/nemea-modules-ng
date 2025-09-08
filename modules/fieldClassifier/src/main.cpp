@@ -28,10 +28,6 @@
 #include <unirec/ipaddr.h>
 #include <unirec/unirec.h>
 
-// Template for new Unirec fields that contain geolocation information
-
-// Run-time debug prints
-
 using namespace Nemea;
 using namespace NFieldProcessor;
 using namespace NLRUCache;

@@ -112,7 +112,7 @@ curl -sS -L -o "${TARGET_DIR}/ndpi_content_match.c.inc" \
 
 vecho "Downloading latest nDPI protocol definitions..."
 
-python3 "${PATH_TO_SCRIPT}" "${TARGET_DIR}/ndpi_content_match.c.inc"
+python3 "${PATH_TO_SCRIPT}" "${TARGET_DIR}/ndpi_content_match.c.inc" "${TARGET_DIR}"
 
 vecho "nDPI protocol definitions processed."
 vecho "Generated files: ${TARGET_DIR}/sniIP.csv, ${TARGET_DIR}/sniTLS.csv"
@@ -139,6 +139,7 @@ download_maxmind_db() {
 		OLDDATE=$(ls "${TARGET_DIR}" |
 			grep "${STRING1}_" |
 			sed "s/${STRING1}_//" |
+			sort -nr |
 			head -n1)
 		vecho "Current database date: ${OLDDATE}"
 	else

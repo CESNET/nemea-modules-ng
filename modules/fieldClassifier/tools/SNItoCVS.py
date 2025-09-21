@@ -1,8 +1,10 @@
 ###############################
 
 # Convert SNI file to CSV
-# Usage: python3 SNItoCVS.py <path_to_sni_file>
-# Output: listIP.csv, listSNI.csv
+# Usage: python3 SNItoCVS.py <path_to_sni_file> <output_directory>
+# Example: python3 SNItoCVS.py ndpi_content_match.c.inc /tmp
+# Output: sniIP.csv, sniTLS.csv
+# Output files are stored in /tmp by default, can be changed by second argument
 
 # listIP.csv columns: IP, hexadecimal_IP, Mask, hexadecimal_mask, IP_type, flags
 #   IP_type: ipv4 or ipv6
@@ -64,15 +66,23 @@ if len(sys.argv) <= 1:
     exit()
 
 sni_file_path = sys.argv[1]
+output_directory = "/tmp"
+if len(sys.argv) > 2:
+    output_directory = sys.argv[2]
+
+# check if empty
+if output_directory == "":
+    print("Output directory is empty")
+    exit()
 
 
 sni_file = open(sni_file_path, "r")
 sni_lines = sni_file.readlines()
 
-csv_file_IP = open("/tmp/sniIP.csv", "w")
+csv_file_IP = open(output_directory + "/sniIP.csv", "w")
 csv_file_IP.write("IP,IPInHex,Mask,MaskInHex,Type,Flags\n")
 
-csv_file_TLS = open("/tmp/sniTLS.csv", "w")
+csv_file_TLS = open(output_directory + "/sniTLS.csv", "w")
 csv_file_TLS.write("Domain,Company,Flags\n")
 
 for line in sni_lines:

@@ -69,10 +69,10 @@ sni_file_path = sys.argv[1]
 sni_file = open(sni_file_path, "r")
 sni_lines = sni_file.readlines()
 
-csv_file_IP = open("sniIP.csv", "w")
+csv_file_IP = open("/tmp/sniIP.csv", "w")
 csv_file_IP.write("IP,IPInHex,Mask,MaskInHex,Type,Flags\n")
 
-csv_file_TLS = open("sniTLS.csv", "w")
+csv_file_TLS = open("/tmp/sniTLS.csv", "w")
 csv_file_TLS.write("Domain,Company,Flags\n")
 
 for line in sni_lines:

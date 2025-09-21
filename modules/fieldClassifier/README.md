@@ -86,19 +86,20 @@ module takes the following parameters:
 
 *  `--pathGeolite` path
 
-  * Specify path to the MaxMind GeoLite City file (.mmdb).
+  * Specify path to the MaxMind GeoLite City file (.mmdb). Default is /tmp/GeoLite2-City.mmdb.
+
 
 ## ASN parameters
 
 *  `--pathASN` path
 
-  * Specify path to the MaxMind GeoLite ASN file (.mmdb).
+  * Specify path to the MaxMind GeoLite ASN file (.mmdb). Default is /tmp/GeoLite2-ASN.mmdb.
 
 ## IP_Classifier parameters
 
 *  `--pathIP` path
 
-  * Specify path to the IP_Classifier file (.csv).
+  * Specify path to the IP_Classifier file (.csv). Default is /tmp/sniIP.csv
 
   * Use SNItoCSV.py script to generate the files. (See the script for more details about the file
   format.)
@@ -107,7 +108,7 @@ module takes the following parameters:
 
 *  `--pathSNI` path
 
-  * Specify path to the SNI_Classifier file (.csv).
+  * Specify path to the SNI_Classifier file (.csv). Default is /tmp/sniTLS.csv
 
   * Use SNItoCSV.py script to generate the files. (See the script for more details about the file
   format.)

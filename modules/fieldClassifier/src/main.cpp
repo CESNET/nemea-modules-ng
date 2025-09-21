@@ -1,10 +1,10 @@
 /**
  * @file main.cpp
  * @author Tomáš Vrána <xvranat00@vutbr.cz>
- * @brief Geolite moudule
+ * @brief Field Classifier moudule
  *
- * This file contains the main function and supporting functions for the Unirec Geolite
- * Module. This module adds geolocation information to Unirec records based on IP addresses
+ * This file contains the main function and supporting functions for the Field Classifier.
+ * This module adds various information to Unirec records based on IP addresses
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -183,11 +183,7 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
-	// TODO: Change the default path to database
-
 	try {
-		// TODO: fix help prints (add each for each plugin)
-
 		// GENERAL
 		program.add_argument("-f", "--fields")
 			.help(
@@ -213,22 +209,22 @@ int main(int argc, char** argv)
 		// GEOLITE
 		program.add_argument("--pathGeolite")
 			.help("Specifiy the path to maxmind City DB files")
-			.default_value(std::string("/home/nixos/GeoLite2-City_20250718/GeoLite2-City.mmdb"));
+			.default_value(std::string("/tmp/GeoLite2-City.mmdb"));
 
 		// ASN
 		program.add_argument("--pathASN")
 			.help("Specifiy the path to	maxmind ASN DB files")
-			.default_value(std::string("/home/nixos/GeoLite2-ASN_20250820/GeoLite2-ASN.mmdb"));
+			.default_value(std::string("/tmp/GeoLite2-ASN.mmdb"));
 
 		// SNI
 		program.add_argument("--pathIP")
 			.help("Specifiy the path to	CSV file with SNI IPs")
-			.default_value(std::string("/home/nixos/work/nemea-modules-ng/sniIP.csv"));
+			.default_value(std::string("/tmp/sniIP.csv"));
 
 		// TLSSNI
 		program.add_argument("--pathSNI")
 			.help("Specifiy the path to	CSV file with SNI TLS domains")
-			.default_value(std::string("/home/nixos/work/nemea-modules-ng/sniTLS.csv"));
+			.default_value(std::string("/tmp/sniTLS.csv"));
 		program.add_argument("-l", "--sniField")
 			.help("Name of Unirec field with TLS SNI domain")
 			.default_value(std::string("TLS_SNI"));

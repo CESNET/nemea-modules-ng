@@ -26,6 +26,22 @@ RulesMatcher::RulesMatcher(const ConfigParser* configParser) noexcept
 	m_fieldsMatcher = std::make_unique<FieldsMatcher>(m_rules);
 }
 
+void RulesMatcher::updateRules(const ConfigParser* configParser)
+{
+	const std::string unirecTemplateDescription = configParser->getUnirecTemplateDescription();
+
+	RuleBuilder ruleBuilder(unirecTemplateDescription);
+
+	m_rules.clear();
+	for (const auto& ruleDescription : configParser->getRulesDescription()) {
+		auto rule = ruleBuilder.build(ruleDescription);
+		m_rules.emplace_back(rule);
+	}
+
+	m_ipAddressFieldMatchers = ruleBuilder.getIpAddressFieldMatchers();
+	m_fieldsMatcher = std::make_unique<FieldsMatcher>(m_rules);
+}
+
 std::vector<bool>
 RulesMatcher::getMatchingIpRulesMask(const Nemea::UnirecRecordView& unirecRecordView)
 {

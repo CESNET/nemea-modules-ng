@@ -47,6 +47,11 @@ ListDetector::ListDetector(const ConfigParser* configParser, ListDetectorMode mo
 {
 }
 
+void ListDetector::updateRules(const ConfigParser* configParser)
+{
+	m_rulesMatcher.updateRules(configParser);
+}
+
 bool ListDetector::matches(const Nemea::UnirecRecordView& unirecRecordView)
 {
 	const bool match = m_rulesMatcher.anyOfRuleMatches(unirecRecordView);

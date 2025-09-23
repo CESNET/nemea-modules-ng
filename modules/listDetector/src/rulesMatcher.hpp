@@ -25,6 +25,12 @@ public:
 	explicit RulesMatcher(const ConfigParser* configParser) noexcept;
 
 	/**
+	 * @brief Updates rules in the RulesMatcher using the provided ConfigParser.
+	 * @param configParser Pointer to the ConfigParser providing new rules.
+	 */
+	void updateRules(const ConfigParser* configParser);
+
+	/**
 	 * @brief Checks if some rule matches given Unirec view.
 	 * @param unirecRecordView The Unirec view to match.
 	 * @return True if some rule matched, false otherwise.

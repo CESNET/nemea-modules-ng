@@ -1,6 +1,7 @@
 add_executable(listDetector
 	main.cpp
 	configParser.cpp
+	configReloader.cpp
 	csvConfigParser.cpp
 	ipAddressPrefix.cpp
 	rule.cpp

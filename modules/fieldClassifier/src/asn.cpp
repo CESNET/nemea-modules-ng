@@ -5,11 +5,11 @@
 namespace NFieldProcessor {
 void ASNClassifier::init(const CommandLineParameters& params)
 {
-	if (MMDB_open(params.pathCityDB.c_str(), MMDB_MODE_MMAP, mmdb) == MMDB_SUCCESS) {
+	if (MMDB_open(params.pathASNDB.c_str(), MMDB_MODE_MMAP, mmdb) == MMDB_SUCCESS) {
 		debugPrint("ASN module initialized successfully");
 	} else {
 		throw std::runtime_error(
-			"Failed to open MaxMind database: " + std::string(params.pathCityDB));
+			"Failed to open MaxMind database: " + std::string(params.pathASNDB));
 	}
 }
 

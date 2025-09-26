@@ -19,10 +19,10 @@ bool ASNClassifier::getData(std::unordered_map<std::string, Field>& fields, Plug
 	if (!res) {
 		return false;
 	}
-	err = MMDB_get_value(&result.entry, &entryData, "autonomous_systenumber", NULL);
+	err = MMDB_get_value(&result.entry, &entryData, "autonomous_system_number", NULL);
 	fields.at("ASN").data = checkEntryData() ? entryData.uint16 : EMPTY_UINT16;
 
-	err = MMDB_get_value(&result.entry, &entryData, "autonomous_systeorganization", NULL);
+	err = MMDB_get_value(&result.entry, &entryData, "autonomous_system_organization", NULL);
 	fields.at("ASO").data
 		= checkEntryData() ? std::string(entryData.utf8_string, entryData.data_size) : EMPTY_STRING;
 

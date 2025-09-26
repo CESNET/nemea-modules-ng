@@ -27,7 +27,6 @@ ID=""
 PATH_TO_SCRIPT="./SNItoCVS.py"
 VERBOSE=0
 TARGET_DIR="/tmp"
-HELPER_DIR_NAME="maxmindHelperDir_$(date +%s)"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -78,8 +77,6 @@ vecho() {
 	fi
 }
 
-readonly HELPER_DIR="${TARGET_DIR}/${HELPER_DIR_NAME}"
-
 ### VALIDATE INPUTS
 if [[ -z "$TARGET_DIR" ]]; then
 	vecho "Error: Target directory cannot be empty."
@@ -95,10 +92,6 @@ if [[ -z "$PATH_TO_SCRIPT" ]]; then
 fi
 if [[ ! -f "$PATH_TO_SCRIPT" ]]; then
 	vecho "Error: Script '$PATH_TO_SCRIPT' does not exist."
-	exit 1
-fi
-if [[ -z "$HELPER_DIR" ]]; then
-	vecho "Error: Helper directory name cannot be empty."
 	exit 1
 fi
 ####################################
@@ -154,29 +147,27 @@ download_maxmind_db() {
 	# Compare dates and download if different
 	if [[ -z "$OLDDATE" ]] || [[ "$DATE" != "$OLDDATE" ]]; then
 
-		# Create helper directory
-		mkdir "${HELPER_DIR}"
-
 		vecho "Download new databse"
-		STATUS=$(curl -s -O -J -L --output-dir "${HELPER_DIR}" -w '%{http_code}\n' -u "${ID}":"${KEY}" https://download.maxmind.com/geoip/databases/${STRING1}/download?suffix=tar.gz)
+		STATUS=$(curl -s -O -J -L --output-dir "${TARGET_DIR}" -w '%{http_code}\n' -u "${ID}":"${KEY}" https://download.maxmind.com/geoip/databases/${STRING1}/download?suffix=tar.gz)
 		if [[ "${STATUS:-}" -ne 200 ]]; then
 			vecho "Failed to download database, HTTP status code: ${STATUS}"
-			rm -rf "${HELPER_DIR}"
 			exit 1
 		fi
 
-		vecho "Removing old databases"
-		rm -rf "${TARGET_DIR}/${STRING1}_*"
-		rm -rf "${TARGET_DIR}/${STRING1}.mmdb"
+		if [[ -n "$OLDDATE" ]]; then
+			vecho "Removing old databases"
+			rm -rf "${TARGET_DIR}/${STRING1}_${OLDDATE}"
+			rm -rf "${TARGET_DIR}/${STRING1}.mmdb"
+		fi
 
 		vecho "Extracting new database"
-		tar -xzf "${HELPER_DIR}/${STRING1}_${DATE}.tar.gz" -C "${TARGET_DIR}"
+		tar -xzf "${TARGET_DIR}/${STRING1}_${DATE}.tar.gz" -C "${TARGET_DIR}"
 		mv "${TARGET_DIR}/${STRING1}_${DATE}/${STRING1}.mmdb" "${TARGET_DIR}/${STRING1}.mmdb"
 
 		vecho "Database updated to ${DATE}"
 
-		vecho "Cleaned up extracted files"
-		rm -rf "${HELPER_DIR}"
+		vecho "Cleaned up ziped files"
+		rm -rf "${TARGET_DIR}/${STRING1}_${DATE}.tar.gz"
 
 		vecho "Final files: ${TARGET_DIR}/${STRING1}.mmdb"
 	else

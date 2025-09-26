@@ -33,32 +33,35 @@ TemplateCreator::generateTemplate(std::vector<std::string>& validFields, Directi
 {
 	std::string templateStr;
 	for (const auto& field : validFields) {
-		if (GEOLITE_FIELDS_STRING.find(field) != std::string::npos) {
-			addFieldToTemplate(templateStr, field, direction, "string");
-			s_activeModules.geolite = true;
+		const Field& fieldInfo = s_fieldsSrc.at(field);
+
+		std::string type;
+
+		switch (fieldInfo.fieldType) {
+		case FieldType::STRING:
+			type = "string";
+			break;
+		case FieldType::UINT16:
+			type = "uint16";
+			break;
+		case FieldType::DOUBLE:
+			type = "double";
+			break;
+		default:
+			throw std::runtime_error(std::string("Unknown field type for field: ") + field);
+			return "";
 		}
-		if (GEOLITE_FIELDS_DOUBLE.find(field) != std::string::npos) {
-			addFieldToTemplate(templateStr, field, direction, "double");
+
+		addFieldToTemplate(templateStr, field, direction, type);
+
+		// TODO: redo
+		if (fieldInfo.pluginType == PluginType::GEOLITE) {
 			s_activeModules.geolite = true;
-		}
-		if (GEOLITE_FIELDS_UINT16.find(field) != std::string::npos) {
-			addFieldToTemplate(templateStr, field, direction, "uint16");
-			s_activeModules.geolite = true;
-		}
-		if (ASN_FIELDS_STRING.find(field) != std::string::npos) {
-			addFieldToTemplate(templateStr, field, direction, "string");
+		} else if (fieldInfo.pluginType == PluginType::ASN) {
 			s_activeModules.asn = true;
-		}
-		if (ASN_FIELDS_UINT16.find(field) != std::string::npos) {
-			addFieldToTemplate(templateStr, field, direction, "uint16");
-			s_activeModules.asn = true;
-		}
-		if (IPCLASS_FIELDS_STRING.find(field) != std::string::npos) {
-			addFieldToTemplate(templateStr, field, direction, "string");
+		} else if (fieldInfo.pluginType == PluginType::IP_CLASSIFIER) {
 			s_activeModules.ipClas = true;
-		}
-		if (SNICLASS_FIELDS_STRING.find(field) != std::string::npos) {
-			addFieldToTemplate(templateStr, field, direction, "string");
+		} else if (fieldInfo.pluginType == PluginType::SNI_CLASSIFIER) {
 			s_activeModules.sniClas = true;
 		}
 	}
@@ -78,48 +81,23 @@ void TemplateCreator::getGeneralUnirecIDs()
 {
 	s_idsGen.srcIPID = getUnirecFieldID(s_ipFieldSrc.c_str());
 	s_idsGen.dstIPID = getUnirecFieldID(s_ipFieldDst.c_str());
+
+	// TODO: add to sni plugin
 	s_idsGen.sniID = getUnirecFieldID(s_sniField.c_str());
 }
+
 void TemplateCreator::getModuleUnirecIDs()
 {
-	//  GEOLITE
-	s_idsSrc.cityID = getUnirecFieldID("SRC_CITY_NAME");
-	s_idsSrc.countryID = getUnirecFieldID("SRC_COUNTRY_NAME");
-	s_idsSrc.latitudeID = getUnirecFieldID("SRC_LATITUDE");
-	s_idsSrc.longitudeID = getUnirecFieldID("SRC_LONGITUDE");
-	s_idsSrc.postalCodeID = getUnirecFieldID("SRC_POSTAL_CODE");
-	s_idsSrc.continentID = getUnirecFieldID("SRC_CONTINENT_NAME");
-	s_idsSrc.isoCodeID = getUnirecFieldID("SRC_ISO_CODE");
-	s_idsSrc.accuracyID = getUnirecFieldID("SRC_ACCURACY");
-
-	s_idsDst.cityID = getUnirecFieldID("DST_CITY_NAME");
-	s_idsDst.countryID = getUnirecFieldID("DST_COUNTRY_NAME");
-	s_idsDst.latitudeID = getUnirecFieldID("DST_LATITUDE");
-	s_idsDst.longitudeID = getUnirecFieldID("DST_LONGITUDE");
-	s_idsDst.postalCodeID = getUnirecFieldID("DST_POSTAL_CODE");
-	s_idsDst.continentID = getUnirecFieldID("DST_CONTINENT_NAME");
-	s_idsDst.isoCodeID = getUnirecFieldID("DST_ISO_CODE");
-	s_idsDst.accuracyID = getUnirecFieldID("DST_ACCURACY");
-
-	//
-	s_idsSrc.asnID = getUnirecFieldID("SRC_ASN");
-	s_idsSrc.asnOrgID = getUnirecFieldID("SRC_ASO");
-
-	s_idsDst.asnID = getUnirecFieldID("DST_ASN");
-	s_idsDst.asnOrgID = getUnirecFieldID("DST_ASO");
-
-	// assifier
-	s_idsSrc.ipFlagsID = getUnirecFieldID("SRC_IP_FLAGS");
-
-	s_idsDst.ipFlagsID = getUnirecFieldID("DST_IP_FLAGS");
-
-	// lassifier
-	s_idsSrc.companyID = getUnirecFieldID("SRC_COMPANY");
-	s_idsSrc.sniFlagsID = getUnirecFieldID("SRC_SNI_FLAGS");
-
-	s_idsDst.companyID = getUnirecFieldID("DST_COMPANY");
-	s_idsDst.sniFlagsID = getUnirecFieldID("DST_SNI_FLAGS");
+	for (auto& field : s_allFields[DirIndex::SRC]) {
+		std::string fieldName = "SRC_" + field.first;
+		field.second.id = getUnirecFieldID(fieldName.c_str());
+	}
+	for (auto& field : s_allFields[DirIndex::DST]) {
+		std::string fieldName = "DST_" + field.first;
+		field.second.id = getUnirecFieldID(fieldName.c_str());
+	}
 }
+
 std::vector<std::string> TemplateCreator::splitToVector(const std::string& str)
 {
 	std::vector<std::string> fieldsVector;
@@ -152,8 +130,6 @@ std::vector<std::string> TemplateCreator::processFields(std::string fields)
 		return std::toupper(chr);
 	});
 
-	std::vector<std::string> allFieldsVector = TemplateCreator::splitToVector(ALL_FIELDS);
-
 	std::vector<std::string> selectedFieldsVector = TemplateCreator::splitToVector(fields);
 
 	std::vector<std::string> validFields;
@@ -166,8 +142,7 @@ std::vector<std::string> TemplateCreator::processFields(std::string fields)
 		}
 
 		// Check if the field is valid
-		if (allFieldsVector.end()
-			== std::find(allFieldsVector.begin(), allFieldsVector.end(), field)) {
+		if (s_fieldsSrc.find(field) == s_fieldsSrc.end()) {
 			throw std::runtime_error(std::string("Invalid field: ") + field);
 			return {};
 		}

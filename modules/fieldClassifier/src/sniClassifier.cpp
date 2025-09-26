@@ -11,8 +11,7 @@
 #include "emptyFields.hpp"
 #include <sstream>
 
-using namespace NFieldProcessor;
-namespace NSNIClassifier {
+namespace NFieldProcessor {
 
 void SNIClassifier::init(const CommandLineParameters& params)
 {
@@ -42,25 +41,27 @@ void SNIClassifier::init(const CommandLineParameters& params)
 	}
 }
 
-void SNIClassifier::checkForMatch(Data& data, const std::string& sni)
+bool SNIClassifier::getData(FieldsMap& fields, PluginData& pluginData)
 {
-	if (sni.empty()) {
-		data.sniFlags = EMPTY_STRING;
-		data.company = EMPTY_STRING;
-		return;
+	if (pluginData.field.empty()) {
+		fields.at("SNI_FLAGS").data = EMPTY_STRING;
+		fields.at("COMPANY").data = EMPTY_STRING;
+		return false;
+		;
 	}
 
 	for (const auto& rule : m_tlsRules) {
-		if (sni.find(rule.sni) != std::string::npos) {
-			data.sniFlags = rule.flags;
-			data.company = rule.company;
+		if (pluginData.field.find(rule.sni) != std::string::npos) {
+			fields.at("SNI_FLAGS").data = rule.flags;
+			fields.at("COMPANY").data = rule.company;
 			debugPrint("SNI_Classifier: Match found", 2);
-			return;
+			return true;
 		}
 	}
-	data.sniFlags = EMPTY_STRING;
-	data.company = EMPTY_STRING;
+	fields.at("SNI_FLAGS").data = EMPTY_STRING;
+	fields.at("COMPANY").data = EMPTY_STRING;
 	debugPrint("SNI_Classifier: No match found", 2);
+	return false;
 }
 
 void SNIClassifier::exit()
@@ -69,4 +70,4 @@ void SNIClassifier::exit()
 	debugPrint("SNI_Classifier module closed", 1);
 }
 
-} // namespace NSNIClassifier
+} // namespace NFieldProcessor

@@ -1,23 +1,13 @@
-/**
- * @file geolite.hpp
- * @author Tomáš Vrána <xvranat00@vutbr.cz>
- * @brief Geolite class
- *
- * SPDX-License-Identifier: BSD-3-Clause
- */
-
-#pragma once
-
-#include "common.hpp"
 #include "plugin.hpp"
 #include <maxminddb.h>
+#include <unordered_map>
 
 namespace NFieldProcessor {
 
 /**
  * @brief Geolite class add Unirec geolocation fields
  */
-class Geolite : public MaxMindPlugin {
+class ASNClassifier : public MaxMindPlugin {
 public:
 	/**
 	 * @brief Initializes the MaxMind database. Throws DatabaseException on failure.
@@ -36,6 +26,7 @@ public:
 	 * @return Return geolocation data retreved from database of default empty value if error or
 	 * data not found. (EMPTY_STRING, EMPTY_DOUBLE)
 	 */
-	bool getData(FieldsMap& fields, PluginData& pluginData) override;
+	bool getData(std::unordered_map<std::string, Field>& fields, PluginData& pluginData) override;
 };
+
 } // namespace NFieldProcessor

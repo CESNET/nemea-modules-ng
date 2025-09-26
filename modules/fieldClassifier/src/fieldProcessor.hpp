@@ -7,10 +7,13 @@
  */
 
 #pragma once
+#include "asn.hpp"
 #include "common.hpp"
 #include "geolite.hpp"
 #include "ipClassifier.hpp"
+#include "plugin.hpp"
 #include "sniClassifier.hpp"
+#include "templateCreator.hpp"
 #include <optional>
 #include <unirec++/unirec.hpp>
 #include <unirec++/unirecRecord.hpp>
@@ -20,6 +23,21 @@ namespace NFieldProcessor {
 
 class FieldProcessor {
 public:
+	void createPlugins()
+	{
+		if (TemplateCreator::s_activeModules.geolite) {
+			m_plugins.push_back(new Geolite());
+		}
+		if (TemplateCreator::s_activeModules.asn) {
+			m_plugins.push_back(new ASNClassifier());
+		}
+		if (TemplateCreator::s_activeModules.ipClas) {
+			m_plugins.push_back(new IPClassifier());
+		}
+		if (TemplateCreator::s_activeModules.sniClas) {
+			m_plugins.push_back(new SNIClassifier());
+		}
+	}
 	/**
 	 * @brief initializes the FieldProcessor object and all active modules
 	 */
@@ -61,12 +79,14 @@ public:
 	void printUnirecRecord(Nemea::UnirecRecord& unirecRecord) const;
 
 private:
-	Data m_data_src; // Data to be saved to Unirec record
-	Data m_data_dst;
+	// Data m_data_src; // Data to be saved to Unirec record
+	// Data m_data_dst;
 
-	NGeolite::Geolite m_geolite; // GEOLITE and ASN MODULE
-	NIPClassifier::IPClassifier m_ipClassifier; // IP_Classifier MODULE
-	NSNIClassifier::SNIClassifier m_sniClassifier; // SNI_Classifier MODULE
+	// Geolite m_geolite; // GEOLITE and ASN MODULE
+	// ASN m_asn; // ASN MODULE
+	// NIPClassifier::IPClassifier m_ipClassifier; // IP_Classifier MODULE
+	// NSNIClassifier::SNIClassifier m_sniClassifier; // SNI_Classifier MODULE
+	std::vector<Plugin*> m_plugins; // Vector of active modules
 
 	CommandLineParameters m_params;
 
@@ -101,17 +121,24 @@ private:
 	// Helper function for returninig ip as string
 	std::string getIpString(Nemea::IpAddress) const;
 
-	template <typename T>
-	void
-	saveDataToUnirecField(Nemea::UnirecRecord& unirecRecord, const T& data, ur_field_id_t idField)
-		const
+	void saveDataToUnirecField(
+		Nemea::UnirecRecord& unirecRecord,
+		const DataVar& data,
+		ur_field_id_t idField) const
 	{
-		if (idField != UR_E_INVALID_NAME) {
-			unirecRecord.setFieldFromType(data, idField);
+		if (idField == UR_E_INVALID_NAME) {
+			return;
+		}
+		if (std::holds_alternative<std::string>(data)) {
+			unirecRecord.setFieldFromType(std::get<std::string>(data), idField);
+		} else if (std::holds_alternative<uint16_t>(data)) {
+			unirecRecord.setFieldFromType(std::get<uint16_t>(data), idField);
+		} else if (std::holds_alternative<double>(data)) {
+			unirecRecord.setFieldFromType(std::get<double>(data), idField);
 		}
 	}
 
-	void getDataForOneDirection(Data& data, Nemea::IpAddress ipAddr);
+	void getDataForOneDirection(FieldsMap& data, Nemea::IpAddress ipAddr);
 
 	// TESTING
 	void readFieldDouble(Nemea::UnirecRecord& unirecRecord, const char* name) const;

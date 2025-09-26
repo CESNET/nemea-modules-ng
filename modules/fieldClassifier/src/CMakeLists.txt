@@ -5,6 +5,8 @@ add_executable(field_classifier
 	fieldProcessor.cpp
 	ipClassifier.cpp
 	sniClassifier.cpp
+	asn.cpp
+
 )
 
 target_link_libraries(field_classifier PRIVATE

@@ -21,39 +21,21 @@ namespace NFieldProcessor {
 
 void FieldProcessor::init()
 {
-	if (TemplateCreator::s_activeModules.geolite || TemplateCreator::s_activeModules.asn) {
+	createPlugins();
+
+	for (auto& plugin : m_plugins) {
 		try {
-			m_geolite.init(m_params);
+			plugin->init(m_params);
 		} catch (const std::exception& ex) {
-			throw std::runtime_error(std::string("Error while initializing Geolite: ") + ex.what());
-		}
-	}
-	if (TemplateCreator::s_activeModules.ipClas) {
-		try {
-			m_ipClassifier.init(m_params);
-		} catch (const std::exception& ex) {
-			throw std::runtime_error(std::string("Error while initializing SNI: ") + ex.what());
-		}
-	}
-	if (TemplateCreator::s_activeModules.sniClas) {
-		try {
-			m_sniClassifier.init(m_params);
-		} catch (const std::exception& ex) {
-			throw std::runtime_error(std::string("Error while initializing TLS SNI: ") + ex.what());
+			throw std::runtime_error(std::string("Error while initializing plugin: ") + ex.what());
 		}
 	}
 }
 
 void FieldProcessor::exit()
 {
-	if (TemplateCreator::s_activeModules.geolite || TemplateCreator::s_activeModules.asn) {
-		m_geolite.exit();
-	}
-	if (TemplateCreator::s_activeModules.ipClas) {
-		m_ipClassifier.exit();
-	}
-	if (TemplateCreator::s_activeModules.sniClas) {
-		m_sniClassifier.exit();
+	for (auto& plugin : m_plugins) {
+		plugin->exit();
 	}
 }
 void FieldProcessor::setParameters(const CommandLineParameters& params)
@@ -84,21 +66,15 @@ std::string FieldProcessor::getIpString(Nemea::IpAddress ipAddr) const
 	throw std::runtime_error("Invalid IP address type");
 }
 
-void FieldProcessor::getDataForOneDirection(Data& data, Nemea::IpAddress ipAddr)
+void FieldProcessor::getDataForOneDirection(FieldsMap& data, Nemea::IpAddress ipAddr)
 {
-	std::string ipStr = getIpString(ipAddr);
+	PluginData pluginData;
+	pluginData.ipAddr = getIpString(ipAddr);
+	pluginData.field = m_sni;
+	pluginData.isIpv4 = ipAddr.isIpv4();
 
-	if (TemplateCreator::s_activeModules.geolite) {
-		m_geolite.getGeoData(data, ipStr.c_str());
-	}
-	if (TemplateCreator::s_activeModules.asn) {
-		m_geolite.getASNData(data, ipStr.c_str());
-	}
-	if (TemplateCreator::s_activeModules.ipClas) {
-		m_ipClassifier.checkForMatch(data, ipStr.c_str(), ipAddr.isIpv4());
-	}
-	if (TemplateCreator::s_activeModules.sniClas) {
-		m_sniClassifier.checkForMatch(data, m_sni);
+	for (auto& plugin : m_plugins) {
+		plugin->getData(data, pluginData);
 	}
 }
 
@@ -125,10 +101,10 @@ void FieldProcessor::getDataForUnirecRecord(std::optional<Nemea::UnirecRecordVie
 		debugPrint("Processing IP: " + ipStr, 2);
 
 		// check if this ip is in cache
-		if (!NLRUCache::LRUCache::get(ipStr, m_data_src)) {
+		if (!NLRUCache::LRUCache::get(ipStr, TemplateCreator::s_allFields)) {
 			// if not get data from plugins and save to cache
-			getDataForOneDirection(m_data_src, m_ipAddrSrc);
-			NLRUCache::LRUCache::put(ipStr, m_data_src);
+			getDataForOneDirection(TemplateCreator::s_allFields[DirIndex::SRC], m_ipAddrSrc);
+			NLRUCache::LRUCache::put(ipStr, TemplateCreator::s_allFields);
 			debugPrint("Cache miss", 2);
 		} else {
 			debugPrint("Cache hit", 2);
@@ -149,9 +125,9 @@ void FieldProcessor::getDataForUnirecRecord(std::optional<Nemea::UnirecRecordVie
 		debugPrint("------------------------------------------------", 2);
 		debugPrint("Processing IP: " + ipStr, 2);
 
-		if (!NLRUCache::LRUCache::get(ipStr, m_data_dst)) {
-			getDataForOneDirection(m_data_dst, m_ipAddrDst);
-			NLRUCache::LRUCache::put(ipStr, m_data_dst);
+		if (!NLRUCache::LRUCache::get(ipStr, TemplateCreator::s_allFields)) {
+			getDataForOneDirection(TemplateCreator::s_allFields[DirIndex::DST], m_ipAddrDst);
+			NLRUCache::LRUCache::put(ipStr, TemplateCreator::s_allFields);
 			debugPrint("Cache miss", 2);
 		} else {
 			debugPrint("Cache hit", 2);
@@ -163,65 +139,20 @@ void FieldProcessor::getDataForUnirecRecord(std::optional<Nemea::UnirecRecordVie
 
 void FieldProcessor::setDataToUnirecRecord(Nemea::UnirecRecord& unirecRecord) const
 {
-	// GEOLITE
-	saveDataToUnirecField(unirecRecord, m_data_src.cityName, TemplateCreator::s_idsSrc.cityID);
-	saveDataToUnirecField(
-		unirecRecord,
-		m_data_src.countryName,
-		TemplateCreator::s_idsSrc.countryID);
-	saveDataToUnirecField(unirecRecord, m_data_src.latitude, TemplateCreator::s_idsSrc.latitudeID);
-	saveDataToUnirecField(
-		unirecRecord,
-		m_data_src.longitude,
-		TemplateCreator::s_idsSrc.longitudeID);
-	saveDataToUnirecField(
-		unirecRecord,
-		m_data_src.postalCode,
-		TemplateCreator::s_idsSrc.postalCodeID);
-	saveDataToUnirecField(
-		unirecRecord,
-		m_data_src.continentName,
-		TemplateCreator::s_idsSrc.continentID);
-	saveDataToUnirecField(unirecRecord, m_data_src.isoCode, TemplateCreator::s_idsSrc.isoCodeID);
-	saveDataToUnirecField(unirecRecord, m_data_src.accuracy, TemplateCreator::s_idsSrc.accuracyID);
-
-	saveDataToUnirecField(unirecRecord, m_data_dst.cityName, TemplateCreator::s_idsDst.cityID);
-	saveDataToUnirecField(
-		unirecRecord,
-		m_data_dst.countryName,
-		TemplateCreator::s_idsDst.countryID);
-	saveDataToUnirecField(unirecRecord, m_data_dst.latitude, TemplateCreator::s_idsDst.latitudeID);
-	saveDataToUnirecField(
-		unirecRecord,
-		m_data_dst.longitude,
-		TemplateCreator::s_idsDst.longitudeID);
-	saveDataToUnirecField(
-		unirecRecord,
-		m_data_dst.postalCode,
-		TemplateCreator::s_idsDst.postalCodeID);
-	saveDataToUnirecField(
-		unirecRecord,
-		m_data_dst.continentName,
-		TemplateCreator::s_idsDst.continentID);
-	saveDataToUnirecField(unirecRecord, m_data_dst.isoCode, TemplateCreator::s_idsDst.isoCodeID);
-	saveDataToUnirecField(unirecRecord, m_data_dst.accuracy, TemplateCreator::s_idsDst.accuracyID);
-
-	// ASN
-	saveDataToUnirecField(unirecRecord, m_data_src.asn, TemplateCreator::s_idsSrc.asnID);
-	saveDataToUnirecField(unirecRecord, m_data_src.asnOrg, TemplateCreator::s_idsSrc.asnOrgID);
-
-	saveDataToUnirecField(unirecRecord, m_data_dst.asn, TemplateCreator::s_idsDst.asnID);
-	saveDataToUnirecField(unirecRecord, m_data_dst.asnOrg, TemplateCreator::s_idsDst.asnOrgID);
-
-	// IP_Classifier
-	saveDataToUnirecField(unirecRecord, m_data_src.ipFlags, TemplateCreator::s_idsSrc.ipFlagsID);
-	saveDataToUnirecField(unirecRecord, m_data_dst.ipFlags, TemplateCreator::s_idsDst.ipFlagsID);
-
-	// SNI_Classifier
-	saveDataToUnirecField(unirecRecord, m_data_src.company, TemplateCreator::s_idsSrc.companyID);
-	saveDataToUnirecField(unirecRecord, m_data_src.sniFlags, TemplateCreator::s_idsSrc.sniFlagsID);
-	saveDataToUnirecField(unirecRecord, m_data_dst.company, TemplateCreator::s_idsDst.companyID);
-	saveDataToUnirecField(unirecRecord, m_data_dst.sniFlags, TemplateCreator::s_idsDst.sniFlagsID);
+	for (const auto& [fieldName, field] : TemplateCreator::s_allFields[DirIndex::SRC]) {
+		try {
+			saveDataToUnirecField(unirecRecord, field.data, field.id);
+		} catch (const std::exception& ex) {
+			throw std::runtime_error("Unexpected variant type in field: " + fieldName);
+		}
+	}
+	for (const auto& [fieldName, field] : TemplateCreator::s_allFields[DirIndex::DST]) {
+		try {
+			saveDataToUnirecField(unirecRecord, field.data, field.id);
+		} catch (const std::exception& ex) {
+			throw std::runtime_error("Unexpected variant type in field: " + fieldName);
+		}
+	}
 }
 
 void FieldProcessor::saveIpAddress(
@@ -299,38 +230,116 @@ void FieldProcessor::printUnirecRecord(Nemea::UnirecRecord& unirecRecord) const
 		std::cout << "##############################" << '\n';
 		std::cout << "Data for SRC_IP: " << getIpString(m_ipAddrSrc) << '\n';
 		std::cout << "SNI content:" << m_sni << '\n';
-		readFieldString(unirecRecord, "SRC_CITY_NAME", m_data_src.cityName.size());
-		readFieldString(unirecRecord, "SRC_COUNTRY_NAME", m_data_src.countryName.size());
+		readFieldString(
+			unirecRecord,
+			"SRC_CITY_NAME",
+			std::get<std::string>(TemplateCreator::s_allFields[DirIndex::SRC].at("CITY_NAME").data)
+				.size());
+		readFieldString(
+			unirecRecord,
+			"SRC_COUNTRY_NAME",
+			std::get<std::string>(
+				TemplateCreator::s_allFields[DirIndex::SRC].at("COUNTRY_NAME").data)
+				.size());
 		readFieldDouble(unirecRecord, "SRC_LATITUDE");
 		readFieldDouble(unirecRecord, "SRC_LONGITUDE");
-		readFieldString(unirecRecord, "SRC_POSTAL_CODE", m_data_src.postalCode.size());
-		readFieldString(unirecRecord, "SRC_CONTINENT_NAME", m_data_src.continentName.size());
-		readFieldString(unirecRecord, "SRC_ISO_CODE", m_data_src.isoCode.size());
-		readFieldString(unirecRecord, "SRC_ASO", m_data_src.asnOrg.size());
+		readFieldString(
+			unirecRecord,
+			"SRC_POSTAL_CODE",
+			std::get<std::string>(
+				TemplateCreator::s_allFields[DirIndex::SRC].at("POSTAL_CODE").data)
+				.size());
+		readFieldString(
+			unirecRecord,
+			"SRC_CONTINENT_NAME",
+			std::get<std::string>(
+				TemplateCreator::s_allFields[DirIndex::SRC].at("CONTINENT_NAME").data)
+				.size());
+		readFieldString(
+			unirecRecord,
+			"SRC_ISO_CODE",
+			std::get<std::string>(TemplateCreator::s_allFields[DirIndex::SRC].at("ISO_CODE").data)
+				.size());
+		readFieldString(
+			unirecRecord,
+			"SRC_ASO",
+			std::get<std::string>(TemplateCreator::s_allFields[DirIndex::SRC].at("ASO").data)
+				.size());
 		readFieldInt(unirecRecord, "SRC_ASN");
 		readFieldInt(unirecRecord, "SRC_ACCURACY");
-		readFieldString(unirecRecord, "SRC_IP_FLAGS", m_data_src.ipFlags.size());
-		readFieldString(unirecRecord, "SRC_COMPANY", m_data_src.company.size());
-		readFieldString(unirecRecord, "SRC_SNI_FLAGS", m_data_src.sniFlags.size());
+		readFieldString(
+			unirecRecord,
+			"SRC_IP_FLAGS",
+			std::get<std::string>(TemplateCreator::s_allFields[DirIndex::SRC].at("IP_FLAGS").data)
+				.size());
+		readFieldString(
+			unirecRecord,
+			"SRC_COMPANY",
+			std::get<std::string>(TemplateCreator::s_allFields[DirIndex::SRC].at("COMPANY").data)
+				.size());
+		readFieldString(
+			unirecRecord,
+			"SRC_SNI_FLAGS",
+			std::get<std::string>(TemplateCreator::s_allFields[DirIndex::SRC].at("SNI_FLAGS").data)
+				.size());
 		std::cout << "##############################" << '\n';
 	}
 	if (m_params.traffic == Direction::BOTH || m_params.traffic == Direction::DESTINATION) {
 		std::cout << "##############################" << '\n';
 		std::cout << "Data for DST_IP: " << getIpString(m_ipAddrDst) << '\n';
 		std::cout << "SNI content:" << m_sni << '\n';
-		readFieldString(unirecRecord, "DST_CITY_NAME", m_data_dst.cityName.size());
-		readFieldString(unirecRecord, "DST_COUNTRY_NAME", m_data_dst.countryName.size());
+		readFieldString(
+			unirecRecord,
+			"DST_CITY_NAME",
+			std::get<std::string>(TemplateCreator::s_allFields[DirIndex::DST].at("CITY_NAME").data)
+				.size());
+		readFieldString(
+			unirecRecord,
+			"DST_COUNTRY_NAME",
+			std::get<std::string>(
+				TemplateCreator::s_allFields[DirIndex::DST].at("COUNTRY_NAME").data)
+				.size());
 		readFieldDouble(unirecRecord, "DST_LATITUDE");
 		readFieldDouble(unirecRecord, "DST_LONGITUDE");
-		readFieldString(unirecRecord, "DST_POSTAL_CODE", m_data_dst.postalCode.size());
-		readFieldString(unirecRecord, "DST_CONTINENT_NAME", m_data_dst.continentName.size());
-		readFieldString(unirecRecord, "DST_ISO_CODE", m_data_dst.isoCode.size());
-		readFieldString(unirecRecord, "DST_ASO", m_data_dst.asnOrg.size());
+		readFieldString(
+			unirecRecord,
+			"DST_POSTAL_CODE",
+			std::get<std::string>(
+				TemplateCreator::s_allFields[DirIndex::DST].at("POSTAL_CODE").data)
+				.size());
+		readFieldString(
+			unirecRecord,
+			"DST_CONTINENT_NAME",
+			std::get<std::string>(
+				TemplateCreator::s_allFields[DirIndex::DST].at("CONTINENT_NAME").data)
+				.size());
+		readFieldString(
+			unirecRecord,
+			"DST_ISO_CODE",
+			std::get<std::string>(TemplateCreator::s_allFields[DirIndex::DST].at("ISO_CODE").data)
+				.size());
+		readFieldString(
+			unirecRecord,
+			"DST_ASO",
+			std::get<std::string>(TemplateCreator::s_allFields[DirIndex::DST].at("ASO").data)
+				.size());
 		readFieldInt(unirecRecord, "DST_ASN");
 		readFieldInt(unirecRecord, "DST_ACCURACY");
-		readFieldString(unirecRecord, "DST_IP_FLAGS", m_data_dst.ipFlags.size());
-		readFieldString(unirecRecord, "DST_COMPANY", m_data_dst.company.size());
-		readFieldString(unirecRecord, "DST_SNI_FLAGS", m_data_dst.sniFlags.size());
+		readFieldString(
+			unirecRecord,
+			"DST_IP_FLAGS",
+			std::get<std::string>(TemplateCreator::s_allFields[DirIndex::DST].at("IP_FLAGS").data)
+				.size());
+		readFieldString(
+			unirecRecord,
+			"DST_COMPANY",
+			std::get<std::string>(TemplateCreator::s_allFields[DirIndex::DST].at("COMPANY").data)
+				.size());
+		readFieldString(
+			unirecRecord,
+			"DST_SNI_FLAGS",
+			std::get<std::string>(TemplateCreator::s_allFields[DirIndex::DST].at("SNI_FLAGS").data)
+				.size());
 		std::cout << "##############################" << '\n';
 	}
 }

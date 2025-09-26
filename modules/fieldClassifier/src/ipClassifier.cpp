@@ -15,9 +15,7 @@
 #include <string>
 #include <unirec++/ipAddress.hpp>
 
-namespace NIPClassifier {
-
-using namespace NFieldProcessor;
+namespace NFieldProcessor {
 
 void IPClassifier::init(const CommandLineParameters& params)
 {
@@ -79,27 +77,28 @@ bool IPClassifier::checkForRule(const uint8_t ipAddr[16], unsigned condition, co
 	}
 	return true;
 }
-void IPClassifier::checkForMatch(Data& data, const char* ipAddr, bool isIPv4)
+bool IPClassifier::getData(FieldsMap& fields, PluginData& pluginData)
 {
-	unsigned condition = isIPv4 ? 4 : 16;
+	unsigned condition = pluginData.isIpv4 ? 4 : 16;
 	uint8_t ipHex[16];
-	if (isIPv4) {
-		inet_pton(AF_INET, ipAddr, &ipHex);
+	if (pluginData.isIpv4) {
+		inet_pton(AF_INET, pluginData.ipAddr.c_str(), &ipHex);
 	} else {
-		inet_pton(AF_INET6, ipAddr, &ipHex);
+		inet_pton(AF_INET6, pluginData.ipAddr.c_str(), &ipHex);
 	}
 	for (const auto& rule : m_ipRules) {
-		if (rule.isIPv4 != isIPv4) {
+		if (rule.isIPv4 != pluginData.isIpv4) {
 			continue;
 		}
 		if (checkForRule(ipHex, condition, rule)) {
 			debugPrint("Ip_Classifier: Match found", 2);
-			data.ipFlags = rule.flags;
-			return;
+			fields.at("IP_FLAGS").data = rule.flags;
+			return true;
 		}
 	}
 	debugPrint("Ip_Classifier: No match found", 2);
-	data.ipFlags = EMPTY_STRING;
+	fields.at("IP_FLAGS").data = EMPTY_STRING;
+	return false;
 }
 
 void IPClassifier::exit()
@@ -108,4 +107,4 @@ void IPClassifier::exit()
 	debugPrint("Ip_Classifier module closed", 1);
 }
 
-} // namespace NIPClassifier
+} // namespace NFieldProcessor

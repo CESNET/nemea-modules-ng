@@ -7,16 +7,16 @@
  */
 #pragma once
 #include "common.hpp"
+#include "plugin.hpp"
 #include <fstream>
 
-namespace NIPClassifier {
-using namespace NFieldProcessor;
+namespace NFieldProcessor {
 
-class IPClassifier {
+class IPClassifier : public Plugin {
 public:
-	void init(const CommandLineParameters& params);
-	void exit();
-	void checkForMatch(Data& data, const char* ipAddr, bool isIPv4);
+	void init(const CommandLineParameters& params) override;
+	void exit() override;
+	bool getData(FieldsMap& fields, PluginData& pluginData) override;
 
 private:
 	uint32_t ipToInt(const std::string& ipAddr);
@@ -25,4 +25,4 @@ private:
 	std::vector<IPRule> m_ipRules;
 };
 
-} // namespace NIPClassifier
+} // namespace NFieldProcessor

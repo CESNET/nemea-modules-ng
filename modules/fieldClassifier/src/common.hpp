@@ -11,6 +11,8 @@
 #include <iostream>
 #include <string>
 #include <unirec/unirec.h>
+#include <unordered_map>
+#include <variant>
 #include <vector>
 
 namespace NFieldProcessor {
@@ -32,6 +34,13 @@ struct ActiveModules {
 	bool asn = false;
 	bool ipClas = false;
 	bool sniClas = false;
+};
+
+enum PluginType : uint8_t {
+	GEOLITE,
+	ASN,
+	IP_CLASSIFIER,
+	SNI_CLASSIFIER,
 };
 
 /**
@@ -61,62 +70,51 @@ struct CommandLineParameters {
 	unsigned long cacheCapacity;
 };
 
-/**
- * @brief Structure to keep Unirec field IDs for new fiels
- */
-struct ModuleIDFields {
-	// GEOLITE
-	ur_field_id_t cityID;
-	ur_field_id_t countryID;
-	ur_field_id_t postalCodeID;
-	ur_field_id_t latitudeID;
-	ur_field_id_t longitudeID;
-	ur_field_id_t continentID;
-	ur_field_id_t isoCodeID;
-	ur_field_id_t accuracyID;
+enum FieldType : uint8_t {
+	STRING,
+	UINT16,
+	DOUBLE,
+};
 
-	// ASN
-	ur_field_id_t asnID;
-	ur_field_id_t asnOrgID;
+typedef std::variant<std::string, uint16_t, double> DataVar;
+struct Field {
+	ur_field_id_t id;
+	DataVar data;
+	PluginType pluginType;
+	FieldType fieldType;
 
-	// IP_Classifier
-	ur_field_id_t ipFlagsID;
+	Field(PluginType type, FieldType fType)
+		: pluginType(type)
+	{
+		id = UR_E_INVALID_NAME;
+		if (fType == FieldType::STRING) {
+			data = std::string();
+		} else if (fType == FieldType::UINT16) {
+			data = static_cast<uint16_t>(0);
+		} else if (fType == FieldType::DOUBLE) {
+			data = static_cast<double>(0);
+		}
+		fieldType = fType;
+	}
+};
 
-	// SNI_Classifier
-	ur_field_id_t companyID;
-	ur_field_id_t sniFlagsID;
+enum DirIndex : uint8_t {
+	SRC = 0,
+	DST = 1,
+};
+typedef std::unordered_map<std::string, Field> FieldsMap;
+typedef std::array<FieldsMap, 2> FieldsMapArray;
+
+struct PluginData {
+	std::string ipAddr;
+	std::string field;
+	bool isIpv4;
 };
 
 struct GeneralIDFields {
 	ur_field_id_t srcIPID;
 	ur_field_id_t dstIPID;
 	ur_field_id_t sniID;
-};
-
-/**
- * @brief Structure to keep data to be saved to Unirec record
- */
-struct Data {
-	// GEOLITE
-	std::string cityName;
-	std::string countryName;
-	double latitude;
-	double longitude;
-	std::string postalCode;
-	std::string continentName;
-	std::string isoCode;
-	uint16_t accuracy;
-
-	// ASN
-	uint16_t asn;
-	std::string asnOrg;
-
-	// IP_Classifier
-	std::string ipFlags;
-
-	// SNI_Classifier
-	std::string company;
-	std::string sniFlags;
 };
 
 /**

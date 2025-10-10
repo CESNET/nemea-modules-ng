@@ -99,25 +99,6 @@ public:
 	virtual void init() = 0;
 	virtual void exit() = 0;
 	virtual bool getData(DataMap& dataMap, std::string& ipAddr) = 0;
-	virtual void setData(
-		DataMapVector& dataMapVector,
-		IDMapVector& idMapVector,
-		std::optional<Nemea::UnirecRecord>& record,
-		TrafficDirection trafficDirection)
-		= 0;
-
-	void write(
-		const std::string& fieldName,
-		DataMapVector& dataMapVector,
-		IDMapVector& idMapVector,
-		TrafficDirection trafficDirection,
-		std::optional<Nemea::UnirecRecord>& record);
-
-	void addFieldDataToUnirec(
-		DataMap& dataMap,
-		IDMap& idMap,
-		const std::string& fieldName,
-		std::optional<Nemea::UnirecRecord>& record);
 };
 
 class MaxMindPlugin : public Plugin {

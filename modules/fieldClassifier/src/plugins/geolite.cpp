@@ -106,23 +106,6 @@ bool Geolite::getData(DataMap& dataMap, std::string& ipAddr)
 	return res;
 }
 
-void Geolite::setData(
-	DataMapVector& dataMapVector,
-	IDMapVector& idMapVector,
-	std::optional<Nemea::UnirecRecord>& record,
-	TrafficDirection trafficDirection)
-{
-	// TODO: rede into fieldClassifier so that i can only specify fields to write
-	write("CITY_NAME", dataMapVector, idMapVector, trafficDirection, record);
-	write("COUNTRY_NAME", dataMapVector, idMapVector, trafficDirection, record);
-	write("POSTAL_CODE", dataMapVector, idMapVector, trafficDirection, record);
-	write("CONTINENT_NAME", dataMapVector, idMapVector, trafficDirection, record);
-	write("ISO_CODE", dataMapVector, idMapVector, trafficDirection, record);
-	write("LATITUDE", dataMapVector, idMapVector, trafficDirection, record);
-	write("LONGITUDE", dataMapVector, idMapVector, trafficDirection, record);
-	write("ACCURACY", dataMapVector, idMapVector, trafficDirection, record);
-}
-
 void Geolite::exit()
 {
 	MMDB_close(mmdb);

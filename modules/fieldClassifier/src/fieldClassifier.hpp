@@ -47,6 +47,7 @@ private:
 	IDMap m_idMapDst;
 
 	IDMapVector m_idMapVector;
+
 	void getUnirecIdsForDirection(const std::string& prefix, IDMap& idMap);
 
 	ur_field_id_t m_sourceIPFieldId = UR_E_INVALID_NAME;
@@ -74,12 +75,27 @@ private:
 		DataMap& dataMap,
 		IDMap& idMap,
 		const std::string& prefix);
+
+	void addFieldDataToUnirec(
+		DataMap& dataMap,
+		IDMap& idMap,
+		const std::string& fieldName,
+		std::optional<Nemea::UnirecRecord>& record);
+
 	// COMMANDLINE PARAMETER VALUES
 	TrafficDirection m_trafficDirection = TRAFFIC_DIRECTION_DEFAULT;
 	std::string m_sourceIPFieldName = SOURCE_IP_FIELD_NAME_DEFAULT;
 	std::string m_destinationIPFieldName = DESTINATION_IP_FIELD_NAME_DEFAULT;
-	std::vector<std::string> m_requiredFields; // default is empty -> use all fields
+
+	// default is empty -> use all fields
+	std::vector<std::string> m_requiredFields;
+
+	// list of required fields that were not yet processed
 	std::vector<std::string> m_requiredFieldsProcessed;
+
+	// list of fields that are in use after processing
+	std::vector<std::string> m_usingFields;
+
 	unsigned long m_cacheCapacity = CACHE_CAPACITY_DEFAULT;
 
 	void getRequiredFields(const std::string& requiredFields);

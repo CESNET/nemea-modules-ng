@@ -24,11 +24,6 @@ public:
 	void init() override;
 	void exit() override;
 	bool getData(DataMap& dataMap, std::string& ipAddr) override;
-	void setData(
-		DataMapVector& dataMapVector,
-		IDMapVector& idMapVector,
-		std::optional<Nemea::UnirecRecord>& record,
-		TrafficDirection trafficDirection) override;
 
 private:
 	std::string m_pathToGeoliteDB = GEOLITE_PATH_DEFAULT;

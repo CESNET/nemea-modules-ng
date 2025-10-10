@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include "fieldClassifier.hpp"
+#include "LRUCache.hpp"
 #include "argparse/argparse.hpp"
 #include "debug.hpp"
 #include "plugins/plugin.hpp"
@@ -73,7 +74,7 @@ void FieldClassifier::handleParams(int argc, char** argv, argparse::ArgumentPars
 		m_sourceIPFieldName = parser.get<std::string>("--source");
 		m_destinationIPFieldName = parser.get<std::string>("--destination");
 		getRequiredFields(parser.get<std::string>("--fields"));
-		m_cacheCapacity = parser.get<unsigned long>("--cacheCapacity");
+		LRUCache::s_capacity = parser.get<unsigned long>("--cacheCapacity");
 
 		// DEBUG PRINTS
 		DEBUG_PRINT(1, "Printing common parameters:");
@@ -297,16 +298,45 @@ void FieldClassifier::getDataFromPlugins(std::optional<Nemea::UnirecRecordView>&
 		m_destinationIPString = getIPtoString(m_destinationIP);
 	}
 
+	if (m_trafficDirection == TrafficDirection::BOTH) {
+		if (LRUCache::get(m_sourceIPString, m_dataMapVector[0])
+			&& LRUCache::get(m_destinationIPString, m_dataMapVector[1])) {
+			DEBUG_PRINT(
+				2,
+				"Cache hit for both source and destination IP: " + m_sourceIPString + ", "
+					+ m_destinationIPString);
+			return;
+		}
+	} else if (m_trafficDirection == TrafficDirection::SOURCE) {
+		if (LRUCache::get(m_sourceIPString, m_dataMapVector[0])) {
+			DEBUG_PRINT(2, "Cache hit for source IP: " + m_sourceIPString);
+			return;
+		}
+	} else {
+		if (LRUCache::get(m_destinationIPString, m_dataMapVector[0])) {
+			DEBUG_PRINT(2, "Cache hit for destination IP: " + m_destinationIPString);
+			return;
+		}
+	}
+
+	DEBUG_PRINT(
+		2,
+		"Cache miss for destination IP: " + m_sourceIPString + ", " + m_destinationIPString);
+
 	// get data from plugins
 	for (auto& plugin : m_plugins) {
 		if (plugin != nullptr) {
 			if (m_trafficDirection == TrafficDirection::SOURCE) {
 				plugin->getData(m_dataMapVector[0], m_sourceIPString);
+				LRUCache::put(m_sourceIPString, m_dataMapVector[0]);
 			} else if (m_trafficDirection == TrafficDirection::DESTINATION) {
 				plugin->getData(m_dataMapVector[0], m_destinationIPString);
+				LRUCache::put(m_destinationIPString, m_dataMapVector[0]);
 			} else {
 				plugin->getData(m_dataMapVector[0], m_sourceIPString);
+				LRUCache::put(m_sourceIPString, m_dataMapVector[0]);
 				plugin->getData(m_dataMapVector[1], m_destinationIPString);
+				LRUCache::put(m_destinationIPString, m_dataMapVector[1]);
 			}
 		}
 	}

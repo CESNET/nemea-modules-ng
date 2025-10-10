@@ -1,3 +1,4 @@
+#include "asn.hpp"
 #include "geolite.hpp"
 #include <vector>
 
@@ -7,7 +8,7 @@ namespace NFieldClassifier {
 // ADD NEW PLUGINS HERE:
 //  ###################
 
-static inline std::vector<class Plugin*> g_PLUGINS = {new Geolite()};
+static inline std::vector<class Plugin*> g_PLUGINS = {new Geolite(), new ASN()};
 
 // ###################
 

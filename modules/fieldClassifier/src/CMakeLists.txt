@@ -11,6 +11,7 @@ add_executable(field_classifier
 	main.cpp
 	fieldClassifier.cpp
 	plugins/geolite.cpp
+	plugins/asn.cpp
 )
 
 target_link_libraries(field_classifier PRIVATE

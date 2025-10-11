@@ -13,6 +13,7 @@ add_executable(field_classifier
 	plugins/geolite.cpp
 	plugins/asn.cpp
 	plugins/ipClassifier.cpp
+	plugins/sniClassifier.cpp
 )
 
 target_link_libraries(field_classifier PRIVATE

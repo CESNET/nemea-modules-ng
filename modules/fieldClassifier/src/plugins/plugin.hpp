@@ -93,12 +93,15 @@ using IDMapVector = std::vector<IDMap>;
 class Plugin {
 public:
 	virtual void handleParameters(argparse::ArgumentParser& parser) = 0;
-
 	virtual void storeParameters(argparse::ArgumentParser& parser) = 0;
 	virtual FieldDefinition defineFields() = 0;
 	virtual void init() = 0;
 	virtual void exit() = 0;
 	virtual bool getData(DataMap& dataMap, std::string& ipAddr) = 0;
+	virtual void getAdditionalDataFromUnirec(std::optional<Nemea::UnirecRecordView>& unirecView)
+	{
+		(void) unirecView;
+	};
 };
 
 class MaxMindPlugin : public Plugin {

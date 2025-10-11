@@ -323,6 +323,13 @@ void FieldClassifier::getDataFromPlugins(std::optional<Nemea::UnirecRecordView>&
 		2,
 		"Cache miss for destination IP: " + m_sourceIPString + ", " + m_destinationIPString);
 
+	// get additional data from unirec record for plugins that need it
+	for (auto& plugin : m_plugins) {
+		if (plugin != nullptr) {
+			plugin->getAdditionalDataFromUnirec(unirecView);
+		}
+	}
+
 	// get data from plugins
 	for (auto& plugin : m_plugins) {
 		if (plugin != nullptr) {

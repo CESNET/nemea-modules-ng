@@ -1,3 +1,13 @@
+/**
+ * @file ans.hpp
+ * @author Tomáš Vrána <xvranat00@vutbr.cz>
+ * @brief ASN plugin
+ *
+ * This file contains the definition of the ASN plugin, which is responsible for
+ * adding autonomous system information to Unirec records based on IP addresses using MaxMind DB.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 #include "plugin.hpp"
 namespace NFieldClassifier {
 

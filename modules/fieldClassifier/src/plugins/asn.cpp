@@ -1,3 +1,10 @@
+/**
+ * @file ans.cpp
+ * @author Tomáš Vrána <xvranat00@vutbr.cz>
+ * @brief ASN plugin implementation
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 #include "asn.hpp"
 #include "../debug.hpp"
 

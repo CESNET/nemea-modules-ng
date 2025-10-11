@@ -1,3 +1,10 @@
+/**
+ * @file ipClassifier.cpp
+ * @author Tomáš Vrána <xvranat00@vutbr.cz>
+ * @brief IPClassifier plugin implementation
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 #include "ipClassifier.hpp"
 #include "../debug.hpp"
 

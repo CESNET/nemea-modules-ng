@@ -43,6 +43,9 @@ namespace NFieldClassifier {
 // string 	- 	Variable-length array of (mostly) printable characters
 // bytes 	- 	Variable-length array of bytes (not expected to be printable characters)
 
+/**
+ * @brief Enum to represent various data types for plugin fields.
+ */
 enum DataType : uint8_t {
 	INT8,
 	INT16,
@@ -62,11 +65,21 @@ enum DataType : uint8_t {
 	// BYTES
 };
 
+/**
+ * @brief Map to hold field names and their corresponding data types. Used for defining plugin
+ * fields.
+ */
 using FieldDefinition = std::unordered_map<std::string, DataType>;
 using FieldDefinitionMemeber = const std::pair<const std::string, NFieldClassifier::DataType>;
 
+/**
+ * @brief Enum to specify the direction of traffic for IP address classification.
+ */
 enum TrafficDirection : uint8_t { SOURCE, DESTINATION, BOTH };
 
+/**
+ * @brief Variant type to hold different data types for plugin fields.
+ */
 using Data = std::variant<
 	int8_t,
 	int16_t,
@@ -81,23 +94,65 @@ using Data = std::variant<
 	double,
 	// Nemea::IpAddress,
 	// Nemea::MacAddress,
-	std::string>
+	std::string>;
 
-	;
+/**
+ * @brief Map to hold field names and their corresponding data values.
+ */
 using DataMap = std::unordered_map<std::string, Data>;
+
+/**
+ * @brief Vector of all maps.
+ */
 using DataMapVector = std::vector<DataMap>;
 
+/**
+ * @brief Map to hold field unirec ids.
+ */
 using IDMap = std::unordered_map<std::string, ur_field_id_t>;
+
+/**
+ * @brief Vector of all maps.
+ */
 using IDMapVector = std::vector<IDMap>;
 
 class Plugin {
 public:
+	/**
+	 * Add command line parameters specific to the plugin.
+	 *
+	 * @param parser Argument parser to add parameters to.
+	 */
 	virtual void handleParameters(argparse::ArgumentParser& parser) = 0;
+	/**
+	 * Store the values of the command line parameters.
+	 *
+	 * @param parser Argument parser to get parameter values from.
+	 */
 	virtual void storeParameters(argparse::ArgumentParser& parser) = 0;
+	/**
+	 * Define the fields provided by the plugin.
+	 *
+	 * @return A map of field names and their data types.
+	 */
 	virtual FieldDefinition defineFields() = 0;
+
 	virtual void init() = 0;
 	virtual void exit() = 0;
+
+	/**
+	 * Get data for the given IP address and store it in the provided data map.
+	 *
+	 * @param dataMap Map to store the retrieved data.
+	 * @param ipAddr IP address to look up.
+	 * @return True if data was successfully retrieved, false otherwise.
+	 */
 	virtual bool getData(DataMap& dataMap, std::string& ipAddr) = 0;
+	/**
+	 * Extract additional data from the Unirec record view if needed.
+	 *
+	 * @param unirecView Optional view of the Unirec record to process.
+	 */
 	virtual void getAdditionalDataFromUnirec(std::optional<Nemea::UnirecRecordView>& unirecView)
 	{
 		(void) unirecView;

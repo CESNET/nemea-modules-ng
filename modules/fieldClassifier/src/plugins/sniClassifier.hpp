@@ -1,3 +1,13 @@
+/**
+ * @file sniClassifier.hpp
+ * @author Tomáš Vrána <xvranat00@vutbr.cz>
+ * @brief sniClassifier class
+ *
+ * This file contains the definition of the SNIClassifier plugin, which is responsible for
+ * classifying TLS SNI domains based on predefined rules from a CSV file.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 #include "plugin.hpp"
 
 #include <fstream>

@@ -3,6 +3,9 @@
  * @author Tomáš Vrána <xvranat00@vutbr.cz>
  * @brief Implementation of LRU Cache
  *
+ * This file contains the definition of a simple LRU (Least Recently Used) cache mechanism
+ * to store and retrieve data associated with IP addresses. The cache is designed to improve
+ * performance by minimizing repeated lookups for frequently accessed IP addresses.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */

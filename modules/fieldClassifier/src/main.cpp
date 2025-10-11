@@ -44,7 +44,7 @@ static void processNextRecord(
 	UnirecOutputInterface& output,
 	FieldClassifier& fieldClassifier)
 {
-	DEBUG_PRINT(1, "Processing next record");
+	DEBUG_PRINT(2, "Processing next record");
 	// ask for new record
 	std::optional<UnirecRecordView> inputUnirecView = input.receive();
 
@@ -83,6 +83,8 @@ static void processNextRecord(
  *
  * @param input input interface for Unirec communication.
  * @param output output interface for Unirec communication.
+ * @param fieldClassifier class thats facilitates the process of getting and saving data
+ * @param templateStr string containing new fields to be added to Unirec template
  */
 static void handleTemplateChange(
 	UnirecInputInterface& input,
@@ -122,6 +124,7 @@ static void handleTemplateChange(
  * @param input  input interface for Unirec communication.
  * @param output  output interface for Unirec communication.
  * @param fieldClassifier class thats facilitates the process of getting and saving data
+ * @param templateStr string containing new fields to be added to Unirec template
  */
 static void processUnirecRecords(
 	UnirecInputInterface& input,
@@ -206,7 +209,6 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
-	// TODO: exit fieldClassifier
 	fieldClassifier.exit();
 
 	return 0;

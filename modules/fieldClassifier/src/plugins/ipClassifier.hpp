@@ -1,3 +1,13 @@
+/**
+ * @file ipClassifier.hpp
+ * @author Tomáš Vrána <xvranat00@vutbr.cz>
+ * @brief IPClassifier plugin
+ *
+ * This file contains the definition of the IPClassifier plugin, which is responsible for
+ * classifying IP addresses based on predefined rules from a CSV file.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 #include "plugin.hpp"
 
 #include <fstream>

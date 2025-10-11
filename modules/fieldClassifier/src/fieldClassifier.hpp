@@ -25,14 +25,55 @@ namespace NFieldClassifier {
 
 class FieldClassifier {
 public:
+	/**
+	 * @brief Handle command-line parameters for all plugins.
+	 *
+	 * @param parser Argument parser to add parameters to.
+	 */
 	void handlePluginParams(argparse::ArgumentParser& parser);
+	/**
+	 * @brief Store command-line parameters for all plugins.
+	 *
+	 * @param parser Argument parser to retrieve parameters from.
+	 */
 	void storePluginParameters(argparse::ArgumentParser& parser);
+	/**
+	 * @brief Add plugin-defined fields to the templateStr string and fieldClassifier maps.
+	 *
+	 * @param templateStr string to be added to Unirec template
+	 */
 	void addPluginFields(std::string& templateStr);
+	/**
+	 * @brief Initialize the FieldClassifier module and all plugins.
+	 */
 	void init();
+	/**
+	 * @brief Clean up and exit the FieldClassifier module and all plugins.
+	 */
 	void exit();
+	/**
+	 * @brief Get Unirec field IDs for source and destination IP fields.
+	 */
 	void getUnirecIds();
+	/**
+	 * @brief save data from each plugin to data maps
+	 *
+	 * @param unirecView Optional view of the Unirec record to process.
+	 */
 	void getDataFromPlugins(std::optional<Nemea::UnirecRecordView>& unirecView);
+	/**
+	 * @brief Load data from data maps to Unirec record.
+	 *
+	 * @param record Optional Unirec record to populate with data.
+	 */
 	void loadDataToUnirecRecord(std::optional<Nemea::UnirecRecord>& record);
+	/**
+	 * @brief Handle command-line parameters for the FieldClassifier module.
+	 *
+	 * @param argc Argument count.
+	 * @param argv Argument vector.
+	 * @param parser Argument parser to add parameters to.
+	 */
 	void handleParams(int argc, char** argv, argparse::ArgumentParser& parser);
 
 private:

@@ -18,6 +18,9 @@ void SNIClassifier::handleParameters(argparse::ArgumentParser& parser)
 		parser.add_argument("--pathSNI")
 			.help("Specifiy the path to file with SNI classification rules")
 			.default_value(std::string(SNI_PATH_DEFAULT));
+		parser.add_argument("--sniFieldName")
+			.help("Name of Unirec field with SNI domain")
+			.default_value(std::string(SNI_FIELD_NAME_DEFAULT));
 	} catch (const std::exception& ex) {
 		throw std::runtime_error(
 			std::string("SNI Classifier: Unable to parse commandline parameters: ") + ex.what());
@@ -26,8 +29,10 @@ void SNIClassifier::handleParameters(argparse::ArgumentParser& parser)
 void SNIClassifier::storeParameters(argparse::ArgumentParser& parser)
 {
 	m_pathToSNIFile = parser.get<std::string>("--pathSNI");
+	m_SNIFieldName = parser.get<std::string>("--sniFieldName");
 
 	DEBUG_PRINT(1, "Path to SNI Classifier file: " + m_pathToSNIFile);
+	DEBUG_PRINT(1, "Name of Unirec field with SNI: " + m_SNIFieldName);
 }
 
 FieldDefinition SNIClassifier::defineFields()

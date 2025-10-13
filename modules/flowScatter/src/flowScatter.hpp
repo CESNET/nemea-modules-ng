@@ -88,6 +88,18 @@ public:
     size_t outputIndex(UnirecRecordView& record);
 
     /**
+     * @brief Re-resolve field ids/types after a UniRec template/format change.
+     *
+     * Call this when the UniRec template changes (format change). This will
+     * resolve all field names from the parsed rules to UniRec field ids and
+     * cache their types so `outputIndex` does not need to look them up per-record.
+     *
+     * This method may throw if any required field is not present in the
+     * current UniRec template.
+     */
+    void changeTemplate();
+
+    /**
      * @brief Returns the current flow scatter statistics.
      * @return The current flow scatter statistics.
      */
@@ -101,6 +113,16 @@ private:
     uint64_t m_sentRecords[MAX_OUTPUTS] = {0};
     Rules m_rules;
     std::shared_ptr<spdlog::logger> m_logger = Nm::loggerGet("FlowScatter");
+
+    /** Cached mapping of rule branches to UniRec field ids and types. */
+    struct CachedBranch {
+        ur_field_id_t conditionalId = 0;
+        ur_field_type_t conditionalType = static_cast<ur_field_type_t>(0);
+        std::vector<ur_field_id_t> fieldIds;
+        std::vector<ur_field_type_t> fieldTypes;
+    };
+
+    std::vector<CachedBranch> m_cachedBranches;
 
 };
 

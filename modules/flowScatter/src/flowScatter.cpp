@@ -169,12 +169,21 @@ FlowScatter::FlowScatter(size_t numOutputs, std::string rule)
     m_logger->info("Initializing FlowScatter with {} outputs", numOutputs);
     m_logger->info("Rule string: '{}'", rule);
     ruleParse(rule);
+    // Resolve fields for the current UniRec template at construction time.
+    try {
+        changeTemplate();
+    } catch (const std::exception& ex) {
+        m_logger->warn("Unable to fully resolve rule fields at construction: {}", ex.what());
+        // We don't fail here. Fields will be resolved when template is available
+        // (e.g., on first format change notification).
+    }
     m_logger->info("FlowScatter initialization completed successfully");
 }
 
 void FlowScatter::ruleParse(const std::string& rule)
 {
     m_rules.branches.clear();
+    m_cachedBranches.clear();
 
     std::istringstream ruleStream(rule);
     std::string branchStr;
@@ -248,6 +257,41 @@ void FlowScatter::ruleParse(const std::string& rule)
     }
 }
 
+void FlowScatter::changeTemplate()
+{
+    m_cachedBranches.clear();
+
+    for (const auto& branch : m_rules.branches) {
+        CachedBranch cb;
+
+        if (!branch.conditionalFieldId.empty()) {
+            int fieldId = ur_get_id_by_name(branch.conditionalFieldId.c_str());
+            if (fieldId < 0) {
+                throw std::runtime_error("Conditional field not found: " + branch.conditionalFieldId);
+            }
+            cb.conditionalId = static_cast<ur_field_id_t>(fieldId);
+            cb.conditionalType = ur_get_type(cb.conditionalId);
+        }
+
+        cb.fieldIds.reserve(branch.fieldNames.size());
+        cb.fieldTypes.reserve(branch.fieldNames.size());
+
+        for (const auto& fname : branch.fieldNames) {
+            int fieldId = ur_get_id_by_name(fname.c_str());
+            if (fieldId < 0) {
+                throw std::runtime_error("Field for hashing not found in template: " + fname);
+            }
+            auto fid = static_cast<ur_field_id_t>(fieldId);
+            cb.fieldIds.push_back(fid);
+            cb.fieldTypes.push_back(ur_get_type(fid));
+        }
+
+        m_cachedBranches.push_back(std::move(cb));
+    }
+
+    m_logger->info("Resolved {} cached rule branches for current UniRec template", m_cachedBranches.size());
+}
+
 size_t FlowScatter::outputIndex(UnirecRecordView& record)
 {
     m_totalRecords++;
@@ -261,25 +305,20 @@ size_t FlowScatter::outputIndex(UnirecRecordView& record)
 
     std::vector<uint8_t> hashInput;
 
-    // Iterate through conditional rules
-    for (const auto& branch : m_rules.branches) {
+    // Iterate through cached conditional rules
+    for (const auto& cb : m_cachedBranches) {
         bool useThisRule = false;
 
-        if (branch.conditionalFieldId.empty()) {
+        if (cb.conditionalId == 0) {
             useThisRule = true;
         } else {
-            auto fieldId = static_cast<ur_field_id_t>(ur_get_id_by_name(branch.conditionalFieldId.c_str()));
-            auto fieldType = ur_get_type(fieldId);
-            useThisRule = checkNonZeroValue(fieldId, fieldType, record);
+            useThisRule = checkNonZeroValue(cb.conditionalId, cb.conditionalType, record);
         }
 
         if (useThisRule) {
-            // Concatenate all fields for this rule
             hashInput.clear();
-            for (const auto& field : branch.fieldNames) {
-                auto hashFieldId = static_cast<ur_field_id_t>(ur_get_id_by_name(field.c_str()));
-                auto hashFieldType = ur_get_type(hashFieldId);
-                appendFieldToHash(hashInput, hashFieldId, hashFieldType, record);
+            for (size_t i = 0; i < cb.fieldIds.size(); ++i) {
+                appendFieldToHash(hashInput, cb.fieldIds[i], cb.fieldTypes[i], record);
             }
             break;
         }

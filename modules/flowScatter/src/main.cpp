@@ -45,7 +45,8 @@ void signalHandler(int signum)
  * @param outputInterfaces Output interfaces for Unirec communication.
  */
 void handleFormatChange(UnirecInputInterface& inputInterface,
-                        std::vector<UnirecOutputInterface>& outputInterfaces)
+                        std::vector<UnirecOutputInterface>& outputInterfaces,
+                        Fs::FlowScatter& scatter)
 {
     inputInterface.changeTemplate();
     uint8_t dataType; const char* spec = nullptr;
@@ -55,6 +56,14 @@ void handleFormatChange(UnirecInputInterface& inputInterface,
 	for (auto& outIfc : outputInterfaces) {
 		outIfc.changeTemplate(spec);
 	}
+    // Notify scatter so it can resolve UniRec field ids/types once per format change.
+    try {
+        scatter.changeTemplate();
+    } catch (const std::exception& ex) {
+        Nm::loggerGet("main")->warn("FlowScatter: unable to resolve fields after format change: {}", ex.what());
+        // Don't rethrow — module can continue and will fallback to round-robin until
+        // fields are available.
+    }
 }
 
 /**
@@ -99,7 +108,7 @@ void processUnirecRecords(UnirecInputInterface&               inputInterface,
 		try {
 			processNextRecord(inputInterface, outputInterfaces, scatter);
 		} catch (FormatChangeException& ex) {
-			handleFormatChange(inputInterface, outputInterfaces);
+			handleFormatChange(inputInterface, outputInterfaces, scatter);
 		} catch (EoFException& ex) {
 			break;
 		} catch (std::exception& ex) {

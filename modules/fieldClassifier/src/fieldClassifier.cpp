@@ -281,6 +281,136 @@ void FieldClassifier::loadIP(
 			+ ex.what());
 	}
 }
+void FieldClassifier::fillInputFieldsToOutput(
+	std::optional<Nemea::UnirecRecordView>& input,
+	std::optional<Nemea::UnirecRecord>& output,
+	std::string& templateStr)
+{
+	// split template to vector by commas
+	std::vector<std::string> templateFields;
+	size_t pos = 0;
+	std::string strCopy = templateStr;
+	if (templateStr.back() != ',') {
+		strCopy += ','; // Add a trailing comma to ensure the last field is processed
+	}
+	while ((pos = strCopy.find(',')) != std::string::npos) {
+		// Extract the field
+		std::string field = strCopy.substr(0, pos);
+		strCopy.erase(0, pos + 1);
+		if (!field.empty()) { // ignore empty fields
+			templateFields.push_back(field);
+		}
+	}
+	// for each field, get data from input and set to output
+	for (const auto& field : templateFields) {
+		// split field by space to get field name
+		size_t spacePos = field.find(' ');
+		if (spacePos == std::string::npos) {
+			throw std::runtime_error(
+				"FieldClassifier: Invalid Unirec field format in template: " + field);
+		}
+		std::string fieldName = field.substr(spacePos + 1);
+		std::string fieldType = field.substr(0, spacePos);
+
+		auto fieldId = static_cast<ur_field_id_t>(ur_get_id_by_name(fieldName.c_str()));
+		if (fieldId == UR_E_INVALID_NAME) {
+			throw std::runtime_error("FieldClassifier: Invalid Unirec field name: " + fieldName);
+		}
+		try {
+			if (fieldType == "string") {
+				auto value = input->getFieldAsType<std::string>(fieldId);
+				output->setFieldFromType<std::string>(value, fieldId);
+			} else if (fieldType == "uint8") {
+				auto value = input->getFieldAsType<uint8_t>(fieldId);
+				output->setFieldFromType<uint8_t>(value, fieldId);
+			} else if (fieldType == "uint16") {
+				auto value = input->getFieldAsType<uint16_t>(fieldId);
+				output->setFieldFromType<uint16_t>(value, fieldId);
+			} else if (fieldType == "uint32") {
+				auto value = input->getFieldAsType<uint32_t>(fieldId);
+				output->setFieldFromType<uint32_t>(value, fieldId);
+			} else if (fieldType == "uint64") {
+				auto value = input->getFieldAsType<uint64_t>(fieldId);
+				output->setFieldFromType<uint64_t>(value, fieldId);
+			} else if (fieldType == "ipaddr") {
+				auto value = input->getFieldAsType<Nemea::IpAddress>(fieldId);
+				output->setFieldFromType<Nemea::IpAddress>(value, fieldId);
+			} else if (fieldType == "int8") {
+				auto value = input->getFieldAsType<int8_t>(fieldId);
+				output->setFieldFromType<int8_t>(value, fieldId);
+			} else if (fieldType == "int16") {
+				auto value = input->getFieldAsType<int16_t>(fieldId);
+				output->setFieldFromType<int16_t>(value, fieldId);
+			} else if (fieldType == "int32") {
+				auto value = input->getFieldAsType<int32_t>(fieldId);
+				output->setFieldFromType<int32_t>(value, fieldId);
+			} else if (fieldType == "int64") {
+				auto value = input->getFieldAsType<int64_t>(fieldId);
+				output->setFieldFromType<int64_t>(value, fieldId);
+			} else if (fieldType == "char") {
+				auto value = input->getFieldAsType<char>(fieldId);
+				output->setFieldFromType<char>(value, fieldId);
+			} else if (fieldType == "float") {
+				auto value = input->getFieldAsType<float>(fieldId);
+				output->setFieldFromType<float>(value, fieldId);
+			} else if (fieldType == "double") {
+				auto value = input->getFieldAsType<double>(fieldId);
+				output->setFieldFromType<double>(value, fieldId);
+			} else if (fieldType == "macaddr") {
+				auto value = input->getFieldAsType<Nemea::MacAddress>(fieldId);
+				output->setFieldFromType<Nemea::MacAddress>(value, fieldId);
+			} else if (fieldType == "time") {
+				auto value = input->getFieldAsType<Nemea::UrTime>(fieldId);
+				output->setFieldFromType<Nemea::UrTime>(value, fieldId);
+			} else if (fieldType == "bytes") {
+				// Nemea::UnirecArray<std::byte> const arr
+				// 	= input->getFieldAsUnirecArray<std::byte>(fieldId);
+				// output->setFieldFromUnirecArray<std::byte>(arr, fieldId);
+				// TODO: implement
+			} else if (fieldType == "int8*") {
+				// const int8_t* value = input->getFieldAsType<int8_t*>(fieldId);
+				// output->setFieldFromType<int8_t*>((int8_t*) value, fieldId);
+			} else if (fieldType == "int16*") {
+				// auto value = input->getFieldAsUnirecArray<int16_t>(fieldId);
+				// output->setFieldFromUnirecArray<int16_t>(value, fieldId);
+			} else if (fieldType == "int32*") {
+				// auto value = input->getFieldAsUnirecArray<int32_t>(fieldId);
+				// output->setFieldFromUnirecArray<int32_t>(value, fieldId);
+			} else if (fieldType == "int64*") {
+				// auto value = input->getFieldAsUnirecArray<int64_t>(fieldId);
+				// output->setFieldFromUnirecArray<int64_t>(value, fieldId);
+			} else if (fieldType == "uint8*") {
+				// auto value = input->getFieldAsUnirecArray<uint8_t>(fieldId);
+				// output->setFieldFromUnirecArray<uint8_t>(value, fieldId);
+			} else if (fieldType == "uint16*") {
+				// auto value = input->getFieldAsUnirecArray<uint16_t>(fieldId);
+				// output->setFieldFromUnirecArray<uint16_t>(value, fieldId);
+			} else if (fieldType == "uint32*") {
+				// auto value = input->getFieldAsUnirecArray<uint32_t>(fieldId);
+				// output->setFieldFromUnirecArray<uint32_t>(value, fieldId);
+			} else if (fieldType == "uint64*") {
+				// auto value = input->getFieldAsUnirecArray<uint64_t>(fieldId);
+				// output->setFieldFromUnirecArray<uint64_t>(value, fieldId);
+			} else if (fieldType == "time*") {
+				// auto value = input->getFieldAsUnirecArray<Nemea::UrTime>(fieldId);
+				// output->setFieldFromUnirecArray<Nemea::UrTime>(value, fieldId);
+			} else if (fieldType == "float*") {
+				// auto value = input->getFieldAsUnirecArray<float>(fieldId);
+				// output->setFieldFromUnirecArray<float>(value, fieldId);
+			} else if (fieldType == "double*") {
+				// auto value = input->getFieldAsUnirecArray<double>(fieldId);
+				// output->setFieldFromUnirecArray<double>(value, fieldId);
+			} else {
+				// throw std::runtime_error(
+				// 	"FieldClassifier: Unsupported Unirec field type: " + fieldType);
+			}
+		} catch (const std::exception& ex) {
+			throw std::runtime_error(
+				std::string("FieldClassifier: Unable to copy field '") + field
+				+ "' from input to output Unirec record: " + ex.what());
+		}
+	}
+}
 
 void FieldClassifier::getDataFromPlugins(std::optional<Nemea::UnirecRecordView>& unirecView)
 {

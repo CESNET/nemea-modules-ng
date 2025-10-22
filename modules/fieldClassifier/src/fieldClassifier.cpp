@@ -285,6 +285,7 @@ void FieldClassifier::fillInputFieldsToOutput(
 	std::optional<Nemea::UnirecRecordView>& input,
 	std::optional<Nemea::UnirecRecord>& output,
 	std::string& templateStr)
+
 {
 	// split template to vector by commas
 	std::vector<std::string> templateFields;
@@ -363,47 +364,53 @@ void FieldClassifier::fillInputFieldsToOutput(
 				auto value = input->getFieldAsType<Nemea::UrTime>(fieldId);
 				output->setFieldFromType<Nemea::UrTime>(value, fieldId);
 			} else if (fieldType == "bytes") {
-				// Nemea::UnirecArray<std::byte> const arr
-				// 	= input->getFieldAsUnirecArray<std::byte>(fieldId);
-				// output->setFieldFromUnirecArray<std::byte>(arr, fieldId);
-				// TODO: implement
+				Nemea::UnirecArray<std::byte> const arr
+					= input->getFieldAsUnirecArray<std::byte>(fieldId);
+				output->setFieldFromUnirecArray<std::byte>(arr, fieldId);
 			} else if (fieldType == "int8*") {
-				// const int8_t* value = input->getFieldAsType<int8_t*>(fieldId);
-				// output->setFieldFromType<int8_t*>((int8_t*) value, fieldId);
+				Nemea::UnirecArray<int8_t> const arr
+					= input->getFieldAsUnirecArray<int8_t>(fieldId);
+				output->setFieldFromUnirecArray<int8_t>(arr, fieldId);
 			} else if (fieldType == "int16*") {
-				// auto value = input->getFieldAsUnirecArray<int16_t>(fieldId);
-				// output->setFieldFromUnirecArray<int16_t>(value, fieldId);
+				Nemea::UnirecArray<int16_t> const arr
+					= input->getFieldAsUnirecArray<int16_t>(fieldId);
+				output->setFieldFromUnirecArray<int16_t>(arr, fieldId);
 			} else if (fieldType == "int32*") {
-				// auto value = input->getFieldAsUnirecArray<int32_t>(fieldId);
-				// output->setFieldFromUnirecArray<int32_t>(value, fieldId);
+				Nemea::UnirecArray<int32_t> const arr
+					= input->getFieldAsUnirecArray<int32_t>(fieldId);
+				output->setFieldFromUnirecArray<int32_t>(arr, fieldId);
 			} else if (fieldType == "int64*") {
-				// auto value = input->getFieldAsUnirecArray<int64_t>(fieldId);
-				// output->setFieldFromUnirecArray<int64_t>(value, fieldId);
+				Nemea::UnirecArray<int64_t> const arr
+					= input->getFieldAsUnirecArray<int64_t>(fieldId);
+				output->setFieldFromUnirecArray<int64_t>(arr, fieldId);
 			} else if (fieldType == "uint8*") {
-				// auto value = input->getFieldAsUnirecArray<uint8_t>(fieldId);
-				// output->setFieldFromUnirecArray<uint8_t>(value, fieldId);
+				Nemea::UnirecArray<uint8_t> const arr
+					= input->getFieldAsUnirecArray<uint8_t>(fieldId);
+				output->setFieldFromUnirecArray<uint8_t>(arr, fieldId);
 			} else if (fieldType == "uint16*") {
-				// auto value = input->getFieldAsUnirecArray<uint16_t>(fieldId);
-				// output->setFieldFromUnirecArray<uint16_t>(value, fieldId);
+				Nemea::UnirecArray<uint16_t> const arr
+					= input->getFieldAsUnirecArray<uint16_t>(fieldId);
+				output->setFieldFromUnirecArray<uint16_t>(arr, fieldId);
 			} else if (fieldType == "uint32*") {
-				// auto value = input->getFieldAsUnirecArray<uint32_t>(fieldId);
-				// output->setFieldFromUnirecArray<uint32_t>(value, fieldId);
+				Nemea::UnirecArray<uint32_t> const arr
+					= input->getFieldAsUnirecArray<uint32_t>(fieldId);
+				output->setFieldFromUnirecArray<uint32_t>(arr, fieldId);
 			} else if (fieldType == "uint64*") {
-				// auto value = input->getFieldAsUnirecArray<uint64_t>(fieldId);
-				// output->setFieldFromUnirecArray<uint64_t>(value, fieldId);
-			} else if (fieldType == "time*") {
-				// auto value = input->getFieldAsUnirecArray<Nemea::UrTime>(fieldId);
-				// output->setFieldFromUnirecArray<Nemea::UrTime>(value, fieldId);
+				Nemea::UnirecArray<uint64_t> const arr
+					= input->getFieldAsUnirecArray<uint64_t>(fieldId);
+				output->setFieldFromUnirecArray<uint64_t>(arr, fieldId);
 			} else if (fieldType == "float*") {
-				// auto value = input->getFieldAsUnirecArray<float>(fieldId);
-				// output->setFieldFromUnirecArray<float>(value, fieldId);
+				Nemea::UnirecArray<float> const arr = input->getFieldAsUnirecArray<float>(fieldId);
+				output->setFieldFromUnirecArray<float>(arr, fieldId);
 			} else if (fieldType == "double*") {
-				// auto value = input->getFieldAsUnirecArray<double>(fieldId);
-				// output->setFieldFromUnirecArray<double>(value, fieldId);
+				Nemea::UnirecArray<double> const arr
+					= input->getFieldAsUnirecArray<double>(fieldId);
+				output->setFieldFromUnirecArray<double>(arr, fieldId);
 			} else {
-				// throw std::runtime_error(
-				// 	"FieldClassifier: Unsupported Unirec field type: " + fieldType);
+				throw std::runtime_error(
+					"FieldClassifier: Unsupported Unirec field type in template: " + fieldType);
 			}
+
 		} catch (const std::exception& ex) {
 			throw std::runtime_error(
 				std::string("FieldClassifier: Unable to copy field '") + field

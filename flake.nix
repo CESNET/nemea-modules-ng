@@ -29,6 +29,7 @@
             pkgs.rpm
             pkgs.clang-tools
             pkgs.editorconfig-checker
+            pkgs.doxygen
             netmonpkgs.packages.x86_64-linux.nemea-modules-meta
             netmonpkgs.packages.x86_64-linux.nemea-framework
             netmonpkgs.packages.x86_64-linux.telemetry

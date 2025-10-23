@@ -62,6 +62,15 @@ static void processNextRecord(
 		throw std::runtime_error(std::string("Unable to create output Unirec record"));
 		return;
 	}
+	auto* templateDef = input.getTemplate();
+	if (templateDef == nullptr) {
+		throw std::runtime_error(std::string("Unable to get template from trap input"));
+	}
+
+	// convert template to string and append new fileds
+	std::string stringTemp = static_cast<std::string>(ur_template_string(templateDef));
+
+	fieldClassifier.fillInputFieldsToOutput(inputUnirecView, unirecRecord, stringTemp);
 
 	// populate Unirec record with data from modules
 	try {

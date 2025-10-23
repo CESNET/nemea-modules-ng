@@ -76,6 +76,11 @@ public:
 	 */
 	void handleParams(int argc, char** argv, argparse::ArgumentParser& parser);
 
+	void fillInputFieldsToOutput(
+		std::optional<Nemea::UnirecRecordView>& input,
+		std::optional<Nemea::UnirecRecord>& output,
+		std::string& templateStr);
+
 private:
 	std::vector<class Plugin*> m_plugins = g_PLUGINS;
 

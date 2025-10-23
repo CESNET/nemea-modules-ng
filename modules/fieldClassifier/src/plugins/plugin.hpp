@@ -58,11 +58,11 @@ enum DataType : uint8_t {
 	CHAR,
 	FLOAT,
 	DOUBLE,
-	// IPADDR,
-	// MACADDR,
-	// TIME,
+	IPADDR,
+	MACADDR,
+	TIME,
 	STRING,
-	// BYTES
+	BYTES
 };
 
 /**

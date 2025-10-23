@@ -28,6 +28,8 @@
             pkgs.fuse3
             pkgs.rpm
             pkgs.clang-tools
+            pkgs.editorconfig-checker
+            pkgs.doxygen
             pkgs.libmaxminddb
             netmonpkgs.packages.x86_64-linux.nemea-modules-meta
             netmonpkgs.packages.x86_64-linux.nemea-framework

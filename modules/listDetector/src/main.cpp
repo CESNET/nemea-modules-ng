@@ -12,6 +12,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include "configReloader.hpp"
 #include "csvConfigParser.hpp"
 #include "listDetector.hpp"
 #include "logger/logger.hpp"
@@ -103,6 +104,15 @@ static void processUnirecRecords(
 
 int main(int argc, char** argv)
 {
+	// make a copy of argv
+	char** argv_copy = new char*[argc + 1];
+	for (int i = 0; i < argc; ++i) {
+		argv_copy[i] = new char[strlen(argv[i]) + 1];
+		argv_copy[argc] = nullptr;
+		strcpy(argv_copy[i], argv[i]);
+	}
+
+	ListDetector::ConfigReloader reloader(argv_copy);
 	argparse::ArgumentParser program("listdetector");
 
 	Nm::loggerInit();
@@ -189,6 +199,7 @@ int main(int argc, char** argv)
 		ListDetector::ListDetector listDetector(configParser.get(), mode);
 		auto listDetectorTelemetryDirectory = telemetryRootDirectory->addDir("listdetector");
 		listDetector.setTelemetryDirectory(listDetectorTelemetryDirectory);
+		reloader.startThread(program.get<std::string>("--rules"));
 
 		processUnirecRecords(biInterface, listDetector);
 

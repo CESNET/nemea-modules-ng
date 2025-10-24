@@ -365,10 +365,10 @@ void FieldClassifier::fillInputFieldsToOutput(
 			} else if (fieldType == "time") {
 				auto value = input->getFieldAsType<Nemea::UrTime>(fieldId);
 				output->setFieldFromType<Nemea::UrTime>(value, fieldId);
-			} else if (fieldType == "bytes") {
-				Nemea::UnirecArray<std::byte> const arr
-					= input->getFieldAsUnirecArray<std::byte>(fieldId);
-				output->setFieldFromUnirecArray<std::byte>(arr, fieldId);
+			//} else if (fieldType == "bytes") {
+			//	Nemea::UnirecArray<std::byte> const arr
+			//		= input->getFieldAsUnirecArray<std::byte>(fieldId);
+			//	output->setFieldFromUnirecArray<std::byte>(arr, fieldId);
 			} else if (fieldType == "int8*") {
 				Nemea::UnirecArray<int8_t> const arr
 					= input->getFieldAsUnirecArray<int8_t>(fieldId);

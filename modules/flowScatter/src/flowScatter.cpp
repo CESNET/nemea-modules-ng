@@ -266,9 +266,17 @@ void FlowScatter::ruleParse(const std::string& rule)
 {
 	m_rules.branches.clear();
 	m_cachedBranches.clear();
+	m_rssMode = false;
+	m_rss_src_id = 0;
+	m_rss_dst_id = 0;
 
 	if (rule.empty()) {
 		return; // No rules defined, nothing to parse
+	}
+
+	if (rule == "rss") {
+		m_rssMode = true;
+		return;
 	}
 
 	std::istringstream ruleStream(rule);
@@ -305,6 +313,18 @@ void FlowScatter::ruleParse(const std::string& rule)
 void FlowScatter::changeTemplate()
 {
 	m_cachedBranches.clear();
+
+	if (m_rssMode) {
+		int const srcId = ur_get_id_by_name("SRC_IP");
+		int const dstId = ur_get_id_by_name("DST_IP");
+		if (srcId < 0 || dstId < 0) {
+			throw std::runtime_error("RSS mode requires SRC_IP and DST_IP fields in template");
+		}
+		m_rss_src_id = static_cast<ur_field_id_t>(srcId);
+		m_rss_dst_id = static_cast<ur_field_id_t>(dstId);
+		
+        return;
+	}
 
 	for (const auto& branch : m_rules.branches) {
 		CachedBranch cachedBranch;
@@ -343,6 +363,25 @@ void FlowScatter::changeTemplate()
 size_t FlowScatter::outputIndex(const UnirecRecordView& record)
 {
 	m_totalRecords++;
+
+	if (m_rssMode) {
+		auto srcIp = record.getFieldAsType<IpAddress>(m_rss_src_id);
+		auto dstIp = record.getFieldAsType<IpAddress>(m_rss_dst_id);
+		
+		IpAddress orResult;
+		const uint8_t* srcBytes = reinterpret_cast<const uint8_t*>(&srcIp);
+		const uint8_t* dstBytes = reinterpret_cast<const uint8_t*>(&dstIp);
+		uint8_t* resultBytes = reinterpret_cast<uint8_t*>(&orResult);
+		
+		for (size_t i = 0; i < sizeof(IpAddress); ++i) {
+			resultBytes[i] = srcBytes[i] | dstBytes[i];
+		}
+		
+		auto hashValue = XXH64(&orResult, sizeof(IpAddress), 0xdeadd00de);
+		auto index = static_cast<size_t>(hashValue % M_NUM_OUTPUTS);
+		m_sentRecords[index]++;
+		return index;
+	}
 
 	// If no rules are defined, distribute records round-robin
 	if (m_rules.branches.empty()) {

@@ -124,6 +124,10 @@ private:
 	};
 
 	std::vector<CachedBranch> m_cachedBranches;
+
+	bool m_rssMode = false;
+	ur_field_id_t m_rss_src_id = 0;
+	ur_field_id_t m_rss_dst_id = 0;
 };
 
 } // namespace Fs

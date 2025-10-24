@@ -25,10 +25,12 @@
 #include <stdexcept>
 #include <telemetry.hpp>
 #include <unirec++/unirec.hpp>
+#include <filesystem>
 
 using namespace Nemea;
 
 static std::atomic<bool> g_stopFlag(false);
+static std::atomic<bool> g_rulesChanged(false);
 
 static void signalHandler(int signum)
 {
@@ -73,6 +75,37 @@ static void processNextRecord(
 }
 
 /**
+ * @brief Monitor the rules file for changes and set a flag when it changes.
+ *
+ * This function periodically checks the last modification time of the specified rules file.
+ * If rules has changed, the function sets a flag to indicate that the rules need to be reloaded.
+ *
+ * @param rulesFilePath Path to the rules file to monitor.
+ * @param checkIntervalms Interval in milliseconds between checks.
+ */
+static void checkRulesFileChanges(const std::string& rulesFilePath, int checkIntervalms)
+{
+	auto logger = Nm::loggerGet("rulesFileWatcher");
+	try {
+		auto lastModificationTime = std::filesystem::last_write_time(rulesFilePath);
+	
+		while (!g_stopFlag.load()) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(checkIntervalms));
+			auto currentModificationTime = std::filesystem::last_write_time(rulesFilePath);
+			if (currentModificationTime != lastModificationTime) {
+				logger->warn("Rules file changed, reloading...");
+				lastModificationTime = currentModificationTime;
+				g_rulesChanged.store(true);
+			}
+		}
+
+	} catch (std::exception& ex) {
+		logger->error(ex.what());
+		g_stopFlag.store(true);
+	}
+}
+
+/**
  * @brief Process Unirec records based on the rules of listDetector.
  *
  * The `processUnirecRecords` function continuously receives Unirec records through the provided
@@ -88,12 +121,13 @@ static void processUnirecRecords(
 	UnirecBidirectionalInterface& biInterface,
 	ListDetector::ListDetector& listDetector)
 {
-	while (!g_stopFlag.load()) {
+	while (!g_stopFlag.load() && !g_rulesChanged.load()) {
 		try {
 			processNextRecord(biInterface, listDetector);
 		} catch (FormatChangeException& ex) {
 			handleFormatChange(biInterface);
 		} catch (const EoFException& ex) {
+			g_stopFlag.store(true);
 			break;
 		} catch (const std::exception& ex) {
 			throw;
@@ -124,6 +158,11 @@ int main(int argc, char** argv)
 			.required()
 			.help("path where the appFs directory will be mounted")
 			.default_value(std::string(""));
+		
+		program.add_argument("-ci", "--check-interval")
+			.help("interval in milliseconds for checking rules file changes. Default is 10000ms (10s). Negative value disable checking.")
+			.default_value(10000)
+			.scan<'i', int>();
 	} catch (std::exception& ex) {
 		logger->error(ex.what());
 		return EXIT_FAILURE;
@@ -190,7 +229,21 @@ int main(int argc, char** argv)
 		auto listDetectorTelemetryDirectory = telemetryRootDirectory->addDir("listdetector");
 		listDetector.setTelemetryDirectory(listDetectorTelemetryDirectory);
 
-		processUnirecRecords(biInterface, listDetector);
+		if (program.get<int>("--check-interval") >= 0)
+		{
+			std::thread rulesFileWatcherThread(checkRulesFileChanges, program.get<std::string>("--rules"), program.get<int>("--check-interval"));
+			rulesFileWatcherThread.detach();
+		}
+		
+		while (!g_stopFlag.load())
+		{
+			if(g_rulesChanged.load()) {
+				configParser= std::make_unique<ListDetector::CsvConfigParser>(program.get<std::string>("--rules"));
+				listDetector.updateRules(configParser.get());
+				g_rulesChanged.store(false);
+			}
+			processUnirecRecords(biInterface, listDetector);
+		}
 
 	} catch (std::exception& ex) {
 		logger->error(ex.what());

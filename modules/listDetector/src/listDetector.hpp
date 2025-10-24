@@ -40,6 +40,12 @@ public:
 	explicit ListDetector(const ConfigParser* configParser, ListDetectorMode mode);
 
 	/**
+	 * @brief Updates rules in the ListDetector using the provided ConfigParser.
+	 * @param configParser Pointer to the ConfigParser providing new rules.
+	 */
+	void updateRules(const ConfigParser* configParser);
+
+	/**
 	 * @brief Checks if the given UnirecRecordView matches some rule from ListDetector.
 	 * @param unirecRecordView The Unirec record to check against the ListDetector.
 	 * @return True if matches, false otherwise.

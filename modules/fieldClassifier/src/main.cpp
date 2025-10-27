@@ -67,10 +67,9 @@ static void processNextRecord(
 		throw std::runtime_error(std::string("Unable to get template from trap input"));
 	}
 
-	// convert template to string and append new fileds
-	std::string stringTemp = static_cast<std::string>(ur_template_string(templateDef));
+	fieldClassifier.templateStringAll = templateDef;
 
-	fieldClassifier.fillInputFieldsToOutput(inputUnirecView, unirecRecord, stringTemp);
+	fieldClassifier.fillInputFieldsToOutput(inputUnirecView, unirecRecord);
 
 	// populate Unirec record with data from modules
 	try {
@@ -113,6 +112,7 @@ static void handleTemplateChange(
 	// convert template to string and append new fileds
 	std::string stringTemp = static_cast<std::string>(ur_template_string(templateDef));
 
+	fieldClassifier.getUnirecIdsForInputFields(stringTemp);
 	// add finished template
 	stringTemp += templateStr;
 

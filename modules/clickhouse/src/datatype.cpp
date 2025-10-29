@@ -10,7 +10,11 @@
 
 #include "datatype.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cstring>
 #include <iostream>
+#include <iterator>
 
 template <unsigned Precision>
 class ColumnDateTime64 : public clickhouse::ColumnDateTime64 {
@@ -22,6 +26,28 @@ public:
 };
 
 namespace Getters {
+
+static inline in6_addr toIn6(const Nemea::IpAddress& addr) noexcept
+{
+	constexpr std::size_t ipv4MappedPrefixLen = 12U;
+	constexpr std::size_t ipv4ByteLen = 4U;
+	constexpr std::size_t ipv4Offset = 8U;
+
+	in6_addr out {};
+	if (addr.isIpv4()) {
+		static constexpr std::array<uint8_t, ipv4MappedPrefixLen>
+			v4mapPrefix {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff};
+
+		std::copy(v4mapPrefix.begin(), v4mapPrefix.end(), out.s6_addr);
+		std::copy(
+			addr.ip.bytes + ipv4Offset,
+			addr.ip.bytes + ipv4Offset + ipv4ByteLen,
+			out.s6_addr + ipv4MappedPrefixLen);
+	} else {
+		std::memcpy(&out, &addr.ip, sizeof(out));
+	}
+	return out;
+}
 
 template <typename Value>
 static Value getValue(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
@@ -36,7 +62,7 @@ static std::vector<Value> getValueArr(Nemea::UnirecRecordView& record, ur_field_
 	Nemea::UnirecArray<Value> const arr = record.getFieldAsUnirecArray<Value>(fieldID);
 	std::vector<Value> result;
 	result.reserve(arr.size());
-	std::copy(arr.begin(), arr.end(), std::back_inserter(result));
+	std::for_each(arr.begin(), arr.end(), [&](const Value& value) { result.push_back(value); });
 	return result;
 }
 
@@ -53,8 +79,8 @@ static std::vector<uint8_t> getBytes(Nemea::UnirecRecordView& record, ur_field_i
 
 static in6_addr getIp(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
 {
-	Nemea::IpAddress addr = record.getFieldAsType<Nemea::IpAddress>(fieldID);
-	return *((in6_addr*) &addr.ip);
+	const Nemea::IpAddress addr = record.getFieldAsType<Nemea::IpAddress>(fieldID);
+	return toIn6(addr);
 }
 
 static std::vector<in6_addr> getIpArr(Nemea::UnirecRecordView& record, ur_field_id_t fieldID)
@@ -67,9 +93,7 @@ static std::vector<in6_addr> getIpArr(Nemea::UnirecRecordView& record, ur_field_
 		addrArr.begin(),
 		addrArr.end(),
 		std::back_inserter(result),
-		[](const Nemea::IpAddress& value) -> in6_addr {
-			return *reinterpret_cast<const in6_addr*>(&value.ip);
-		});
+		[](const Nemea::IpAddress& value) -> in6_addr { return toIn6(value); });
 	return result;
 }
 

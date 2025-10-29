@@ -1,6 +1,6 @@
 {
   description = "A basic flake with a shell";
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
   inputs.systems.url = "github:nix-systems/default";
   inputs.netmonpkgs.url = "github:jaroslavpesek/netmonpkgs";
   inputs.flake-utils = {
@@ -28,6 +28,9 @@
             pkgs.fuse3
             pkgs.rpm
             pkgs.clang-tools
+            pkgs.editorconfig-checker
+            pkgs.doxygen
+            pkgs.libmaxminddb
             netmonpkgs.packages.x86_64-linux.nemea-modules-meta
             netmonpkgs.packages.x86_64-linux.nemea-framework
             netmonpkgs.packages.x86_64-linux.telemetry

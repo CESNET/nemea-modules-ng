@@ -76,10 +76,12 @@ public:
 	 */
 	void handleParams(int argc, char** argv, argparse::ArgumentParser& parser);
 
+	void getUnirecIdsForInputFields(std::string& templateStr);
+
 	void fillInputFieldsToOutput(
 		std::optional<Nemea::UnirecRecordView>& input,
-		std::optional<Nemea::UnirecRecord>& output,
-		std::string& templateStr);
+		std::optional<Nemea::UnirecRecord>& output);
+	ur_template_t* templateStringAll;
 
 private:
 	std::vector<class Plugin*> m_plugins = g_PLUGINS;
@@ -106,6 +108,9 @@ private:
 	std::string m_destinationIPString;
 
 	std::string m_templateStr;
+
+	std::vector<ur_field_id_t> m_inputFieldIds;
+	std::vector<DataType> m_inputFieldTypes;
 
 	std::string getIPtoString(const Nemea::IpAddress& ipAddr);
 
@@ -146,5 +151,23 @@ private:
 
 	void getRequiredFields(const std::string& requiredFields);
 	// ###################
+
+	std::unordered_map<std::string, DataType> m_UnirecTypeMap = {
+		{"string", DataType::STRING},    {"int8", DataType::INT8},
+		{"int16", DataType::INT16},      {"int32", DataType::INT32},
+		{"int64", DataType::INT64},      {"uint8", DataType::UINT8},
+		{"uint16", DataType::UINT16},    {"uint32", DataType::UINT32},
+		{"uint64", DataType::UINT64},    {"char", DataType::CHAR},
+		{"float", DataType::FLOAT},      {"double", DataType::DOUBLE},
+		{"ipaddr", DataType::IPADDR},    {"macaddr", DataType::MACADDR},
+		{"bytes", DataType::BYTES},      {"int8*", DataType::A_INT8},
+		{"int16*", DataType::A_INT16},   {"int32*", DataType::A_INT32},
+		{"int64*", DataType::A_INT64},   {"uint8*", DataType::A_UINT8},
+		{"uint16*", DataType::A_UINT16}, {"uint32*", DataType::A_UINT32},
+		{"uint64*", DataType::A_UINT64}, {"float*", DataType::A_FLOAT},
+		{"double*", DataType::A_DOUBLE}, {"ipaddr*", DataType::A_IP},
+		{"time*", DataType::A_TIME},     {"time", DataType::TIME},
+		{"macaddr*", DataType::A_MAC},
+	};
 };
 } // namespace NFieldClassifier

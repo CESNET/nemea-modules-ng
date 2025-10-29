@@ -11,6 +11,7 @@
 
 #pragma once
 #include "argparse/argparse.hpp"
+#include <cstdint>
 #include <maxminddb.h>
 #include <unirec++/ipAddress.hpp>
 #include <unirec++/macAddress.hpp>
@@ -26,25 +27,8 @@ namespace NFieldClassifier {
 #define PREFIX_SRC "SRC_"
 #define PREFIX_DST "DST_"
 
-// int8 	1 	8bit singed integer
-// int16 	2 	16bit singed integer
-// int32 	4 	32bit singed integer
-// int64 	8 	64bit singed integer
-// uint8 	1 	8bit unsigned integer
-// uint16 	2 	16bit unsigned integer
-// uint32 	4 	32bit unsigned integer
-// uint64 	8 	64bit unsigned integer
-// char 	1 	A single ASCII character
-// float 	4 	Single precision floating point number (IEEE 754)
-// double 	8 	Double precision floating point number (IEEE 754)
-// ipaddr 	16 	Special type for IPv4/IPv6 addresses, see below for details
-// macaddr 	6 	Special type for MAC address, see below for details
-// time 	8 	Special type for precise timestamps, see below for details
-// string 	- 	Variable-length array of (mostly) printable characters
-// bytes 	- 	Variable-length array of bytes (not expected to be printable characters)
-
 /**
- * @brief Enum to represent various data types for plugin fields.
+ * @brief Enum to represent unirec data types.
  */
 enum DataType : uint8_t {
 	INT8,
@@ -62,7 +46,20 @@ enum DataType : uint8_t {
 	MACADDR,
 	TIME,
 	STRING,
-	BYTES
+	BYTES,
+	A_INT8,
+	A_INT16,
+	A_INT32,
+	A_INT64,
+	A_UINT8,
+	A_UINT16,
+	A_UINT32,
+	A_UINT64,
+	A_FLOAT,
+	A_DOUBLE,
+	A_IP,
+	A_MAC,
+	A_TIME
 };
 
 /**

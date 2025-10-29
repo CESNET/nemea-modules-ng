@@ -100,14 +100,13 @@ bool IPClassifier::checkForRule(const uint8_t ipAddr[16], unsigned condition, co
 }
 bool IPClassifier::getData(DataMap& dataMap, std::string& ipAddr)
 {
-	uint8_t ipHexV4[16];
-	uint8_t ipHexV6[16];
+	uint8_t ipHex[16];
 	unsigned condition;
 	bool isIPv4 = false;
-	if (inet_pton(AF_INET, ipAddr.c_str(), &ipHexV4) == 1) {
+	if (inet_pton(AF_INET, ipAddr.c_str(), &ipHex) == 1) {
 		condition = 4;
 		isIPv4 = true;
-	} else if (inet_pton(AF_INET6, ipAddr.c_str(), &ipHexV6) == 1) {
+	} else if (inet_pton(AF_INET6, ipAddr.c_str(), &ipHex) == 1) {
 		condition = 16;
 		isIPv4 = false;
 	} else {
@@ -118,7 +117,7 @@ bool IPClassifier::getData(DataMap& dataMap, std::string& ipAddr)
 		if (rule.isIPv4 != isIPv4) {
 			continue;
 		}
-		if (checkForRule(ipHexV4, condition, rule)) {
+		if (checkForRule(ipHex, condition, rule)) {
 			DEBUG_PRINT(
 				2,
 				"Ip Classifier: Match found for IP: " + ipAddr + " with flags: " + rule.flags);

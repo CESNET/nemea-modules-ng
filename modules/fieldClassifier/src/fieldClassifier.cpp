@@ -414,8 +414,8 @@ void FieldClassifier::fillInputFieldsToOutput(
 			// 	= input->getFieldAsUnirecArray<std::byte>(fieldId);
 			// output->setFieldFromUnirecArray<std::byte>(arr, fieldId);
 
-			std::byte value = input->getFieldAsType<std::byte>(fieldId);
-			output->setFieldFromType<std::byte>(value, fieldId);
+			// std::byte value = input->getFieldAsType<std::byte>(fieldId);
+			// output->setFieldFromType<std::byte>(value, fieldId);
 
 			break;
 		}

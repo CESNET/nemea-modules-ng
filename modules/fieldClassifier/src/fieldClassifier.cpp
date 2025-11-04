@@ -412,13 +412,9 @@ void FieldClassifier::fillInputFieldsToOutput(
 			break;
 		}
 		case DataType::BYTES: {
-			// Nemea::UnirecArray<std::byte> const arr
-			// 	= input->getFieldAsUnirecArray<std::byte>(fieldId);
-			// output->setFieldFromUnirecArray<std::byte>(arr, fieldId);
-
-			// std::byte value = input->getFieldAsType<std::byte>(fieldId);
-			// output->setFieldFromType<std::byte>(value, fieldId);
-
+			Nemea::UnirecArray<std::byte> const arr
+				= input->getFieldAsUnirecArray<std::byte>(fieldId);
+			output->setFieldFromUnirecArray<std::byte>(arr, fieldId);
 			break;
 		}
 		case DataType::A_INT8: {

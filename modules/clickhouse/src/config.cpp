@@ -110,15 +110,22 @@ static void parseColumns(const YAML::Node& columnsNode, Config& config)
 		Config::Column column;
 		size_t const spacePos = colValue.find(' ');
 
-		std::string const type = colValue.substr(0, spacePos);
+		std::string type = colValue.substr(0, spacePos);
 		std::string name = colValue.substr(spacePos + 1);
+
+		// Check for ! suffix indicating non-nullable column
+		column.nullable = true;
+		if (!type.empty() && type.back() == '!') {
+			column.nullable = false;
+			type.pop_back(); // Remove the '!' suffix
+		}
 
 		try {
 			column.type = g_string_to_columntype.at(type);
 
 		} catch (std::out_of_range& ex) {
 			std::stringstream sstream;
-			sstream << "Incorrect column type: " << colValue.substr(0, spacePos);
+			sstream << "Incorrect column type: " << type;
 			throw std::runtime_error(sstream.str());
 		}
 

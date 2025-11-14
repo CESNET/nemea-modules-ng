@@ -124,7 +124,7 @@ static void ensureSchema(
 		sstream << "CREATE TABLE " << table << "(\n";
 		size_t columnIndex = 0;
 		for (const auto& column : columns) {
-			const auto& clickhouseType = typeToClickhouse(columns[columnIndex].type);
+			const auto& clickhouseType = typeToClickhouse(columns[columnIndex].type, columns[columnIndex].nullable);
 			sstream << "    \"" << column.name << "\" " << clickhouseType
 					<< (columnIndex < columns.size() - 1 ? "," : "") << '\n';
 			columnIndex++;
@@ -143,17 +143,8 @@ static void ensureSchema(
 
 	for (size_t i = 0; i < dbColumns.size(); i++) {
 		const auto& expectedName = columns[i].name;
-		const auto& expectedType = typeToClickhouse(columns[i].type);
+		const auto& expectedType = typeToClickhouse(columns[i].type, columns[i].nullable);
 		const auto& [actual_name, actual_type] = dbColumns[i];
-
-		// strip Nullable(...) wrapper for comparison
-		std::string actualBaseType = actual_type;
-		static const std::string nullablePrefix = "Nullable(";
-		if (actual_type.rfind(nullablePrefix, 0) == 0 && actual_type.back() == ')') {
-			actualBaseType = actual_type.substr(
-				nullablePrefix.size(),
-				actual_type.size() - nullablePrefix.size() - 1);
-		}
 
 		if (expectedName != actual_name) {
 			std::stringstream sstream;
@@ -163,8 +154,8 @@ static void ensureSchema(
 			throw std::runtime_error(sstream.str());
 		}
 
-		// compare expected to stripped actual type
-		if (expectedType != actualBaseType) {
+		// Compare expected type with actual type (exact match required for nullable vs non-nullable)
+		if (expectedType != actual_type) {
 			std::stringstream sstream;
 			sstream << "Expected column #" << i << " in table \"" << table << "\" to be of type \""
 					<< expectedType << "\" but it is \"" << actual_type << "\"\n"

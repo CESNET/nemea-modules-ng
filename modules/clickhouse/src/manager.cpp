@@ -31,10 +31,11 @@ static std::vector<ColumnCtx> prepareColumns(const std::vector<Config::Column>& 
 		column.name = columnCfg.name;
 		column.type = columnCfg.type;
 		column.fieldID = columnCfg.type;
+		column.nullable = columnCfg.nullable;
 
 		column.getter = makeGetter(columnCfg.type);
-		column.columnWriter = makeColumnwriter(columnCfg.type);
-		column.columnFactory = [=]() { return makeColumn(columnCfg.type); };
+		column.columnWriter = makeColumnwriter(columnCfg.type, columnCfg.nullable);
+		column.columnFactory = [=]() { return makeColumn(columnCfg.type, columnCfg.nullable); };
 
 		columns.emplace_back(std::move(column));
 	}

@@ -82,6 +82,7 @@ struct ColumnCtx {
 	std::string name; ///< Column name
 	ColumnType type; ///< Column type
 	ur_field_id_t fieldID; ///< unirec template field id
+	bool nullable = true; ///< whether the column is nullable
 
 	ColumnFactoryFn columnFactory = nullptr; ///< lambda for creating columns
 	GetterFn getter = nullptr; ///< lambda for converting unirec data to clickhouse column
@@ -121,9 +122,10 @@ const int g_TIME_PRECISION = 9;
  * @brief Make a ClickHouse column that is able to store values of the supplied data type
  *
  * @param type The data type
+ * @param nullable Whether the column should be nullable
  * @return The ClickHouse column object
  */
-std::shared_ptr<clickhouse::Column> makeColumn(ColumnType type);
+std::shared_ptr<clickhouse::Column> makeColumn(ColumnType type, bool nullable = true);
 
 /**
  * @brief Makes a function (lambda) which converts unirec column data into clickhouse column
@@ -137,14 +139,16 @@ GetterFn makeGetter(ColumnType type);
  * @brief Converts Columntype into clickhouse string specification of column
  *
  * @param type The data type
+ * @param nullable Whether the column is nullable
  * @return The ClickHouse column name
  */
-ColumnWriterFn makeColumnwriter(ColumnType type);
+ColumnWriterFn makeColumnwriter(ColumnType type, bool nullable = true);
 
 /**
  * @brief Converts Columntype into clickhouse string specification of column
  *
  * @param type The data type
+ * @param nullable Whether the column is nullable
  * @return The ClickHouse column name
  */
-std::string typeToClickhouse(ColumnType type);
+std::string typeToClickhouse(ColumnType type, bool nullable = true);

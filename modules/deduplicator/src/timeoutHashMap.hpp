@@ -302,7 +302,7 @@ public:
 	}
 
 private:
-	std::function<size_t(const FlowKey&)> m_hasher;
+	std::function<size_t(const Key&)> m_hasher;
 	typename HashMapTimeoutBucket::TimeoutBucketCallables m_timeoutBucketCallables;
 	std::vector<HashMapTimeoutBucket> m_buckets;
 	const uint64_t M_BUCKET_MASK;

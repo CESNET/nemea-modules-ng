@@ -212,7 +212,7 @@ public:
 		/**
 		 * @brief Default size for the hash map.
 		 */
-		static inline const int DEFAULT_HASHMAP_EXPONENT = 20; // 1'048'576 records
+		static inline const uint32_t DEFAULT_HASHMAP_EXPONENT = 20; // 1'048'576 records
 
 		uint32_t bucketCountExponent; ///< Total amount of records in table
 		uint64_t timeout; ///< Time interval to consider flow unique

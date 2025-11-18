@@ -46,7 +46,7 @@ public:
 		std::function<bool(const Timestamp&, const Timestamp&)>,
 		std::function<Timestamp(const Timestamp&, uint64_t)>>;
 
-	static inline const int DEFAULT_HASHMAP_TIMEOUT = 5000; ///< Default timeout - 5s
+	static inline const uint64_t DEFAULT_HASHMAP_TIMEOUT = 5000; ///< Default timeout - 5s
 
 	/**
 	 * @brief Deduplicator constructor

@@ -79,6 +79,7 @@ struct Config {
 		std::string name; ///< column name
 		ColumnType type; ///< column type
 		ur_field_id_t fieldID; ///< column unirec id
+		bool nullable = true; ///< whether the column accepts NULL values (default: true)
 	};
 
 	/**

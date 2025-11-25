@@ -30,7 +30,7 @@ void ASN::storeParameters(argparse::ArgumentParser& parser)
 FieldDefinition ASN::defineFields()
 {
 	// list of all fields provided by this plugin
-	FieldDefinition allFields = {{"ASN", DataType::UINT16}, {"ASO", DataType::STRING}};
+	FieldDefinition allFields = {{"ASN", DataType::UINT32}, {"ASO", DataType::STRING}};
 
 	return allFields;
 }
@@ -53,7 +53,7 @@ bool ASN::getData(DataMap& dataMap, std::string& ipAddr)
 	}
 	if (dataMap.find("ASN") != dataMap.end()) {
 		err = MMDB_get_value(&result.entry, &entryData, "autonomous_system_number", NULL);
-		dataMap.at("ASN") = checkEntryData() ? entryData.uint16 : EMPTY_UINT16;
+		dataMap.at("ASN") = checkEntryData() ? entryData.uint32 : EMPTY_UINT16;
 	}
 	if (dataMap.find("ASO") != dataMap.end()) {
 		err = MMDB_get_value(&result.entry, &entryData, "autonomous_system_organization", NULL);

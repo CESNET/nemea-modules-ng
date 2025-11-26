@@ -12,6 +12,8 @@
 #include "plugins/plugin.hpp"
 #include <stdexcept>
 
+extern int g_debug_level;
+
 namespace NFieldClassifier {
 void FieldClassifier::handleParams(int argc, char** argv, argparse::ArgumentParser& parser)
 {

@@ -82,6 +82,10 @@ module takes the following parameters:
   * Specify if the geolocation should be done for source, destination or both IP addresses. Possible
     values are `src`, `dst` or `both`. Default is `both`.
 
+* `-c`, `--cacheCapacity` number
+
+  * Specify the capacity of the internal cache (number of entries). Default is `4000`.
+
 ## Geolite parameters
 
 *  `--pathGeolite` path
